@@ -800,6 +800,18 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 /*
 			The large buffer is too full. Merge and write it
 */
+/*
+			Determine if this is a merge because LargePatches is too small, or because LargeSize is too small.
+			Print some info. This lets us determine which of these parameters is restricting memory use.
+*/
+			if ( S->lPatch >= S->MaxPatches ) {
+				printf("SORTINFO: Exceeded LargePatches\n");
+				fflush(stdout);
+			}
+			else {
+				printf("SORTINFO: Exceeded LargeSize\n");
+				fflush(stdout);
+			}
 #ifdef GZIPDEBUG
 			MLOCK(ErrorMessageLock);
 			MesPrint("%w EndSort: lPatch = %d, MaxPatches = %d,lFill = %x, sSpace = %ld, MaxTer = %d, lTop = %x"
