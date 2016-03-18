@@ -1554,6 +1554,25 @@ void UpdateMaxSize()
 		else {
 			position = scr[i].filesize;
 		}
+/*
+		Store the maximum size of either the in or out buffer
+*/
+		if ( i < 2 ) {
+			if ( ISLESSPOS(AS.MaxScratchSize,position) ) {
+				AS.MaxScratchSize = position;
+			}
+		}
+/*
+		Otherwise i=2, store the maximum size of the hide buffer
+*/
+		else {
+			if ( ISLESSPOS(AS.MaxHideSize,position) ) {
+				AS.MaxHideSize = position;
+			}
+		}
+/*
+		Add this file to total
+*/
 		ADD2POS(sumsize,position);
 	}
 /*
