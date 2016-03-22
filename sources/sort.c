@@ -801,15 +801,10 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			The large buffer is too full. Merge and write it
 */
 /*
-			Determine if this is a merge because LargePatches is too small, or because LargeSize is too small.
-			Print some info. This lets us determine which of these parameters is restricting memory use.
+			Determine if this is a merge because LargePatches is too small, print message.
 */
 			if ( S->lPatch >= S->MaxPatches ) {
 				printf("SORTINFO: Exceeded LargePatches\n");
-				fflush(stdout);
-			}
-			else {
-				printf("SORTINFO: Exceeded LargeSize\n");
 				fflush(stdout);
 			}
 #ifdef GZIPDEBUG
@@ -4179,6 +4174,13 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 	The small buffer is full. It has to be sorted and written.
 */
+/*
+		Determine if this is a sort due to insufficient TermsInSmall, print a message.
+*/
+		if ( S->sTerms >= S->TermsInSmall ) {
+			printf("SORTINFO: Exceeded TermsInSmall\n");
+			fflush(stdout);
+		}
 		tover = over = S->sTerms;
 		ss = S->sPointer;
 		ss[over] = 0;
@@ -4212,6 +4214,13 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 			The large buffer is too full. Merge and write it
 */
+/*
+			Determine if this is a merge because LargePatches is too small, print message.
+*/
+			if ( S->lPatch >= S->MaxPatches ) {
+				printf("SORTINFO: Exceeded LargePatches\n");
+				fflush(stdout);
+			}
 			if ( MergePatches(1) ) goto StoreCall;
 /*
 			pp = S->SizeInFile[1];
