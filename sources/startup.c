@@ -1667,6 +1667,7 @@ VOID Terminate(int errorcode)
 			MesPrint("Max. space for expressions: %19p bytes",&(AS.MaxExprSize));
 			MesPrint("Max. space for scratch file: %18p bytes",&(AS.MaxScratchSize));
 			MesPrint("Max. space for hide file: %21p bytes",&(AS.MaxHideSize));
+			MesPrint("Max. space for InParallel output: %13p bytes",&(AS.MaxThreadScratchOutSize));
 		}
 		PrintRunningTime();
 	}

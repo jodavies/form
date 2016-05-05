@@ -1777,6 +1777,7 @@ struct S_const {
 	POSITION MaxExprSize;          /* ( ) Maximum size of in/out/sort */
 	POSITION MaxScratchSize; /* ( ) Maximum size of in or out */
 	POSITION MaxHideSize; /* ( ) Maximum size of hide */
+	POSITION MaxThreadScratchOutSize; /* ( ) Maximum size of InParallel scratch output */
 #ifdef WITHPTHREADS
 	pthread_mutex_t	inputslock;
 	pthread_mutex_t	outputslock;
