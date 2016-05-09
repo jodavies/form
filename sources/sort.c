@@ -4292,13 +4292,18 @@ VOID StageSort(FILEHANDLE *fout)
 		POSITION position;
 		PUTZERO(position);
 		MLOCK(ErrorMessageLock);
+/*
+		Print how many patches we have; if the user is actively trying to avoid
+		stage4 sorts, this makes it easier to configure FilePatches
+*/
 #ifdef WITHPTHREADS
-		MesPrint("StageSort in thread %d",identity);
+		MesPrint("StageSort in thread %d, merging %d patches",identity,S->fPatchN);
 #elif defined(WITHMPI)
-		MesPrint("StageSort in process %d",PF.me);
+		MesPrint("StageSort in process %d, merging %d patches",PF.me,S->fPatchN);
 #else
-		MesPrint("StageSort");
+		MesPrint("StageSort, merging %d patches",S->fPatchN);
 #endif
+		MesPrint("SORTINFO: StageSort Merging %d patches\n", S->fPatchN);
 		MUNLOCK(ErrorMessageLock);
 		SeekFile(fout->handle,&position,SEEK_END);
 /*
