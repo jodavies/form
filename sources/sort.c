@@ -804,8 +804,9 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			Determine if this is a merge because LargePatches is too small, print message.
 */
 			if ( S->lPatch >= S->MaxPatches ) {
-				printf("SORTINFO: Exceeded LargePatches\n");
-				fflush(stdout);
+				MLOCK(ErrorMessageLock);
+				MesPrint("SORTINFO: Exceeded LargePatches");
+				MUNLOCK(ErrorMessageLock);
 			}
 #ifdef GZIPDEBUG
 			MLOCK(ErrorMessageLock);
@@ -4178,8 +4179,9 @@ WORD StoreTerm(PHEAD WORD *term)
 		Determine if this is a sort due to insufficient TermsInSmall, print a message.
 */
 		if ( S->sTerms >= S->TermsInSmall ) {
-			printf("SORTINFO: Exceeded TermsInSmall\n");
-			fflush(stdout);
+			MLOCK(ErrorMessageLock);
+			MesPrint("SORTINFO: Exceeded TermsInSmall");
+			MUNLOCK(ErrorMessageLock);
 		}
 		tover = over = S->sTerms;
 		ss = S->sPointer;
@@ -4218,8 +4220,9 @@ WORD StoreTerm(PHEAD WORD *term)
 			Determine if this is a merge because LargePatches is too small, print message.
 */
 			if ( S->lPatch >= S->MaxPatches ) {
-				printf("SORTINFO: Exceeded LargePatches\n");
-				fflush(stdout);
+				MLOCK(ErrorMessageLock);
+				MesPrint("SORTINFO: Exceeded LargePatches");
+				MUNLOCK(ErrorMessageLock);
 			}
 			if ( MergePatches(1) ) goto StoreCall;
 /*
@@ -4297,13 +4300,12 @@ VOID StageSort(FILEHANDLE *fout)
 		stage4 sorts, this makes it easier to configure FilePatches
 */
 #ifdef WITHPTHREADS
-		MesPrint("StageSort in thread %d, merging %d patches",identity,S->fPatchN);
+		MesPrint("SORTINFO: StageSort in thread %d, merging %d patches",identity,S->fPatchN);
 #elif defined(WITHMPI)
-		MesPrint("StageSort in process %d, merging %d patches",PF.me,S->fPatchN);
+		MesPrint("SORTINFO: StageSort in process %d, merging %d patches",PF.me,S->fPatchN);
 #else
-		MesPrint("StageSort, merging %d patches",S->fPatchN);
+		MesPrint("SORTINFO: StageSort, merging %d patches",S->fPatchN);
 #endif
-		MesPrint("SORTINFO: StageSort Merging %d patches\n", S->fPatchN);
 		MUNLOCK(ErrorMessageLock);
 		SeekFile(fout->handle,&position,SEEK_END);
 /*

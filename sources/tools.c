@@ -1559,7 +1559,9 @@ void UpdateMaxSize()
 */
 		if ( i < 2 ) {
 			if ( ISLESSPOS(AS.MaxScratchSize,position) ) {
+				MLOCK(AS.MaxScratchSizeLock);
 				AS.MaxScratchSize = position;
+				MUNLOCK(AS.MaxScratchSizeLock);
 			}
 		}
 /*
@@ -1567,7 +1569,9 @@ void UpdateMaxSize()
 */
 		else {
 			if ( ISLESSPOS(AS.MaxHideSize,position) ) {
+				MLOCK(AS.MaxHideSizeLock);
 				AS.MaxHideSize = position;
+				MUNLOCK(AS.MaxHideSizeLock);
 			}
 		}
 /*

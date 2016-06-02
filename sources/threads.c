@@ -1734,11 +1734,11 @@ bucketstolen:;
 */
 #ifdef WITHPTHREADS
 				if (identity > 0) {
-					MLOCK(ErrorMessageLock);
+					MLOCK(AS.MaxThreadScratchOutSizeLock);
 					if ( ISLESSPOS(AS.MaxThreadScratchOutSize,outposition) ) {
 						AS.MaxThreadScratchOutSize = outposition;
 					}
-					MUNLOCK(ErrorMessageLock);
+					MUNLOCK(AS.MaxThreadScratchOutSizeLock);
 				}
 #endif
 				LOCK(AS.outputslock);
