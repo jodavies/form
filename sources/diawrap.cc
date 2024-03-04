@@ -972,6 +972,8 @@ WORD GenTopologies(PHEAD WORD *term, WORD level)
 	info.level = level;
 	info.diaoffset = AR.funoffset;
 	info.flags = 0;
+	info.currentModel = 0;
+	info.currentMODEL = 0;
  
 	t = term + info.diaoffset;  // the function
 	t1 = t + FUNHEAD;           // its arguments

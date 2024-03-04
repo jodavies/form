@@ -1398,7 +1398,7 @@ typedef struct {
 	WORD *term;
 	void *currentModel;
 	void *currentMODEL;
-    WORD *legcouple[MAXLEGS+1];
+	WORD *legcouple[MAXLEGS+1];
 	LONG numtopo;
 	LONG numdia;
 	WORD diaoffset;
