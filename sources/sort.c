@@ -4427,7 +4427,7 @@ WORD StoreTerm(PHEAD WORD *term)
 	SORTING *S = AT.SS;
 	WORD **ss, *lfill, j, *t;
 	POSITION pp;
-	LONG lSpace, sSpace, RetCode, over, tover;
+	LONG lSpace, sSpace, sTermsTmp, RetCode, over, tover;
 
 	if ( ( ( AP.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) && AR.sLevel == 0 ) {
 #ifdef WITHPTHREADS
@@ -4441,7 +4441,7 @@ WORD StoreTerm(PHEAD WORD *term)
 	S->sFill = *(S->PoinFill);
 	if ( S->sTerms >= S->TermsInSmall || ( S->sFill + *term ) >= S->sTop ) {
 /*
-	The small buffer is full. It has to be sorted and written.
+	The small buffer is full. It has to be sorted.
 */
 		tover = over = S->sTerms;
 		ss = S->sPointer;
@@ -4449,66 +4449,94 @@ WORD StoreTerm(PHEAD WORD *term)
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"Before SplitMerge");
 #endif
-		ss[SplitMerge(BHEAD ss,over)] = 0;
+		sTermsTmp = SplitMerge(BHEAD ss,over);
+		ss[sTermsTmp] = 0;
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"After SplitMerge");
 #endif
+
+		/* Compute the new size of the small buffer terms */
 		sSpace = 0;
-		if ( over > 0 ) {
-			sSpace = ComPress(ss,&RetCode);
-			S->TermsLeft -= over - RetCode;
+		for (LONG i = 0; i < sTermsTmp; i++) {
+			sSpace += *(ss[i]);
 		}
-		sSpace++;
-
-		lSpace = sSpace + (S->lFill - S->lBuffer)
-				 - (AM.MaxTer/sizeof(WORD))*((LONG)S->lPatch);
-		SETBASEPOSITION(pp,lSpace);
-		MULPOS(pp,sizeof(WORD));
-		if ( S->file.handle >= 0 ) {
-			ADD2POS(pp,S->fPatches[S->fPatchN]);
-		}
-		if ( S == AT.S0 ) {	/* Only statistics at ground level */
-			WriteStats(&pp,STATSSPLITMERGE,CHECKLOGTYPE);
-		}
-		if ( ( S->lPatch >= S->MaxPatches ) ||
-			( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer ) ) >= S->lTop ) ) {
 /*
-			The large buffer is too full. Merge and write it
+		After SplitMerge, if there is sufficient space (capacity or number of
+		terms), don't write a patch in the large buffer but just continue.
+		GarbHand will remove the holes created in the small buffer by SplitMerge.
+		It does this by temporarily copying to the large buffer, or if there is
+		not enough space there, allocating temporary space. In case we would have
+		to allocate, just write a large patch regardless.
 */
-			if ( MergePatches(1) ) goto StoreCall;
-/*
-			pp = S->SizeInFile[1];
-			ADDPOS(pp,sSpace);
-			MULPOS(pp,sizeof(WORD));
-*/
-			SETBASEPOSITION(pp,sSpace);
-			MULPOS(pp,sizeof(WORD));
-			ADD2POS(pp,S->fPatches[S->fPatchN]);
+		if ( ( sSpace < (S->sTop-S->sBuffer)/2 ) && ( sTermsTmp < S->TermsInSmall/2)
+			&& S->lBuffer != 0 && ( S->lFill + sSpace < S->lTop ) ) {
+			S->sTerms = sTermsTmp;
+			S->TermsLeft += (sTermsTmp - over);
+			GarbHand();
+			S->PoinFill = ss + sTermsTmp;
+			*(S->PoinFill) = S->sFill;
+		}
 
-			if ( S == AT.S0 ) {	/* Only statistics at ground level */
-				WriteStats(&pp,STATSMERGETOFILE,CHECKLOGTYPE);
+		else {
+			sSpace = 0;
+			if ( over > 0 ) {
+				sSpace = ComPress(ss,&RetCode);
+				S->TermsLeft -= over - RetCode;
 			}
-			S->lPatch = 0;
-			S->lFill = S->lBuffer;
-		}
-		S->Patches[S->lPatch++] = S->lFill;
-	    lfill = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
-		if ( tover > 0 ) {
-			ss = S->sPointer;
-			while ( ( t = *ss++ ) != 0 ) {
-				j = *t;
-				if ( j < 0 ) j = t[1] + 2;
-				while ( --j >= 0 ){
-				  *lfill++ = *t++;
+			sSpace++;
+
+			lSpace = sSpace + (S->lFill - S->lBuffer)
+					 - (AM.MaxTer/sizeof(WORD))*((LONG)S->lPatch);
+			SETBASEPOSITION(pp,lSpace);
+			MULPOS(pp,sizeof(WORD));
+			if ( S->file.handle >= 0 ) {
+				ADD2POS(pp,S->fPatches[S->fPatchN]);
+			}
+			if ( S == AT.S0 ) {	/* Only statistics at ground level */
+				WriteStats(&pp,STATSSPLITMERGE,CHECKLOGTYPE);
+			}
+			if ( ( S->lPatch >= S->MaxPatches ) ||
+				( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer ) ) >= S->lTop ) ) {
+/*
+				The large buffer is too full. Merge and write it
+*/
+				if ( MergePatches(1) ) goto StoreCall;
+/*
+				pp = S->SizeInFile[1];
+				ADDPOS(pp,sSpace);
+				MULPOS(pp,sizeof(WORD));
+*/
+				SETBASEPOSITION(pp,sSpace);
+				MULPOS(pp,sizeof(WORD));
+				ADD2POS(pp,S->fPatches[S->fPatchN]);
+
+				if ( S == AT.S0 ) {	/* Only statistics at ground level */
+					WriteStats(&pp,STATSMERGETOFILE,CHECKLOGTYPE);
+				}
+				S->lPatch = 0;
+				S->lFill = S->lBuffer;
+			}
+			S->Patches[S->lPatch++] = S->lFill;
+			lfill = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
+			if ( tover > 0 ) {
+				ss = S->sPointer;
+				while ( ( t = *ss++ ) != 0 ) {
+					j = *t;
+					if ( j < 0 ) j = t[1] + 2;
+					while ( --j >= 0 ){
+					  *lfill++ = *t++;
+					}
 				}
 			}
+			*lfill++ = 0;
+			S->lFill = lfill;
+			S->sTerms = 0;
+			S->PoinFill = S->sPointer;
+			*(S->PoinFill) = S->sFill = S->sBuffer;
 		}
-		*lfill++ = 0;
-		S->lFill = lfill;
-		S->sTerms = 0;
-		S->PoinFill = S->sPointer;
-		*(S->PoinFill) = S->sFill = S->sBuffer;
 	}
+
+	/* Now copy the new term */
 	j = *term;
 	while ( --j >= 0 ) *S->sFill++ = *term++;
 	S->sTerms++;
