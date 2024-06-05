@@ -50,7 +50,6 @@
 
 #define GZIPDEBUG
 */
-#define NEWSPLITMERGE
 
 #include "form3.h"
 
@@ -3309,7 +3308,222 @@ LONG ComPress(WORD **ss, LONG *n)
  *		terms.
  */
 
-#ifdef NEWSPLITMERGE
+#define JDSPLITMERGE
+#define NEWSPLITMERGE
+
+#if defined(JDSPLITMERGE)
+
+LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
+{
+	GETBIDENTITY
+	SORTING *S = AT.SS;
+
+	WORD **ppL, **ppR, **ppO;
+	LONG cmpAdd, cmpRes, termsLeft, termsRight, split;
+
+	// Here there is nothing to do
+	if ( number < 2 ) { return(number); }
+
+	// Here we compare the terms
+	if ( number == 2 ) {
+		ppL = Pointer;
+		ppR = ppL + 1;
+		if ( ( cmpRes = CompareTerms(BHEAD *ppL, *ppR, (WORD)0) ) < 0 ) {
+			// The terms are out of order, swap. Cast to avoid uninit pointer.
+			ppO = (WORD **)(*ppL);
+			*ppL = *ppR;
+			*ppR = (WORD *)ppO;
+		}
+		else if ( cmpRes == 0 ) {
+			// The terms are equal, add them. The number is at least one smaller.
+			number--;
+			cmpAdd = S->PolyWise ? AddPoly(BHEAD ppL, ppR) : AddCoef(BHEAD ppL, ppR);
+			if ( cmpAdd == 0 ) {
+				// The terms cancelled. AddPoly already set the pointers to zero.
+				number = 0;
+			}
+		}
+		// The terms are ordered or added.
+		return(number);
+	}
+
+
+	// For larger number values, we must continue the recursion
+	split = number/2;
+	termsLeft = SplitMerge(BHEAD Pointer, split);
+	termsRight = SplitMerge(BHEAD Pointer+split, number-split);
+
+
+	// Now we are on the way back up
+
+	// If the right side contains no terms, we can return; there is nothing to merge
+	// TODO do we never have to zero anything here?
+	if ( termsRight == 0 ) {
+		return(termsLeft);
+	}
+
+	// If the last LHS term and first RHS term are in order, the rest must be also.
+	// We can finish quickly in this case. The terms might also add.
+	if ( termsLeft > 0 && termsRight > 0 ) {
+		cmpRes = CompareTerms(BHEAD Pointer[termsLeft-1], Pointer[split], (WORD)0);
+
+		if ( cmpRes >= 0 ) {
+			// The terms are in order or equal
+			ppL = Pointer + termsLeft-1;
+			ppR = Pointer + split;
+
+			if ( cmpRes == 0 ) {
+				// The terms are equal, add them.
+				cmpAdd = S->PolyWise ? AddPoly(BHEAD ppL, ppR) : AddCoef(BHEAD ppL, ppR);
+				if ( cmpAdd > 0 ) {
+					// The terms are added. Add already set ppR to zero. ppL is "done".
+					// RHS has one fewer term.
+					ppL++;
+					ppR++;
+					termsRight--;
+				}
+				else {
+					// The terms cancelled. Add already set both ppL, ppR to zero.
+					// Both sides have one fewer term.
+					termsLeft--;
+					ppR++;
+					termsRight--;
+				}
+			}
+			else {
+				// The terms were in order. Advance ppL on the LHS.
+				ppL++;
+			}
+
+			// Now we know the total number of terms: it is termsLeft + termsRight.
+			termsLeft += termsRight;
+
+			// Deeper levels of the recursion might have added terms, so it might
+			// not be the case that the LHS and RHS terms are contiguous. Move them.
+			if ( ppL < ppR ) {
+				while ( --termsRight >= 0 ) {
+					*ppL++ = *ppR++;
+				}
+				// ppL is now at the end of the RHS terms. But this is not necessarily
+				// the end of the RHS pointers: that is at Pointer+number. But SplitMerge
+				// on the RHS terms might have added terms. Explicitly zero those pointers.
+				while ( ppL < Pointer+number ) {
+					*ppL++ = 0;
+				}
+			}
+
+			// We are done here. Go to the next level up.
+			return(termsLeft);
+		}
+	}
+
+	// Now we are in the case that the last LHS term and the first RHS term are not
+	// in order, and there is work to do.
+
+	// We need scratch space to store pointers now. Make sure the array has at least
+	// "split" entries:
+	if ( split >= AN.SplitScratchSize ) {
+		// The +100 avoids too much reallocation when the array is small.
+		AN.SplitScratchSize = (split*3)/2+100;
+		// It doesn't need to be larger than half the number of SmallBuffer terms:
+		if ( AN.SplitScratchSize > S->Terms2InSmall/2 ) {
+			AN.SplitScratchSize = S->Terms2InSmall/2;
+		}
+		// Realloc. Free if already allocated. Not the case the first time we come here.
+		if ( AN.SplitScratch ) {
+			M_free(AN.SplitScratch, "AN.SplitScratch");
+		}
+		AN.SplitScratch = Malloc1(AN.SplitScratchSize*sizeof(*(AN.SplitScratch)), "AN.SplitScratch");
+	}
+
+
+	// Here comes the possible "timsort improvement". Find the place in the buffer where the merge
+	// needs to start by binary sort. The original code only looks in the "top half" of the LHS.
+	// TODO implement that first, then look at doing better?
+
+
+	// Move the LHS pointers to the scratch space. Zero the old LHS pointers. TODO not necessary, we zero later.
+	for ( unsigned i = 0; i < termsLeft; i++ ) {
+		(AN.SplitScratch)[i] = Pointer[i];
+	}
+	AN.InScratch = termsLeft;
+	for ( unsigned i = 0; i < split; i++ ) {
+		Pointer[i] = 0;
+	}
+
+	// Pointers which move through the terms: ppL is in the LHS terms (which was moved
+	// to AN.SplitScratch). ppR is in the RHS terms. ppO is the "output" which is where
+	// the LHS terms used to be, at Pointer.
+	ppL = AN.SplitScratch;
+	ppR = Pointer + split;
+	ppO = Pointer;
+	while ( termsLeft > 0 && termsRight > 0 ) {
+		if ( ( cmpRes = CompareTerms(BHEAD *ppL, *ppR, (WORD)0) ) < 0 ) {
+			// RHS term is first. Move the pointer, zero the old location.
+			*ppO = *ppR;
+			ppO++;
+			*ppR++ = 0;
+			termsRight--;
+		}
+		else if ( cmpRes > 0 ) {
+			// LHS term is first. Move the pointer, zero the old (scratch) location.
+			*ppO = *ppL;
+			ppO++;
+			*ppL++ = 0;
+			termsLeft--;
+		}
+		else {
+			// The terms are equal. Add them.
+			cmpAdd = S->PolyWise ? AddPoly(BHEAD ppL, ppR) : AddCoef(BHEAD ppL, ppR);
+			if ( cmpAdd > 0 ) {
+				// Terms added, but did not cancel. Result at ppL. ppR zeroed already.
+				*ppO++ = *ppL;
+			}
+			// Increment both LHS and RHS pointers, since we added a term from each.
+			*ppL++ = 0;
+			// TODO this is already zero, after the Add.
+			*ppR++ = 0;
+			termsLeft--;
+			termsRight--;
+		}
+	}
+
+	// Now at least one of termsLeft and termsRight is 0. Copy the remaining terms. Zero
+	// the old (scratch) locations.
+	for ( unsigned i = 0; i < termsLeft; i++ ) {
+		*ppO = *ppL;
+		ppO++;
+		*ppL++ = 0;
+	}
+	if ( ppO == ppR ) {
+		// We have reached the first RHS term with ppO: this means that no terms have Added,
+		// neither here nor in deeper LHS recursion levels. We can just skip over the entire
+		// RHS terms and we are done.
+		ppO += termsRight;
+	}
+	else {
+		// Copy the RHS terms into place.
+		for ( unsigned i = 0; i < termsRight; i++ ) {
+			*ppO = *ppR;
+			ppO++;
+			ppR++;
+		}
+	}
+
+	// The final term count is the difference between ppO and the beginning of the array.
+	termsLeft = ppO - Pointer;
+
+	// Zero the entire rest of the array beyond the point we've reached.
+	while ( ppO < Pointer+number ) {
+		*ppO++ = 0;
+	}
+	// No terms remain in scratch
+	AN.InScratch = 0;
+
+	return(termsLeft);
+}
+
+#elif defined(NEWSPLITMERGE)
 
 LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 {
