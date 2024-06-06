@@ -3319,7 +3319,9 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	SORTING *S = AT.SS;
 
 	WORD **ppL, **ppR, **ppO;
-	LONG cmpAdd, cmpRes, termsLeft, termsRight, split;
+	LONG cmpAdd, cmpRes;
+	LONG termsLeft, termsRight, split;
+	LONG checkL, checkLJump, checkLTerms;
 
 	// Here there is nothing to do
 	if ( number < 2 ) { return(number); }
@@ -3436,20 +3438,12 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 		AN.SplitScratch = Malloc1(AN.SplitScratchSize*sizeof(*(AN.SplitScratch)), "AN.SplitScratch");
 	}
 
-
-	// Here comes the possible "timsort improvement". Find the place in the buffer where the merge
-	// needs to start by binary sort. The original code only looks in the "top half" of the LHS.
-	// TODO implement that first, then look at doing better?
-
-
-	// Move the LHS pointers to the scratch space. Zero the old LHS pointers. TODO not necessary, we zero later.
+	// Copy the LHS pointers to the scratch space.
 	for ( unsigned i = 0; i < termsLeft; i++ ) {
 		(AN.SplitScratch)[i] = Pointer[i];
 	}
 	AN.InScratch = termsLeft;
-	for ( unsigned i = 0; i < split; i++ ) {
-		Pointer[i] = 0;
-	}
+
 
 	// Pointers which move through the terms: ppL is in the LHS terms (which was moved
 	// to AN.SplitScratch). ppR is in the RHS terms. ppO is the "output" which is where
@@ -3457,6 +3451,111 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	ppL = AN.SplitScratch;
 	ppR = Pointer + split;
 	ppO = Pointer;
+
+
+	// Here comes the "timsort improvement". Find the place in the buffer where the merge
+	// needs to start by binary sort. The original code only looks in the "top half" of the LHS.
+	// Here we work on the original terms, rather than a copy.
+
+//	while ( termsLeft > 8 ) {
+//		// Check the middle of the LHS terms.
+//		checkL = termsLeft/2;
+//
+//		cmpRes = CompareTerms(BHEAD ppL[checkL], *ppR, (WORD)0);
+//
+//		if ( cmpRes < 0 ) {
+//			// The terms are not in order. Break out, and continue as normal.
+//			break;
+//		}
+//
+//		// The terms are in order, so shift the LHS pointers to checkL.
+//		// Terms before this are already in the right place.
+//		ppO += checkL;
+//		ppL += checkL;
+//		termsLeft -= checkL;
+//
+//		if ( cmpRes == 0 ) {
+//			// The terms add.
+//			cmpAdd = S->PolyWise ? AddPoly(BHEAD ppO, ppR) : AddCoef(BHEAD ppO, ppR);
+//			if ( cmpAdd == 0 ) {
+//				// The terms cancelled. The ppO is now 0, and ready for the next term.
+//			}
+//			else {
+//				// The terms added. Advance ppO, the term is in the right place.
+//				ppO++;
+//			}
+//			// We have taken a term from the RHS
+//			ppR++;
+//			termsRight--;
+//			// We don't consider the LHS term again (whether it cancelled or not)
+//			ppL++;
+//			termsLeft--;
+//			// We have found the merge point.
+//			break;
+//		}
+//	}
+
+
+	// Try a better version. Use a binary sort to find the merge point, with no giving up.
+	checkL = termsLeft/2;
+	checkLJump = termsLeft/2;
+	checkLTerms = termsLeft;
+
+if ( termsLeft > 8 && checkLJump > 1 ) {
+}
+	while ( termsLeft > 8 && checkLJump > 1 ) {
+		// Jump the checkL position by half the previous value.
+		checkLJump /= 2;
+
+		// Compare the LHS term at checkL with the first RHS term.
+		cmpRes = CompareTerms(BHEAD *(Pointer+checkL), *ppR, (WORD)0);
+
+		if ( cmpRes < 0 ) {
+			// The terms are not in order. Try earlier on the LHS:
+			checkL -= checkLJump;
+			continue;
+		}
+
+		if ( cmpRes > 0 ) {
+			// The terms are in order, shift the LHS pointers to checkL.
+			// Terms before this are already in the right place.
+			ppO = Pointer + checkL;
+			ppL = AN.SplitScratch + checkL;
+			termsLeft = checkLTerms - checkL;
+			// Check later in the LHS terms.
+			checkL += checkLJump;
+			continue;
+		}
+
+		if ( cmpRes == 0 ) {
+			// The terms add, shift the LHS pointers to checkL.
+			// Terms before this are already in the right place.
+			ppO = Pointer + checkL;
+			ppL = AN.SplitScratch + checkL;
+			termsLeft = checkLTerms - checkL;
+
+			cmpAdd = S->PolyWise ? AddPoly(BHEAD ppO, ppR) : AddCoef(BHEAD ppO, ppR);
+			if ( cmpAdd == 0 ) {
+				// The terms cancelled. The ppO is now 0, and ready for the next term.
+			}
+			else {
+				// The terms added. Advance ppO, the term is in the right place.
+				ppO++;
+			}
+			// We have taken a term from the RHS
+			ppR++;
+			termsRight--;
+			// We don't consider the LHS term again (whether it cancelled or not)
+			ppL++;
+			termsLeft--;
+			// We have found the merge point.
+			break;
+		}
+	}
+
+
+	// Now perform the merge. Whether or not we use any binary search above,
+	// ppL, ppR and ppO are in the right place already.
 	while ( termsLeft > 0 && termsRight > 0 ) {
 		if ( ( cmpRes = CompareTerms(BHEAD *ppL, *ppR, (WORD)0) ) < 0 ) {
 			// RHS term is first. Move the pointer, zero the old location.
