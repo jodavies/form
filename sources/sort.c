@@ -3321,7 +3321,6 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	WORD **ppL, **ppR, **ppO;
 	LONG cmpAdd, cmpRes;
 	LONG termsLeft, termsRight, split;
-	LONG checkL, checkLJump, checkLTerms;
 
 	// Here there is nothing to do
 	if ( number < 2 ) { return(number); }
@@ -3439,10 +3438,10 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	}
 
 	// Copy the LHS pointers to the scratch space.
-	for ( unsigned i = 0; i < termsLeft; i++ ) {
-		(AN.SplitScratch)[i] = Pointer[i];
-	}
-	AN.InScratch = termsLeft;
+//	for ( unsigned i = 0; i < termsLeft; i++ ) {
+//		(AN.SplitScratch)[i] = Pointer[i];
+//	}
+//	AN.InScratch = termsLeft;
 
 
 	// Pointers which move through the terms: ppL is in the LHS terms (which was moved
@@ -3497,13 +3496,12 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 
 
 	// Try a better version. Use a binary sort to find the merge point, with no giving up.
-	checkL = termsLeft/2;
-	checkLJump = termsLeft/2;
-	checkLTerms = termsLeft;
+	LONG checkL = termsLeft/2;
+	LONG checkLJump = termsLeft/2;
+	const LONG checkLTerms = termsLeft;
 
-if ( termsLeft > 8 && checkLJump > 1 ) {
-}
-	while ( termsLeft > 8 && checkLJump > 1 ) {
+//	while ( termsLeft > 8 && checkLJump > 1 ) {
+	while ( checkLJump > 1 ) {
 		// Jump the checkL position by half the previous value.
 		checkLJump /= 2;
 
@@ -3511,7 +3509,7 @@ if ( termsLeft > 8 && checkLJump > 1 ) {
 		cmpRes = CompareTerms(BHEAD *(Pointer+checkL), *ppR, (WORD)0);
 
 		if ( cmpRes < 0 ) {
-			// The terms are not in order. Try earlier on the LHS:
+			// The terms are not in order. Check earlier in the LHS terms.
 			checkL -= checkLJump;
 			continue;
 		}
@@ -3520,7 +3518,7 @@ if ( termsLeft > 8 && checkLJump > 1 ) {
 			// The terms are in order, shift the LHS pointers to checkL.
 			// Terms before this are already in the right place.
 			ppO = Pointer + checkL;
-			ppL = AN.SplitScratch + checkL;
+//			ppL = AN.SplitScratch + checkL;
 			termsLeft = checkLTerms - checkL;
 			// Check later in the LHS terms.
 			checkL += checkLJump;
@@ -3531,12 +3529,12 @@ if ( termsLeft > 8 && checkLJump > 1 ) {
 			// The terms add, shift the LHS pointers to checkL.
 			// Terms before this are already in the right place.
 			ppO = Pointer + checkL;
-			ppL = AN.SplitScratch + checkL;
+//			ppL = AN.SplitScratch + checkL;
 			termsLeft = checkLTerms - checkL;
 
 			cmpAdd = S->PolyWise ? AddPoly(BHEAD ppO, ppR) : AddCoef(BHEAD ppO, ppR);
 			if ( cmpAdd == 0 ) {
-				// The terms cancelled. The ppO is now 0, and ready for the next term.
+				// The terms cancelled. The *ppO is now 0, and ready for the next term.
 			}
 			else {
 				// The terms added. Advance ppO, the term is in the right place.
@@ -3546,12 +3544,20 @@ if ( termsLeft > 8 && checkLJump > 1 ) {
 			ppR++;
 			termsRight--;
 			// We don't consider the LHS term again (whether it cancelled or not)
-			ppL++;
+//			ppL++;
 			termsLeft--;
 			// We have found the merge point.
 			break;
 		}
 	}
+
+
+	// Now copy the remaining LHS terms to the scratch space. The first new term is
+	// one above the current ppO position.
+	for ( unsigned i = 0; i < termsLeft; i++) {
+		(AN.SplitScratch)[i] = *(Pointer + checkLTerms - termsLeft + i);
+	}
+	AN.InScratch = termsLeft;
 
 
 	// Now perform the merge. Whether or not we use any binary search above,
