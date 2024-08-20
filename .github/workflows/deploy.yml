@@ -114,7 +114,7 @@ jobs:
             mkdir static-lib
             ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
             ln -s /usr/local/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
-            export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
+            export LIBRARY_PATH="$(pwd)/static-lib:/opt/homebrew/lib:${LIBRARY_PATH:-}"
             opts="$opts --disable-static-link"
           fi
           if [ "$RUNNER_OS" == "Windows" ]; then
@@ -127,7 +127,7 @@ jobs:
         continue-on-error: ${{ runner.os == 'Windows' }}
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
-              export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
+              export LIBRARY_PATH="$(pwd)/static-lib:/opt/homebrew/lib:${LIBRARY_PATH:-}"
           fi
           make -j 4
 
