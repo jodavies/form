@@ -2229,6 +2229,10 @@ NoMnot:
 */
 		w = SetElements + Sets[j].first;
 		m = SetElements + Sets[j].last;
+		if ( w == 0 ) {
+			MesPrint("Error, set in wildcard specification is empty.");
+			Terminate(-1);
+		}
 		if ( ( Sets[j].flags & ORDEREDSET ) == ORDEREDSET ) {
 /*
 			We search first and ask questions later
