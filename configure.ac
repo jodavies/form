@@ -364,6 +364,12 @@ AC_ARG_ENABLE([threaded],
 AC_ARG_ENABLE([parform],
 	[AS_HELP_STRING([--enable-parform],
 		[build parallel version using MPI (parform) @<:@default=no@:>@])],
+	[AC_MSG_ERROR([ParFORM is deprecated and will eventually be removed. Build anyway with --enable-parform-force.
+		Please report your usage of ParFORM: https://github.com/vermaseren/form/issues])]
+	[enable_parform=no])
+AC_ARG_ENABLE([parform-force],
+	[AS_HELP_STRING([--enable-parform-force],
+		[build parallel version using MPI (parform) @<:@default=no@:>@])],
 	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_parform=yes])],
 	[enable_parform=no])
 AC_ARG_ENABLE([debug],

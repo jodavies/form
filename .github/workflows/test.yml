@@ -47,9 +47,9 @@ jobs:
         run: |
           opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform";;
-            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform";;
-            parform|parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform";;
+            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform-force";;
+            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform-force";;
+            parform|parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform-force";;
           esac
           case ${{ matrix.bin }} in
             vorm|tvorm|parvorm) opts="$opts --enable-debug";;
@@ -160,9 +160,9 @@ jobs:
         run: |
           opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform";;
-            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform";;
-            parform|parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform";;
+            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform-force";;
+            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform-force";;
+            parform|parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform-force";;
           esac
           case ${{ matrix.bin }} in
             vorm|tvorm|parvorm) opts="$opts --enable-debug";;
@@ -218,9 +218,9 @@ jobs:
         run: |
           opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            vorm)    opts="$opts --enable-scalar --disable-threaded --disable-parform";;
-            tvorm)   opts="$opts --disable-scalar --enable-threaded --disable-parform";;
-            parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform";;
+            vorm)    opts="$opts --enable-scalar --disable-threaded --disable-parform-force";;
+            tvorm)   opts="$opts --disable-scalar --enable-threaded --disable-parform-force";;
+            parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform-force";;
           esac
           opts="$opts --enable-debug --enable-coverage --with-gmp --with-zlib"
           autoreconf -i
@@ -281,8 +281,8 @@ jobs:
         run: |
           opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            form)  opts="$opts --enable-scalar --disable-threaded --disable-parform";;
-            tform) opts="$opts --disable-scalar --enable-threaded --disable-parform";;
+            form)  opts="$opts --enable-scalar --disable-threaded --disable-parform-force";;
+            tform) opts="$opts --disable-scalar --enable-threaded --disable-parform-force";;
           esac
           opts="$opts --disable-debug --with-gmp --with-zlib"
           autoreconf -i
