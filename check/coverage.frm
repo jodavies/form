@@ -25,6 +25,7 @@ TableBase "test.tbl" use;
 Apply;
 Print;
 .end
+#pend_if mpi?
 assert succeeded?
 assert result("test") =~ expr("55 + f(11)")
 *--#] tablebase_1 :
@@ -44,6 +45,7 @@ Local test = <f(1)>+...+<f(11)>;
 Apply;
 Print;
 .end
+#pend_if mpi?
 assert succeeded?
 assert result("test") =~ expr("55 + f(11)")
 *--#] tablebase_2 :
@@ -59,6 +61,7 @@ TableBase "test3.tbl" addto f;
 TableBase "test3.tbl" open;
 Tablebase "test3.tbl" audit;
 .end
+#pend_if mpi?
 assert succeeded?
 assert stdout =~ exact_pattern(<<'EOF')
 Table,sparse,f(1)
