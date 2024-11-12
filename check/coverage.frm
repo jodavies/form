@@ -99,3 +99,47 @@ assert result("G") =~ expr("10/3*f(x1)*p(mu)*p.q*x1")
 assert result("G2") =~ expr("10/3*f(x1)*p(mu)*p.q*x1")
 assert result("g") =~ expr("10/3*f(x1)*p(mu)*p.q*x1")
 *--#] factorin_ :
+*--#[ hideskip :
+#: scratchsize 1
+#: hidesize 1
+Symbol x,y,z;
+Local f = (1+x+y+z)^70;
+Local g = (1+x+y+z)^70;
+.sort
+Hide f;
+Skip g;
+Identify x = 2;
+Identify y = 2;
+Identify z = 2;
+.sort
+UnHide f;
+Identify x = 1;
+Identify y = 1;
+Identify z = 1;
+Print;
+.end
+assert succeeded?
+assert result("f") =~ expr("1393796574908163946345982392040522594123776")
+assert result("g") =~ expr("1393796574908163946345982392040522594123776")
+*--#] hideskip :
+*--#[ saveload :
+Symbol x;
+Function f;
+CFunction g;
+Index mu;
+Vector p,q;
+Tensor T;
+Global F = (1+x)^20 + f(1) + g(2) + p.q + p(mu) + T(q) + T(mu) + e_(p,q);
+.store
+Save test.sav F;
+.end
+Load test.sav;
+Local G = F;
+.sort
+Delete storage;
+Identify x = 1;
+Print;
+.end
+assert succeeded?
+assert result("G") =~ expr("1048576 + p.q + p(mu) + e_(p,q) + g(2) + T(q) + T(mu) + f(1)")
+*--#] saveload :
