@@ -30,6 +30,7 @@ EXTRA_DIST = \
 	benchmark-fu.sh \
 	check-help.sh \
 	check.rb \
+	coverage.frm \
 	examples.frm \
 	extra/checkpoint.frm \
 	extra/color.frm \
