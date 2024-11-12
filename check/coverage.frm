@@ -143,3 +143,40 @@ Print;
 assert succeeded?
 assert result("G") =~ expr("1048576 + p.q + p(mu) + e_(p,q) + g(2) + T(q) + T(mu) + f(1)")
 *--#] saveload :
+*--#[ symm :
+* pattern matching of functions with symmtry properties
+Indices x1,x2,x3,x4,x5;
+
+CFunction fs(symmetric), fas(antisymmetric), fcs(cyclesymmetric);
+Function gs(symmetric), gas(antisymmetric), gcs(cyclesymmetric);
+CTensor Ts(symmetric), Tas(antisymmetric), Tcs(cyclesymmetric);
+Tensor Us(symmetric), Uas(antisymmetric), Ucs(cyclesymmetric);
+
+Local test =
+	+ fs(1,2,3,4,5) + fas(1,2,3,4,5) + fcs(1,2,3,4,5)
+	+ gs(1,2,3,4,5) + gas(1,2,3,4,5) + gcs(1,2,3,4,5)
+	+ Ts(1,2,3,4,5) + Tas(1,2,3,4,5) + Tcs(1,2,3,4,5)
+	+ Us(1,2,3,4,5) + Uas(1,2,3,4,5) + Ucs(1,2,3,4,5)
+	;
+
+Identify fs(x1?,x2?,4,3,x5?) = fs;
+Identify fas(x1?,x2?,4,3,x5?) = - fas;
+Identify fcs(5,1,x3?,x4?,x5?) = fcs;
+
+Identify gs(x1?,x2?,4,3,x5?) = gs;
+Identify gas(x1?,x2?,4,3,x5?) = - gas;
+Identify gcs(5,1,x3?,x4?,x5?) = gcs;
+
+Identify Ts(x1?,x2?,4,3,x5?) = Ts;
+Identify Tas(x1?,x2?,4,3,x5?) = - Tas;
+Identify Tcs(5,1,x3?,x4?,x5?) = Tcs;
+
+Identify Us(x1?,x2?,4,3,x5?) = Us;
+Identify Uas(x1?,x2?,4,3,x5?) = - Uas;
+Identify Ucs(5,1,x3?,x4?,x5?) = Ucs;
+
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("fs + fas + fcs + Ts + Tas + Tcs + Us + Uas + Ucs + gs + gas + gcs")
+*--#] symm :
