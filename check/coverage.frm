@@ -180,3 +180,90 @@ Print;
 assert succeeded?
 assert result("test") =~ expr("fs + fas + fcs + Ts + Tas + Tcs + Us + Uas + Ucs + gs + gas + gcs")
 *--#] symm :
+*--#[ transform :
+CFunction Z,f,g,h,i;
+Symbol inf,x,y,n;
+Set funs: f,g;
+#$one = 1;
+#$two = 2;
+
+Local test1 = f(1,2,3,4) + g(1,2,3,4) + h(1,2,3,4) + i(1,2,3,4);
+Local test2 = f(1,2,3,4);
+Local test3 = f(1,2,3,4,5,6,7);
+Local test4 = f(1,2,3,4);
+Local test5 = f(1,2,3,4) + g(1,2,3,4);
+Local test6 = f(1) + f(1,1) + f(1,2) + f(2,1) + f(1,3,2) + f(2,3,1);
+Local test7 = test6;
+Local test8 =
+	+ g(1)*f(1,1,1)
+	+ g(2)*f(-1,1,1)
+	+ g(3)*f(2,1,1)
+	+ g(4)*f(1,-2,1)
+	+ g(5)*f(-1,-1,-1)
+*	Check against HarmonicSums.m
+	- (
+		+ g(1)*Z(1, 1, 1, inf)
+		- g(2)*Z(-1, -1, 1, inf)
+		+ g(3)*Z(2, 1, 1, inf)
+		+ g(4)*(-Z(1, -2, -1, inf))
+		- g(5)*Z(-1, 1, 1, inf)
+	)
+	;
+Local test9 = test8;
+
+InExpression test1;
+	Transform funs addargs($one,last);
+	Transform {h,i}, mulargs($one,last);
+EndInExpression;
+
+InExpression test2;
+	Transform f explode(1,last);
+	Identify f(?a) = f(?a)*g(nargs_(?a));
+	Identify g(y?$len) = 1;
+	Transform f encode(1,last):base=$two;
+	Transform f decode(1,$len):base=2, implode(1,last);
+EndInExpression;
+
+InExpression test3;
+	Transform f permute($one,3,5)($two,6);
+EndInExpression;
+
+InExpression test4;
+	Transform f reverse($two,last);
+EndInExpression;
+
+InExpression test5;
+	Transform f cycle($two,last)=+1;
+	Transform g cycle(2,last)=-1;
+EndInExpression;
+
+InExpression test6;
+	Transform f islyndon(1,last)=(y,n);
+EndInExpression;
+InExpression test7;
+	Transform f tolyndon(1,last)=(1,1);
+EndInExpression;
+
+InExpression test8;
+	Transform f HtoZ(1,last);
+	Identify f(?a) = Z(?a,inf);
+EndInExpression;
+
+InExpression test9;
+	Transform Z ZtoH(1,last-1);
+	Identify Z(?a,inf) = f(?a);
+EndInExpression;
+
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("f(10) + g(10) + h(24) + i(24)")
+assert result("test2") =~ expr("f(1,2,3,4)")
+assert result("test3") =~ expr("f(3,6,5,4,1,2,7)")
+assert result("test4") =~ expr("f(1,4,3,2)")
+assert result("test5") =~ expr("f(1,4,2,3) + g(1,3,4,2)")
+assert result("test6") =~ expr("f(1)*y + f(1,1)*n + f(1,2)*y + f(1,3,2)*y + f(2,1)*n + f(2,3,1)*n")
+assert result("test7") =~ expr("f(1) + f(1,1) + 2*f(1,2) + f(1,2,3) + f(1,3,2)")
+assert result("test8") =~ expr("0")
+assert result("test9") =~ expr("0")
+*--#] transform :
