@@ -163,7 +163,7 @@ int CoTransform(UBYTE *in)
 			return(error);
 		}
 		in = SkipAName(in);
-		if ( *in == '>' || *in == '<' ) in++;
+		if ( *in == '>' || *in == '<' || *in == '+' || *in == '-' ) in++;
 		ss = in;
 		c = *ss; *ss = 0;
 		if ( c != '(' ) {

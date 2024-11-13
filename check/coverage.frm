@@ -182,7 +182,7 @@ assert result("test") =~ expr("fs + fas + fcs + Ts + Tas + Tcs + Us + Uas + Ucs 
 *--#] symm :
 *--#[ transform :
 CFunction Z,f,g,h,i;
-Symbol inf,x,y,n;
+Symbol inf,x,y,y1,y2,n1,n2;
 Set funs: f,g;
 #$one = 1;
 #$two = 2;
@@ -234,14 +234,23 @@ EndInExpression;
 
 InExpression test5;
 	Transform f cycle($two,last)=+1;
-	Transform g cycle(2,last)=-1;
+	Transform g cycle(2,last)=-$one;
 EndInExpression;
 
 InExpression test6;
-	Transform f islyndon(1,last)=(y,n);
+	Transform f islyndon(1,last)=(y1,n1);
+	Transform f islyndon<(1,last)=(y1,n1);
+	Transform f islyndon+(1,last)=(y1,n1);
+	Transform f islyndon>(1,last)=(y2,n2);
+	Transform f islyndon-(1,last)=(y2,n2);
 EndInExpression;
+
 InExpression test7;
-	Transform f tolyndon(1,last)=(1,1);
+	Transform f tolyndon(1,last)=(y1,n1);
+	Transform f tolyndon<(1,last)=(y1,n1);
+	Transform f tolyndon+(1,last)=(y1,n1);
+	Transform f tolyndon>(1,last)=(y2,n2);
+	Transform f tolyndon-(1,last)=(y2,n2);
 EndInExpression;
 
 InExpression test8;
@@ -262,8 +271,8 @@ assert result("test2") =~ expr("f(1,2,3,4)")
 assert result("test3") =~ expr("f(3,6,5,4,1,2,7)")
 assert result("test4") =~ expr("f(1,4,3,2)")
 assert result("test5") =~ expr("f(1,4,2,3) + g(1,3,4,2)")
-assert result("test6") =~ expr("f(1)*y + f(1,1)*n + f(1,2)*y + f(1,3,2)*y + f(2,1)*n + f(2,3,1)*n")
-assert result("test7") =~ expr("f(1) + f(1,1) + 2*f(1,2) + f(1,2,3) + f(1,3,2)")
+assert result("test6") =~ expr("f(1)*y1^3*y2^2 + f(1,1)*n1^3*n2^2 + f(1,2)*y1^3*n2^2 + f(1,3,2)*y1^3*n2^2 + f(2,1)*y2^2*n1^3 + f(2,3,1)*n1^3*n2^2")
+assert result("test7") =~ expr("f(1)*y1^3*y2^2 + f(1,1)*n1^3*n2^2 + 2*f(2,1)*y1^3*y2^2 + f(3,1,2)*y1^3*y2^2 + f(3,2,1)*y1^3*y2^2")
 assert result("test8") =~ expr("0")
 assert result("test9") =~ expr("0")
 *--#] transform :
