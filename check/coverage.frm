@@ -6,77 +6,140 @@
 #endif
 .end
 
-*--#[ tablebase_1 :
-CTable,sparse f(1);
-#do i = 1,10
-	Fill f(`i') = `i';
-#enddo
+*--#[ if :
+Symbol x(:100),y,z;
+CFunction f,g(symmetric),h;
+Vector p,q;
+Tensor T;
+Index mu,i1,i2,i3;
+
+Set hset: h;
+
+Local test = x * (
+	+ z^2
+	+ z^3
+	+ f(x)
+	+ f(y)
+	+ f(y)*x
+	+ p(mu)
+	+ p
+	+ p.q
+	+ T(p)*z
+	+ f(p)
+	+ g(p)
+	+ h(p)
+	+ g(i1,i2)*g(i1,i2)
+	+ g(i1,i2)*g(i1,i3)
+	+ g(i1,i2,i3)*g(i1,i2,i3)
+	);
+Local test2 = x;
 .sort
-TableBase "test.tbl" create;
-TableBase "test.tbl" addto f;
-.end
-TableBase "test.tbl" open;
-Tablebase "test.tbl" load;
-.sort
-Local test = <f(1)>+...+<f(11)>;
-TestUse;
-.sort
-TableBase "test.tbl" use;
-Apply;
+
+#$one = 1;
+#$two = 2;
+#$pdotq = p.q;
+
+#if ( (maxpowerof(x) > 100) || (minpowerof(x) > -100) )
+	Multiply z;
+#endif
+
+#if ( termsin(test) == 15 )
+	Multiply 2;
+#endif
+
+#if ( exists(test3) )
+	Multiply 1000;
+#endif
+
+#if (isfactorized(test2) == 0)
+	If (Expression(test2));
+		Identify x = 100;
+	EndIf;
+#endif
+
+If (Match(f(x?)*x?));
+	Identify x = 1;
+EndIf;
+
+If (Count(z,1) == 3);
+	Identify x = 1;
+ElseIf (Count(z,1) == $two);
+	Identify x = 2;
+EndIf;
+
+If (Count(p+v,1) == 1);
+	Identify x = 1;
+EndIf;
+If (Count(p+d,1) == 1);
+	Identify x = 2;
+EndIf;
+If (Count(p+f,1) == 1);
+	Identify x = 3;
+EndIf;
+If (Count(p+?{f,g},1) == 1);
+	Identify x = 4;
+EndIf;
+If (Count(p+?hset,1) == 1);
+	Identify x = 5;
+EndIf;
+If (Occurs(p.q));
+	Multiply 6;
+EndIf;
+If (Match($pdotq));
+	Multiply 6;
+EndIf;
+
+If (Occurs(f) || Match(g(p)));
+	Multiply 2;
+	Identify x = 2;
+EndIf;
+
+If ( (Coefficient == MultipleOf(3)) && (Count(z,1) == $one) );
+	Multiply z;
+EndIf;
+
+If (FindLoop(g, arguments=2, loopsize=2));
+	Identify x = 1;
+EndIf;
+If (FindLoop(g, arguments=3, loopsize=2));
+	Identify x = 2;
+EndIf;
+If (FindLoop(g, arguments=3, loopsize<3, include=i3));
+	Multiply 3;
+EndIf;
+
+If ($two);
+	Multiply 2;
+EndIf;
+
+If (1 >= $two);
+	Multiply 1000;
+EndIf;
+
+If (1 < 2);
+	Multiply 2;
+EndIf;
+If (1 <= 2);
+	Multiply 2;
+EndIf;
+
+If (1 > 2);
+	Multiply 1000;
+EndIf;
+If (1 >= 2);
+	Multiply 1000;
+EndIf;
+
+If (0);
+	Multiply 1000;
+EndIf;
+
 Print;
 .end
-#pend_if mpi?
 assert succeeded?
-assert result("test") =~ expr("55 + f(11)")
-*--#] tablebase_1 :
-*--#[ tablebase_2 :
-CTable,sparse f(1);
-#do i = 1,10
-	Fill f(`i') = `i';
-#enddo
-.sort
-TableBase "test2.tbl" create;
-TableBase "test2.tbl" addto f;
-.end
-TableBase "test2.tbl" open;
-Tablebase "test2.tbl" enter;
-.sort
-Local test = <f(1)>+...+<f(11)>;
-Apply;
-Print;
-.end
-#pend_if mpi?
-assert succeeded?
-assert result("test") =~ expr("55 + f(11)")
-*--#] tablebase_2 :
-*--#[ tablebase_3 :
-CTable,sparse f(1);
-#do i = 1,10
-	Fill f(`i') = `i';
-#enddo
-.sort
-TableBase "test3.tbl" create;
-TableBase "test3.tbl" addto f;
-.end
-TableBase "test3.tbl" open;
-Tablebase "test3.tbl" audit;
-.end
-#pend_if mpi?
-assert succeeded?
-assert stdout =~ exact_pattern(<<'EOF')
-Table,sparse,f(1)
-    f(1)
-    f(2)
-    f(3)
-    f(4)
-    f(5)
-    f(6)
-    f(7)
-    f(8)
-    f(9)
-    f(10)
-EOF
-*--#] tablebase_3 :
+assert result("test") =~ expr("32*z^2 + 16*z^3 + 1152*p.q + 16*p(mu) + 16*p + 32*f(x) + 192*f(y) + 128*f(p) + 128*g(p) + 16*g(i1,i2)^2 + 16*g(i1,i2)*g(i1,i3)*x + 96*g(i1,i2,i3)^2 + 80*h(p) + 48*T(p)*z^2");
+assert result("test2") =~ expr("1600")
+*--#] if :
 *--#[ factorin_ :
 CFunction f;
 Symbol x1,x2,x3;
@@ -180,6 +243,77 @@ Print;
 assert succeeded?
 assert result("test") =~ expr("fs + fas + fcs + Ts + Tas + Tcs + Us + Uas + Ucs + gs + gas + gcs")
 *--#] symm :
+*--#[ tablebase_1 :
+CTable,sparse f(1);
+#do i = 1,10
+	Fill f(`i') = `i';
+#enddo
+.sort
+TableBase "test.tbl" create;
+TableBase "test.tbl" addto f;
+.end
+TableBase "test.tbl" open;
+Tablebase "test.tbl" load;
+.sort
+Local test = <f(1)>+...+<f(11)>;
+TestUse;
+.sort
+TableBase "test.tbl" use;
+Apply;
+Print;
+.end
+#pend_if mpi?
+assert succeeded?
+assert result("test") =~ expr("55 + f(11)")
+*--#] tablebase_1 :
+*--#[ tablebase_2 :
+CTable,sparse f(1);
+#do i = 1,10
+	Fill f(`i') = `i';
+#enddo
+.sort
+TableBase "test2.tbl" create;
+TableBase "test2.tbl" addto f;
+.end
+TableBase "test2.tbl" open;
+Tablebase "test2.tbl" enter;
+.sort
+Local test = <f(1)>+...+<f(11)>;
+Apply;
+Print;
+.end
+#pend_if mpi?
+assert succeeded?
+assert result("test") =~ expr("55 + f(11)")
+*--#] tablebase_2 :
+*--#[ tablebase_3 :
+CTable,sparse f(1);
+#do i = 1,10
+	Fill f(`i') = `i';
+#enddo
+.sort
+TableBase "test3.tbl" create;
+TableBase "test3.tbl" addto f;
+.end
+TableBase "test3.tbl" open;
+Tablebase "test3.tbl" audit;
+.end
+#pend_if mpi?
+assert succeeded?
+assert stdout =~ exact_pattern(<<'EOF')
+Table,sparse,f(1)
+    f(1)
+    f(2)
+    f(3)
+    f(4)
+    f(5)
+    f(6)
+    f(7)
+    f(8)
+    f(9)
+    f(10)
+EOF
+*--#] tablebase_3 :
 *--#[ transform :
 CFunction Z,f,g,h,i;
 Symbol inf,x,y,y1,y2,n1,n2;
