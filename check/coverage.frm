@@ -240,17 +240,17 @@ EndInExpression;
 InExpression test6;
 	Transform f islyndon(1,last)=(y1,n1);
 	Transform f islyndon<(1,last)=(y1,n1);
-	Transform f islyndon+(1,last)=(y1,n1);
+	Transform f islyndon-(1,last)=(y1,n1);
 	Transform f islyndon>(1,last)=(y2,n2);
-	Transform f islyndon-(1,last)=(y2,n2);
+	Transform f islyndon+(1,last)=(y2,n2);
 EndInExpression;
 
 InExpression test7;
 	Transform f tolyndon(1,last)=(y1,n1);
 	Transform f tolyndon<(1,last)=(y1,n1);
-	Transform f tolyndon+(1,last)=(y1,n1);
+	Transform f tolyndon-(1,last)=(y1,n1);
 	Transform f tolyndon>(1,last)=(y2,n2);
-	Transform f tolyndon-(1,last)=(y2,n2);
+	Transform f tolyndon+(1,last)=(y2,n2);
 EndInExpression;
 
 InExpression test8;

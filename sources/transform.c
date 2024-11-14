@@ -548,7 +548,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			type = ISLYNDON;
 			goto doreplace;
 		}
-		else if ( StrICmp(s,(UBYTE *)"islyndon+" ) == 0 ) {
+		else if ( StrICmp(s,(UBYTE *)"islyndon-" ) == 0 ) {
 			type = ISLYNDON;
 			goto doreplace;
 		}
@@ -556,7 +556,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			type = ISLYNDONR;
 			goto doreplace;
 		}
-		else if ( StrICmp(s,(UBYTE *)"islyndon-" ) == 0 ) {
+		else if ( StrICmp(s,(UBYTE *)"islyndon+" ) == 0 ) {
 			type = ISLYNDONR;
 			goto doreplace;
 		}
@@ -568,7 +568,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			type = TOLYNDON;
 			goto doreplace;
 		}
-		else if ( StrICmp(s,(UBYTE *)"tolyndon+" ) == 0 ) {
+		else if ( StrICmp(s,(UBYTE *)"tolyndon-" ) == 0 ) {
 			type = TOLYNDON;
 			goto doreplace;
 		}
@@ -576,7 +576,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			type = TOLYNDONR;
 			goto doreplace;
 		}
-		else if ( StrICmp(s,(UBYTE *)"tolyndon-" ) == 0 ) {
+		else if ( StrICmp(s,(UBYTE *)"tolyndon+" ) == 0 ) {
 			type = TOLYNDONR;
 			goto doreplace;
 		}
