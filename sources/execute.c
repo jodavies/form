@@ -1051,7 +1051,8 @@ if ( AC.SwitchInArray > 0 ) {
 	  AC.MultiBracketBuf = 0;
 	}
 
-	if ( AC.SortReallocateFlag ) {
+	if ( 1 ) {
+//	if ( AC.SortReallocateFlag ) {
 		/* Reallocate the sort buffers to reduce resident set usage */
 		/* AT.SS is the same as AT.S0 here */
 		SORTING* S = AT.S0;
