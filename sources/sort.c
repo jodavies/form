@@ -756,6 +756,7 @@ MesPrint("EndSort par %d", par);
 	if ( over >= 0 ) {
 		if ( S->lPatch > 0 || S->file.handle >= 0 ) {
 			ss[over] = 0;
+MesPrint("EndSort call ComPress");
 			sSpace = ComPress(ss,&spare);
 			S->TermsLeft -= over - spare;
 			if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
@@ -1053,10 +1054,13 @@ TooLarge:
 		MUNLOCK(ErrorMessageLock);
 #endif
 		if ( S->lPatch <= 0 ) {
+MesPrint("StageSort call 1");
 			StageSort(&(S->file));
 			position = S->fPatches[S->fPatchN];
 			ss = S->sPointer;
 			if ( *ss ) {
+MesPrint("Writing patch with remaining small buffer content");
+MesPrint("position 1 %l", position);
 #ifdef WITHZLIB
 				*AR.CompressPointer = 0;
 				if ( S == AT.S0 && AR.NoCompress == 0 && AR.gzipCompress > 0 )
@@ -1073,6 +1077,7 @@ TooLarge:
 				if ( FlushOut(&position,&(S->file),1) ) {
 					retval = -1; goto RetRetval;
 				}
+MesPrint("position 1 %l", position);
 				++(S->fPatchN);
 				S->fPatches[S->fPatchN] = position;
 				UpdateMaxSize();
@@ -1424,6 +1429,10 @@ WORD Sflush(FILEHANDLE *fi)
 
 WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 {
+if (*term < 0) {
+	MesPrint("PutOut (comp %d): term --- %a", ncomp, *(term+1), term+2);
+}
+else MesPrint("PutOut (comp %d): term %a", ncomp, *term, term);
 	GETBIDENTITY
 	WORD i, *p, ret, *r, *rr, j, k, first;
 	int dobracketindex = 0;
@@ -2594,8 +2603,14 @@ twogen:
 
 WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 {
-MesPrint("cmp term1 %a", *term1, term1);
-MesPrint("cmp term2 %a", *term2, term2);
+if (*term1 < 0) {
+	MesPrint("cmp term1 --- %a", *(term1+1), term1+2);
+}
+else MesPrint("cmp term1 (%d) %a", *term1, *term1, term1);
+if (*term2 < 0) {
+	MesPrint("cmp term1 --- %a", *(term2+1), term2+2);
+}
+else MesPrint("cmp term2 (%d) %a", *term2, *term2, term2);
 	SORTING *S = AT.SS;
 	WORD *stopper1, *stopper2, *t2;
 	WORD *s1, *s2, *t1;
@@ -3784,7 +3799,9 @@ FileMake:
 			fout->POfill = fout->PObuffer;	
 			PUTZERO(fout->POposition);
 		}
+MesPrint("StageSort call 2a");
 ConMer:
+MesPrint("StageSort call 2b");
 		StageSort(fout);
 #ifdef WITHZLIB
 		if ( S == AT.S0 && AR.NoCompress == 0 && AR.gzipCompress > 0 )
@@ -4506,6 +4523,7 @@ PatCall2:;
 
 WORD StoreTerm(PHEAD WORD *term)
 {
+MesPrint("StoreTerm: term %a", *term, term);
 	GETBIDENTITY
 	SORTING *S = AT.SS;
 	WORD **ss, *lfill, j, *t;
@@ -4538,6 +4556,7 @@ WORD StoreTerm(PHEAD WORD *term)
 #endif
 		sSpace = 0;
 		if ( over > 0 ) {
+MesPrint("StoreTerm call ComPress");
 			sSpace = ComPress(ss,&RetCode);
 			S->TermsLeft -= over - RetCode;
 		}
@@ -4622,6 +4641,7 @@ VOID StageSort(FILEHANDLE *fout)
 {
 	GETIDENTITY
 	SORTING *S = AT.SS;
+MesPrint("StageSort: fPatchN %d (max %d)", S->fPatchN, S->MaxFpatches);
 	if ( S->fPatchN >= S->MaxFpatches ) {
 		POSITION position;
 		if ( S != AT.S0 ) {
