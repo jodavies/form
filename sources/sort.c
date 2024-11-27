@@ -703,6 +703,7 @@ WORD NewSort(PHEAD0)
 
 LONG EndSort(PHEAD WORD *buffer, int par)
 {
+MesPrint("EndSort par %d", par);
   GETBIDENTITY
   SORTING *S = AT.SS;
   WORD j, **ss, *to, *t;
@@ -2593,6 +2594,8 @@ twogen:
 
 WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 {
+MesPrint("cmp term1 %a", *term1, term1);
+MesPrint("cmp term2 %a", *term2, term2);
 	SORTING *S = AT.SS;
 	WORD *stopper1, *stopper2, *t2;
 	WORD *s1, *s2, *t1;
@@ -3714,6 +3717,7 @@ VOID GarbHand(VOID)
 
 WORD MergePatches(WORD par)
 {
+MesPrint("MergePatches par %d", par);
 	GETIDENTITY
 	SORTING *S = AT.SS;
 	WORD **poin, **poin2, ul, k, i, im, *m1;
@@ -3999,7 +4003,7 @@ ConMer:
 /*
 				Now move the remaining part 'back'
 */
-			    m3 = copybuf;
+				m3 = copybuf;
 				m1 = copytop;
 				while ( m1 > m2 ) *--m3 = *--m1;
 				m2 = m3;
@@ -4040,21 +4044,24 @@ ConMer:
 		goto EndOfAll;
 	}
 	else if ( S->lPatch > 0 ) {
-
+MesPrint("lPatches: %d here", S->lPatch);
 		/* More than one patch. Construct the tree. */
 
 		lpat = 1;
 		do { lpat *= 2; } while ( lpat < S->lPatch );
 		mpat = ( lpat >> 1 ) - 1;
 		k = lpat - S->lPatch;
+MesPrint("lpat %d mpat %d k %d", lpat, mpat, k);
 
 		/* k is the number of empty places in the tree. they will
 		   be at the even positions from 2 to 2*k */
 
 		for ( i = 1; i < lpat; i++ ) {
+MesPrint("loop1 i %d", i);
 			S->tree[i] = -1;
 		}
 		for ( i = 1; i <= k; i++ ) {
+MesPrint("loop2 i %d", i);
 			im = ( i * 2 ) - 1;
 			poin[im] = S->Patches[i-1];
 			poin2[im] = poin[im] + *(poin[im]);
@@ -4064,6 +4071,7 @@ ConMer:
 			poin[im-1] = poin2[im-1] = 0;
 		}
 		for ( i = (k*2)+1; i <= lpat; i++ ) {
+MesPrint("loop3 i %d", i);
 			S->used[i-k] = i;
 			S->ktoi[i] = i-k-1;
 			poin[i] = S->Patches[i-k-1];
@@ -4103,6 +4111,7 @@ OneTerm:
 */
 		while ( i >>= 1 ) {
 			if ( S->tree[i] > 0 ) {
+MesPrint("poin %l %l", poin[S->tree[i]]-*(S->Patches), poin[k]-*(S->Patches));
 				if ( ( c = CompareTerms(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 					S->tree[i] is the smaller. Exchange and go on.
@@ -4841,8 +4850,10 @@ void CleanUpSort(int num)
 				M_free(S->inPatches, "CleanUpSort: inPatches");
 				M_free(S->tree, "CleanUpSort: tree");
 				M_free(S->used, "CleanUpSort: used");
+#ifdef WITHZLIB
 				M_free(S->fpcompressed, "CleanUpSort: fpcompressed");
 				M_free(S->fpincompressed, "CleanUpSort: fpincompressed");
+#endif
 				M_free(S->ktoi, "CleanUpSort: ktoi");
 				M_free(S->lBuffer, "CleanUpSort: lBuffer+sBuffer");
 				M_free(S->file.PObuffer, "CleanUpSort: PObuffer");
