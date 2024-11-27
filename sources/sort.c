@@ -1327,6 +1327,13 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 	UNLOCK(file->pthreadslock);
 #endif
 #endif
+MesPrint("PutIn %d", buffer[0]);
+MesPrint("PutIn %d", buffer[1]);
+MesPrint("PutIn %d", buffer[2]);
+MesPrint("PutIn %d", buffer[3]);
+MesPrint("PutIn %d", buffer[4]);
+MesPrint("PutIn %d", buffer[5]);
+MesPrint("PutIn ret");
 	return(RetCode);
 }
 
