@@ -3316,7 +3316,8 @@ restart:;
 		   What seems to happen is we return from here, goto Finalize, and
 		   end up in LoadReadjusted again without the threads having a
 		   chance to update their busy status. Then we end up here again... */
-		sleep(0.1);
+//		sleep(0.1);
+		sched_yield();
 		return(1); /* Wait a bit.... */
 	}
 	return(0);
