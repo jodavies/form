@@ -3060,7 +3060,7 @@ Finalize:;
 				switch ( threadbuckets[j]->free ) {
 					case BUCKETFREE:
 						thr = threadbuckets[j];
-						if ( !endofinput ) goto NextBucket;
+						if ( !endofinput ) { goto NextBucket; }
 						thr->free = BUCKETATEND;
 						break;
 					case BUCKETCOMINGFREE:
@@ -3108,7 +3108,7 @@ NextBucket:;
 		for ( id = 1; id <= numberofworkers; id++ ) {
 			AB[id]->T.LoadBalancing = 1;
 		}
-		if ( LoadReadjusted() ) goto Finalize;
+		if ( LoadReadjusted() ) { goto Finalize; }
 		for ( id = 1; id <= numberofworkers; id++ ) {
 			AB[id]->T.LoadBalancing = 0;
 		}
@@ -3309,8 +3309,16 @@ restart:;
 		}
 		goto intercepted;
 	}
+/* This has always been commented. Indeed no lock is held here. */
 /*	UNLOCK(thr->lock); */
-	if ( numbusy > 0 ) return(1); /* Wait a bit.... */
+	if ( numbusy > 0 ) {
+		/* JD: this avoids large runtimes for tform tests under valgrind.
+		   What seems to happen is we return from here, goto Finalize, and
+		   end up in LoadReadjusted again without the threads having a
+		   chance to update their busy status. Then we end up here again... */
+		sleep(0.1);
+		return(1); /* Wait a bit.... */
+	}
 	return(0);
 intercepted:;
 /*
@@ -3319,8 +3327,9 @@ intercepted:;
 	2: find the first untreated term.
 	3: put the terms in the free buckets.
 
-	Remember: we have the lock to avoid interference from the thread
-	that is being robbed.
+	Remember: we still have the lock to avoid interference from the thread
+	that is being robbed. We were holding it and then jumped here with
+	goto intercepted.
 */
 	numinput = thr->firstterm + thr->usenum;
 	nperbucket = numtogo / numfree;
