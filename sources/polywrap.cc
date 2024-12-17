@@ -123,6 +123,13 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool is_fun_arg, string mes
  */
 WORD *poly_gcd(PHEAD WORD *a, WORD *b, WORD fit) {
 
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		WORD *ret = flint_gcd(BHEAD a, b, fit);
+		return ret;
+	}
+#endif
+
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_gcd" << endl;
 #endif
@@ -423,6 +430,13 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 */
 WORD *poly_div(PHEAD WORD *a, WORD *b, WORD fit) {
 
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		WORD *ret = flint_div(BHEAD a, b, fit);
+		return ret;
+	}
+#endif
+
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_div" << endl;
 #endif
@@ -443,6 +457,13 @@ WORD *poly_div(PHEAD WORD *a, WORD *b, WORD fit) {
 	terminated sequence of terms (or just zero).
 */
 WORD *poly_rem(PHEAD WORD *a, WORD *b, WORD fit) {
+
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		WORD *ret = flint_rem(BHEAD a, b, fit);
+		return ret;
+	}
+#endif
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_rem" << endl;
@@ -606,7 +627,14 @@ void poly_sort(PHEAD WORD *a) {
  *   - Calls poly::operators and polygcd::gcd
  */
 WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
- 
+
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		WORD *ret = flint_ratfun_add(BHEAD t1, t2);
+		return ret;
+	}
+#endif
+
 	if ( AR.PolyFunExp == 1 ) return PolyRatFunSpecial(BHEAD t1, t2);
 
 #ifdef DEBUG
@@ -725,6 +753,13 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  *   - Calls poly::operators and polygcd::gcd
  */
 int poly_ratfun_normalize (PHEAD WORD *term) {
+
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		flint_ratfun_normalize(BHEAD term);
+		return 0;
+	}
+#endif
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_ratfun_normalize" << endl;
@@ -1059,6 +1094,13 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 	cout << "*** [" << thetime() << "]  CALL : poly_factorize_argument" << endl;
 #endif
 
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		flint_factorize_argument(BHEAD argin, argout);
+		return 0;
+	}
+#endif
+
 	poly_factorize(BHEAD argin,argout,true,true);
 	return 0;
 }
@@ -1084,6 +1126,12 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_factorize_dollar" << endl;
+#endif
+
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		return flint_factorize_dollar(BHEAD argin);
+	}
 #endif
 
 	return poly_factorize(BHEAD argin,NULL,false,false);
@@ -1673,6 +1721,12 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 
 WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		return flint_inverse(BHEAD arga, argb);
+	}
+#endif
+
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_inverse" << endl;
 #endif
@@ -1817,6 +1871,12 @@ WORD *poly_mul(PHEAD WORD *a, WORD *b) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_mul" << endl;
+#endif
+
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		return flint_mul(BHEAD a, b);
+	}
 #endif
 
 	// Extract variables
