@@ -350,6 +350,27 @@ AS_IF([test "x$with_zlib" != xno],
 		AC_MSG_NOTICE([zlib is not available])
 		with_zlib=no])])
 
+# Check for flint
+AC_ARG_WITH([flint],
+	[AS_HELP_STRING([--with-flint@<:@=DIR@:>@],
+		[use flint for polynomial arithmetic (installed in prefix DIR) @<:@default=check@:>@])],
+	[AS_IF([test "x$withval" != xyes && test "x$withval" != xno && test "x$withval" != xcheck],
+		[with_flint=yes
+		CPPFLAGS="$CPPFLAGS -I$withval/include"
+		LDFLAGS="$LDFLAGS -L$withval/lib"])],
+	[with_flint=check])
+AS_IF([test "x$with_flint" != xno],
+	[flag=:
+	AS_IF([$flag], [AC_CHECK_HEADER([flint/flint.h], [], [flag=false])])
+	AS_IF([$flag], [AC_CHECK_LIB([flint], [fmpz_mpoly_init], [LIBS="-lflint $LIBS"], [flag=false])])
+	AS_IF([$flag],
+		[AC_DEFINE(WITHZLIB, [], [Define to use flint for polynomial arithmetic.])
+		with_flint=yes],
+		[AS_IF([test "x$with_flint" = xyes],
+			[AC_MSG_FAILURE([test for flint failed. Give --without-flint if you want to compile without flint])])
+		AC_MSG_NOTICE([flint is not available])
+		with_flint=no])])
+
 # enable-scalar/threaded/parform/debug/float
 AC_ARG_ENABLE([scalar],
 	[AS_HELP_STRING([--enable-scalar],
@@ -1061,6 +1082,10 @@ if test "x$with_mpfr" = xyes; then
 fi
 if test "x$with_zlib" = xyes; then
 	echo "    zlib"
+	atleastone=yes
+fi
+if test "x$with_flint" = xyes; then
+	echo "    flint"
 	atleastone=yes
 fi
 if test $atleastone = no; then
