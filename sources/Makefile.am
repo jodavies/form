@@ -16,6 +16,7 @@ SRCBASE = \
 	extcmd.c \
 	factor.c \
 	findpat.c \
+	flintwrap.cc \
 	form3.h \
 	fsizes.h \
 	ftypes.h \
