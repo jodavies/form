@@ -1641,6 +1641,8 @@ extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
 extern void  poly_free_poly_vars(PHEAD const char *);
 
+extern int   flint_ratfun_normalize(PHEAD WORD *);
+
 extern VOID optimize_print_code (int);
 
 #ifdef WITHPTHREADS
