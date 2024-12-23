@@ -51,7 +51,11 @@ WORD flint_fmpz_get_form(fmpz_t z, WORD *a) {
 		a[2*i] = (WORD)(limb_data[i] & 0xFFFFFFFF);
 		na++;
 		a[2*i+1] = (WORD)(limb_data[i] >> BITSINWORD);
-		if ( a[2*i+1] != 0 ) { na++; }
+		if ( a[2*i+1] != 0 || i < (nlimbs-1) ) {
+			// The final limb might fit in a single 32bit WORD. Only
+			// increment na if the final WORD is non zero.
+			na++;
+		}
 	}
 
 	// And now put the sign in the number of limbs
@@ -497,7 +501,7 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 	out += flint_poly_to_argument(out, den1, var_map, ctx);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
-
+	AT.WorkPointer = out;
 
 	fmpz_mpoly_clear(num1, ctx);
 	fmpz_mpoly_clear(den1, ctx);
