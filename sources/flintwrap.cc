@@ -14,19 +14,29 @@ extern "C" {
 #include <map>
 #include <cassert>
 
+
 // The bits of std that are needed:
 using std::cout;
 using std::endl;
 using std::map;
 using std::vector;
 
-// Prototypes
+
+// Function prototypes which are not already in declare.h
 WORD flint_fmpz_get_form(fmpz_t, WORD *);
 void flint_fmpz_set_form(fmpz_t, UWORD *, WORD);
-map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &, bool, bool);
-void flint_mpoly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const map<unsigned,unsigned>, const fmpz_mpoly_ctx_t);
-ULONG flint_mpoly_to_argument(WORD *, ULONG, const fmpz_mpoly_t, const map<unsigned,unsigned>, const fmpz_mpoly_ctx_t);
-int flint_ratfun_normalize(PHEAD WORD *);
+
+map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &, const bool, const bool);
+
+void flint_mpoly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const map<unsigned,unsigned> &, const fmpz_mpoly_ctx_t);
+ULONG flint_mpoly_to_argument(WORD *, ULONG, const fmpz_mpoly_t, const map<unsigned,unsigned> &, const fmpz_mpoly_ctx_t);
+
+void flint_ratfun_add_mpoly(PHEAD WORD *, WORD *, WORD *, const map<unsigned,unsigned> &);
+void flint_ratfun_add_poly(PHEAD WORD *, WORD *, WORD *, const map<unsigned,unsigned> &);
+
+void flint_ratfun_normalize_mpoly(PHEAD WORD *, const map<unsigned,unsigned> &);
+void flint_ratfun_normalize_poly(PHEAD WORD *, const map<unsigned,unsigned> &);
+
 void flint_ratfun_read(const WORD *, fmpz_mpoly_t, fmpz_mpoly_t, const map<unsigned,unsigned> &, fmpz_mpoly_ctx_t);
 
 /*
@@ -202,7 +212,7 @@ map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &es, const bool
 	#[ flint_mpoly_from_argument :
 */
 // TODO with arghead
-void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args, const map<unsigned,unsigned> var_map, const fmpz_mpoly_ctx_t ctx) {
+void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args, const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
 
 	// First check for "fast notation" arguments:
 	if ( *args == -SNUMBER ) {
@@ -337,7 +347,7 @@ void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WO
 	#[ flint_mpoly_to_argument :
 */
 // TODO with arghead
-ULONG flint_mpoly_to_argument(WORD *out, ULONG prev_size, const fmpz_mpoly_t poly, const map<unsigned,unsigned> var_map, const fmpz_mpoly_ctx_t ctx) {
+ULONG flint_mpoly_to_argument(WORD *out, ULONG prev_size, const fmpz_mpoly_t poly, const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
 
 	fmpz_t coeff;
 	fmpz_init(coeff);
@@ -438,8 +448,16 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 	}
 	const map<unsigned,unsigned> var_map = flint_get_variables(e, true, true);
 
+	flint_ratfun_add_mpoly(BHEAD t1, t2, oldworkpointer, var_map);
 
-	// Now we know how many variables appear in all polyratfuns. Prepare flint context.
+	return oldworkpointer;
+}
+/*
+	#] flint_ratfun_add :
+	#[ flint_ratfun_add_mpoly :
+*/
+void flint_ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsigned,unsigned> &var_map) {
+
 	fmpz_mpoly_ctx_t ctx;
 	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
 
@@ -481,7 +499,6 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 //	fmpz_clear(leading_coeff);
 
 	// Result in FORM notation:
-	WORD* out = oldworkpointer;
 	*out++ = AR.PolyFun;
 	WORD* args_size = out++;
 	WORD* args_flag = out++;
@@ -495,18 +512,21 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 	AT.WorkPointer = out;
 
-
 	fmpz_mpoly_clear(num1, ctx);
 	fmpz_mpoly_clear(den1, ctx);
 	fmpz_mpoly_clear(num2, ctx);
 	fmpz_mpoly_clear(den2, ctx);
 	fmpz_mpoly_clear(gcd, ctx);
 	fmpz_mpoly_ctx_clear(ctx);
-
-	return oldworkpointer;
 }
 /*
-	#] flint_ratfun_add :
+	#] flint_ratfun_add_mpoly :
+	#[ flint_ratfun_add_poly :
+*/
+//void flint_ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsigned,unsigned> &var_map) {
+//}
+/*
+	#] flint_ratfun_add_poly :
 	#[ flint_ratfun_normalize :
 */
 int flint_ratfun_normalize(PHEAD WORD *term) {
@@ -559,8 +579,28 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 	}
 	const map<unsigned,unsigned> var_map = flint_get_variables(e, true, true);
 
+	flint_ratfun_normalize_mpoly(BHEAD term, var_map);
 
-	// Now we know how many variables appear in all polyratfuns. Prepare flint context.
+
+	// Undo renaming of single-argument PolyFun
+	const WORD *new_tstop = term + *term - ABS((term + *term)[-1]);
+	for (WORD *t=term+1; t<new_tstop; t+=t[1]) {
+		if (*t == TMPPOLYFUN ) *t = AR.PolyFun;
+	}
+
+	return 0;
+}
+/*
+	#] flint_ratfun_normalize :
+	#[ flint_ratfun_normalize_mpoly :
+*/
+void flint_ratfun_normalize_mpoly(PHEAD WORD *term, const map<unsigned,unsigned> &var_map) {
+
+	// The length of the coefficient
+	const int ncoeff = (term + *term)[-1];
+	// The end of the term data, before the coefficient:
+	const WORD *tstop = term + *term - ABS(ncoeff);
+
 	fmpz_mpoly_ctx_t ctx;
 	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
 
@@ -665,22 +705,18 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 
 	*term_size = out - term_size;
 
-
 	fmpz_mpoly_clear(num1, ctx);
 	fmpz_mpoly_clear(den1, ctx);
 	fmpz_mpoly_ctx_clear(ctx);
-
-
-	// Undo renaming of single-argument PolyFun
-	const WORD *new_tstop = term + *term - ABS((term + *term)[-1]);
-	for (WORD *t=term+1; t<new_tstop; t+=t[1]) {
-		if (*t == TMPPOLYFUN ) *t = AR.PolyFun;
-	}
-
-	return 0;
 }
 /*
-	#] flint_ratfun_normalize :
+	#] flint_ratfun_normalize_mpoly :
+	#[ flint_ratfun_normalize_poly :
+*/
+//void flint_ratfun_normalize_mpoly(PHEAD WORD *term, const map<unsigned,unsigned> &var_map) {
+//}
+/*
+	#] flint_ratfun_normalize_poly :
 	#[ flint_ratfun_read :
 */
 void flint_ratfun_read(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den, const map<unsigned,unsigned> &var_map, fmpz_mpoly_ctx_t ctx) {
