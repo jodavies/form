@@ -24,8 +24,8 @@ using std::vector;
 WORD flint_fmpz_get_form(fmpz_t, WORD *);
 void flint_fmpz_set_form(fmpz_t, UWORD *, WORD);
 map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &, bool, bool);
-void flint_poly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const map<unsigned,unsigned>, fmpz_mpoly_ctx_t);
-ULONG flint_poly_to_argument(WORD *, fmpz_mpoly_t, const map<unsigned,unsigned>, fmpz_mpoly_ctx_t);
+void flint_mpoly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const map<unsigned,unsigned>, const fmpz_mpoly_ctx_t);
+ULONG flint_mpoly_to_argument(WORD *, ULONG, const fmpz_mpoly_t, const map<unsigned,unsigned>, const fmpz_mpoly_ctx_t);
 int flint_ratfun_normalize(PHEAD WORD *);
 void flint_ratfun_read(const WORD *, fmpz_mpoly_t, fmpz_mpoly_t, const map<unsigned,unsigned> &, fmpz_mpoly_ctx_t);
 
@@ -135,7 +135,7 @@ void flint_fmpz_set_form(fmpz_t z, UWORD *a, WORD na) {
 	#[ flint_get_variables :
 */
 // TODO sort vars
-map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &es, bool with_arghead, bool sort_vars) {
+map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &es, const bool with_arghead, const bool sort_vars) {
 	DUMMYUSE(sort_vars);
 
 	// This does the same job as poly::get_variables. We need to get
@@ -199,10 +199,10 @@ map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &es, bool with_
 }
 /*
 	#] flint_get_variables :
-	#[ flint_poly_from_argument :
+	#[ flint_mpoly_from_argument :
 */
 // TODO with arghead
-void flint_poly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args, const map<unsigned,unsigned> var_map, fmpz_mpoly_ctx_t ctx) {
+void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args, const map<unsigned,unsigned> var_map, const fmpz_mpoly_ctx_t ctx) {
 
 	// First check for "fast notation" arguments:
 	if ( *args == -SNUMBER ) {
@@ -311,7 +311,7 @@ void flint_poly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WOR
 		fmpz_mul(coeff, coeff, den_coeff);
 
 		// Shift by neg_exponents
-		for (int i = 0; i < var_map.size(); i++) {
+		for (unsigned i = 0; i < var_map.size(); i++) {
 			exponents[i] += neg_exponents[i];
 		}
 
@@ -333,11 +333,11 @@ void flint_poly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WOR
 	fmpz_clear(den_coeff);
 }
 /*
-	#] flint_poly_from_argument :
-	#[ flint_poly_to_argument :
+	#] flint_mpoly_from_argument :
+	#[ flint_mpoly_to_argument :
 */
 // TODO with arghead
-ULONG flint_poly_to_argument(WORD *out, fmpz_mpoly_t poly, const map<unsigned,unsigned> var_map, fmpz_mpoly_ctx_t ctx) {
+ULONG flint_mpoly_to_argument(WORD *out, ULONG prev_size, const fmpz_mpoly_t poly, const map<unsigned,unsigned> var_map, const fmpz_mpoly_ctx_t ctx) {
 
 	fmpz_t coeff;
 	fmpz_init(coeff);
@@ -388,42 +388,33 @@ ULONG flint_poly_to_argument(WORD *out, fmpz_mpoly_t poly, const map<unsigned,un
 			}
 		}
 
-//		cout << "   term: ";
-//		fmpz_print(coeff);
-//		cout << " : " << exponents[0] << " " << exponents[1] << endl;
-		int size = flint_fmpz_get_form(coeff, out);
-//		cout << "size: " << size << endl;
-		out += ABS(size);
+		int coeff_size = flint_fmpz_get_form(coeff, out);
+		out += ABS(coeff_size);
 		*out++ = 1; // the denominator
-		for (int i = 0; i < ABS(size)-1; i++) {
+		for (int i = 0; i < ABS(coeff_size)-1; i++) {
 			*out++ = 0;
 		}
-		*out = 2*ABS(size) + 1; // the size of the coefficient
-		if ( size < 0 ) { *out = -(*out); }
+		*out = 2*ABS(coeff_size) + 1; // the size of the coefficient
+		if ( coeff_size < 0 ) { *out = -(*out); }
 		out++;
 
 		*term_size = out - term_size;
 
-//		cout << "term: ";
-//		for (int i = 0; i < *term_size; i++) {
-//			cout << term_size[i] << " ";
-//		}
-//		cout << endl;
+		if ( sizeof(WORD)*(prev_size + out - arg_size) >= (size_t)AM.MaxTer ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("flint_mpoly_to_argument: output exceeds MaxTermSize");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
 
 	}
 
 	*arg_size = out - arg_size;
 
-//	cout << "argument: ";
-//	for (int i = 0; i < *arg_size; i++) {
-//		cout << arg_size[i] << " ";
-//	}
-//	cout << endl;
-
 	return *arg_size;
 }
 /*
-	#] flint_poly_to_argument :
+	#] flint_mpoly_to_argument :
 	#[ flint_ratfun_add :
 */
 WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
@@ -445,14 +436,15 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 		e.push_back(t);
 		NEXTARG(t);
 	}
-	map<unsigned,unsigned> var_map = flint_get_variables(e, true, true);
+	const map<unsigned,unsigned> var_map = flint_get_variables(e, true, true);
 
 
 	// Now we know how many variables appear in all polyratfuns. Prepare flint context.
 	fmpz_mpoly_ctx_t ctx;
 	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
 
-	fmpz_mpoly_t num1, den1, num2, den2;
+	fmpz_mpoly_t gcd, num1, den1, num2, den2;
+	fmpz_mpoly_init(gcd, ctx);
 	fmpz_mpoly_init(num1, ctx);
 	fmpz_mpoly_init(den1, ctx);
 	fmpz_mpoly_init(num2, ctx);
@@ -461,32 +453,32 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 	flint_ratfun_read(t1, num1, den1, var_map, ctx);
 	flint_ratfun_read(t2, num2, den2, var_map, ctx);
 
-	// if den1 != den2
-	fmpz_mpoly_t gcd;
-	fmpz_mpoly_init(gcd, ctx);
-	fmpz_mpoly_gcd_cofactors(gcd, den1, den2, den1, den2, ctx);
+	if ( fmpz_mpoly_cmp(den1, den2, ctx) != 0 ) {
+		fmpz_mpoly_gcd_cofactors(gcd, den1, den2, den1, den2, ctx);
 
-	fmpz_mpoly_mul(num1, num1, den2, ctx);
-	fmpz_mpoly_mul(num2, num2, den1, ctx);
+		fmpz_mpoly_mul(num1, num1, den2, ctx);
+		fmpz_mpoly_mul(num2, num2, den1, ctx);
 
-	fmpz_mpoly_add(num1, num1, num2, ctx);
-	fmpz_mpoly_mul(den1, den1, den2, ctx);
-	fmpz_mpoly_mul(den1, den1, gcd,  ctx);
+		fmpz_mpoly_add(num1, num1, num2, ctx);
+		fmpz_mpoly_mul(den1, den1, den2, ctx);
+		fmpz_mpoly_mul(den1, den1, gcd,  ctx);
+	}
+	else {
+		fmpz_mpoly_add(num1, num1, num2, ctx);
+	}
 
+	// Finally divide out any common factors between the resulting num1, den1:
 	fmpz_mpoly_gcd_cofactors(gcd, num1, den1, num1, den1, ctx);
 
-	// if den1 == den2, fmpz_mpoly_cmp == 0
-
-	// Fix sign
-	fmpz_t leading_coeff;
-	fmpz_init(leading_coeff);
-	fmpz_mpoly_get_term_coeff_fmpz(leading_coeff, den1, 0, ctx);
-	if ( fmpz_sgn(leading_coeff) == -1 ) {
-		fmpz_mpoly_neg(num1, num1, ctx);
-		fmpz_mpoly_neg(den1, den1, ctx);
-	}
-	fmpz_clear(leading_coeff);
-
+	// Fix sign: the leading denominator term should have a positive coeff.
+//	fmpz_t leading_coeff;
+//	fmpz_init(leading_coeff);
+//	fmpz_mpoly_get_term_coeff_fmpz(leading_coeff, den1, 0, ctx);
+//	if ( fmpz_sgn(leading_coeff) == -1 ) {
+//		fmpz_mpoly_neg(num1, num1, ctx);
+//		fmpz_mpoly_neg(den1, den1, ctx);
+//	}
+//	fmpz_clear(leading_coeff);
 
 	// Result in FORM notation:
 	WORD* out = oldworkpointer;
@@ -497,11 +489,12 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 	*args_flag = 0; // clean prf
 	FILLFUN3(out); // TODO ?
 
-	out += flint_poly_to_argument(out, num1, var_map, ctx);
-	out += flint_poly_to_argument(out, den1, var_map, ctx);
+	out += flint_mpoly_to_argument(out, out-args_size, num1, var_map, ctx);
+	out += flint_mpoly_to_argument(out, out-args_size, den1, var_map, ctx);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 	AT.WorkPointer = out;
+
 
 	fmpz_mpoly_clear(num1, ctx);
 	fmpz_mpoly_clear(den1, ctx);
@@ -564,7 +557,7 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 			}
 		}
 	}
-	map<unsigned,unsigned> var_map = flint_get_variables(e, true, true);
+	const map<unsigned,unsigned> var_map = flint_get_variables(e, true, true);
 
 
 	// Now we know how many variables appear in all polyratfuns. Prepare flint context.
@@ -653,10 +646,18 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 	WORD* args_flag = out++;
 	*args_flag &= ~MUSTCLEANPRF;
 
-	out += flint_poly_to_argument(out, num1, var_map, ctx);
-	out += flint_poly_to_argument(out, den1, var_map, ctx);
+	out += flint_mpoly_to_argument(out, out-args_size, num1, var_map, ctx);
+	out += flint_mpoly_to_argument(out, out-args_size, den1, var_map, ctx);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
+
+	// +3 for the coefficient of 1/1, which is added after the check
+	if ( sizeof(WORD)*(*args_size+3) >= (size_t)AM.MaxTer ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint_ratfun_normalize: output exceeds MaxTermSize");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	*out++ = 1;
 	*out++ = 1;
@@ -708,12 +709,12 @@ void flint_ratfun_read(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den, const 
 	fmpz_mpoly_init(den_den, ctx);
 
 	// Read the numerator
-	flint_poly_from_argument(num, den_num, a, var_map, ctx);
+	flint_mpoly_from_argument(num, den_num, a, var_map, ctx);
 
 	NEXTARG(a);
 	if ( a < arg_stop ) {
 		// Read the denominator
-		flint_poly_from_argument(den, den_den, a, var_map, ctx);
+		flint_mpoly_from_argument(den, den_den, a, var_map, ctx);
 		NEXTARG(a);
 	}
 	else {
