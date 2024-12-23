@@ -611,6 +611,10 @@ void poly_sort(PHEAD WORD *a) {
  */
 WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  
+	if ( AC.FlintPolyFlag ) {
+		return flint_ratfun_add(BHEAD t1, t2);
+	}
+
 	if ( AR.PolyFunExp == 1 ) return PolyRatFunSpecial(BHEAD t1, t2);
 
 #ifdef DEBUG
@@ -732,6 +736,11 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  *   - Calls poly::operators and polygcd::gcd
  */
 int poly_ratfun_normalize (PHEAD WORD *term) {
+
+	if ( AC.FlintPolyFlag ) {
+		flint_ratfun_normalize(BHEAD term);
+		return 0;
+	}
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_ratfun_normalize" << endl;

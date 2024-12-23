@@ -138,6 +138,7 @@ static KEYWORDV onoffoptions[] = {
 	,{"wtimestats",     &(AC.WTimeStatsFlag),  1,  0}
 	,{"sortreallocate",	&(AC.SortReallocateFlag), 1, 0}
 	,{"backtrace",		&(AC.PrintBacktraceFlag), 1, 0}
+	,{"flint",			&(AC.FlintPolyFlag), 1, 0}
 };
 
 static WORD one = 1;
