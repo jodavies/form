@@ -33,6 +33,7 @@ void flint_mpoly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const m
 ULONG flint_mpoly_to_argument(WORD *, ULONG, const fmpz_mpoly_t, const map<unsigned,unsigned> &, const fmpz_mpoly_ctx_t);
 
 void flint_poly_from_argument(fmpz_poly_t, fmpz_poly_t, const WORD *, const map<unsigned,unsigned> &);
+ULONG flint_poly_to_argument(WORD *, ULONG, const fmpz_poly_t, const map<unsigned,unsigned> &);
 
 void flint_ratfun_add_mpoly(PHEAD WORD *, WORD *, WORD *, const map<unsigned,unsigned> &);
 void flint_ratfun_add_poly(PHEAD WORD *, WORD *, WORD *, const map<unsigned,unsigned> &);
@@ -580,38 +581,43 @@ ULONG flint_poly_to_argument(WORD *out, ULONG prev_size, const fmpz_poly_t poly,
 
 	// In reverse, since we want a "highfirst" output
 	for (LONG i = n_terms-1; i >= 0; i--) {
-		WORD* term_size = out++;
 		fmpz_poly_get_coeff_fmpz(coeff, poly, i);
 
-		if ( !fmpz_is_zero(coeff) && i > 0 ) {
-			*out++ = SYMBOL;
-			*out++ = 4; // The symbol array size, it is univariate
-			// TODO this seems bad
-			for (auto x: var_map) {
-				if ( x.second == 0 ) {
-					*out++ = x.first;
+		// fmpz_poly is dense, there might be many zero coefficients:
+		if ( !fmpz_is_zero(coeff) ) {
+			WORD* term_size = out++;
+
+			if ( i > 0 ) {
+				*out++ = SYMBOL;
+				*out++ = 4; // The symbol array size, it is univariate
+				// TODO this seems bad
+				for (auto x: var_map) {
+					if ( x.second == 0 ) {
+						*out++ = x.first;
+					}
 				}
+				*out++ = i;
 			}
-			*out++ = i;
-		}
 
-		int coeff_size = flint_fmpz_get_form(coeff, out);
-		out += ABS(coeff_size);
-		*out++ = 1; // the denominator
-		for (int i = 0; i < ABS(coeff_size)-1; i++) {
-			*out++ = 0;
-		}
-		*out = 2*ABS(coeff_size) + 1; // the size of the coefficient
-		if ( coeff_size < 0 ) { *out = -(*out); }
-		out++;
+			int coeff_size = flint_fmpz_get_form(coeff, out);
+			out += ABS(coeff_size);
+			*out++ = 1; // the denominator
+			for (int i = 0; i < ABS(coeff_size)-1; i++) {
+				*out++ = 0;
+			}
+			*out = 2*ABS(coeff_size) + 1; // the size of the coefficient
+			if ( coeff_size < 0 ) { *out = -(*out); }
+			out++;
 
-		*term_size = out - term_size;
+			*term_size = out - term_size;
 
-		if ( sizeof(WORD)*(prev_size + out - arg_size) >= (size_t)AM.MaxTer ) {
-			MLOCK(ErrorMessageLock);
-			MesPrint("flint_poly_to_argument: output exceeds MaxTermSize");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(-1);
+			if ( sizeof(WORD)*(prev_size + out - arg_size) >= (size_t)AM.MaxTer ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("flint_poly_to_argument: output exceeds MaxTermSize");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+
 		}
 
 	}
