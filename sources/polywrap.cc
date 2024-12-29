@@ -612,7 +612,8 @@ void poly_sort(PHEAD WORD *a) {
 WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  
 	if ( AC.FlintPolyFlag ) {
-		return flint_ratfun_add(BHEAD t1, t2);
+		WORD *ret = flint_ratfun_add(BHEAD t1, t2);
+		return ret;
 	}
 
 	if ( AR.PolyFunExp == 1 ) return PolyRatFunSpecial(BHEAD t1, t2);
