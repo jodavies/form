@@ -605,16 +605,18 @@ unsigned flint::poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const 
 		const WORD* symbol_stop = term_stop - ABS(coeff_size);
 		const WORD* t = term;
 
-		t++;
+		t++; // skip over the total size entry
 		if (t == symbol_stop) {
 			// Just a number, no symbols
 		}
 		else {
 			t++; // this entry is SYMBOL
-			t++; // this is the symbol code
+			t++; // this entry is the size of the symbol array
+			t++; // this is the first (and only) symbol code
 			if ( *t < 0 ) {
 				neg_exponent = MaX(neg_exponent, (unsigned long)(-(*t)) );
 			}
+			t++;
 		}
 
 		// Now check for a denominator in the coefficient:
@@ -660,9 +662,11 @@ unsigned flint::poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const 
 		}
 		else {
 			t++; // this entry is SYMBOL
-			t++; // this entry just has the size of the symbol array, but we can use symbol_stop
-			exponent = *(t+1);
+			t++; // this entry is the size of the symbol array
+			t++; // this is the first (and only) symbol code
+			exponent = *t++;
 		}
+
 		// Now read the coefficient
 		flint::fmpz_set_form(coeff, (UWORD*)symbol_stop, coeff_size/2);
 
@@ -720,6 +724,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 
 	const LONG n_terms = fmpz_poly_length(poly);
 
+	// The poly is zero
 	if ( n_terms == 0 ) {
 		if ( with_arghead ) {
 			*out++ = -SNUMBER;
@@ -729,6 +734,19 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 		else {
 			*out = 0;
 			return 1;
+		}
+	}
+
+	// The poly is constant, use fast notation if the coefficient is small enough
+	if ( with_arghead && n_terms == 1 ) {
+		if ( fmpz_fits_si(fmpz_poly_get_coeff_ptr(poly, 0)) ) {
+			long fast_coeff = fmpz_poly_get_coeff_si(poly, 0);
+			// While ">=", could work here, FORM does not use fast notation for INT_MIN
+			if ( fast_coeff > INT_MIN && fast_coeff <= INT_MAX ) {
+				*out++ = -SNUMBER;
+				*out++ = (WORD)fast_coeff;
+				return 2;
+			}
 		}
 	}
 
@@ -760,6 +778,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 	// In reverse, since we want a "highfirst" output
 	for (LONG i = n_terms-1; i >= 0; i--) {
 
+		// TODO use ptr to read coeff directly with no copy?
 		fmpz_poly_get_coeff_fmpz(coeff, poly, i);
 
 		// fmpz_poly is dense, there might be many zero coefficients:
@@ -1034,9 +1053,8 @@ void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const map<unsigned,unsigned
 		}
 	}
 
-	// Fix sign: leading term of den should be positive. Maybe not necessary,
-	// does gcd_cofactors already arrange for this somehow?
-	// Fix sign
+	// Fix sign: leading term of den should be positive.
+	// Maybe not necessary, does gcd_cofactors already arrange for this somehow?
 //	fmpz_t leading_coeff;
 //	fmpz_init(leading_coeff);
 //	fmpz_mpoly_get_term_coeff_fmpz(leading_coeff, den1, 0, ctx);
@@ -1155,17 +1173,12 @@ void flint::ratfun_normalize_poly(PHEAD WORD *term, const map<unsigned,unsigned>
 		}
 	}
 
-	// Fix sign: leading term of den should be positive. Maybe not necessary,
-	// does gcd_cofactors already arrange for this somehow?
-	// Fix sign
-//	fmpz_t leading_coeff;
-//	fmpz_init(leading_coeff);
-//	fmpz_mpoly_get_term_coeff_fmpz(leading_coeff, den1, 0, ctx);
-//	if ( fmpz_sgn(leading_coeff) == -1 ) {
-//		fmpz_mpoly_neg(num1, num1, ctx);
-//		fmpz_mpoly_neg(den1, den1, ctx);
-//	}
-//	fmpz_clear(leading_coeff);
+	// Fix sign: leading term of den should be positive. Since poly_to_argument writes
+	// out the terms in high-first order, the "leading term" is the final term:
+	if ( fmpz_sgn(fmpz_poly_get_coeff_ptr(den1, fmpz_poly_degree(den1))) == -1 ) {
+		fmpz_poly_neg(num1, num1);
+		fmpz_poly_neg(den1, den1);
+	}
 
 	// Result in FORM notation:
 	WORD* out = s;
