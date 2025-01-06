@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: libmpfr-dev libzstd-dev
+          packages: libmpfr-dev libzstd-dev libflint-dev
           version: 1.0
 
       - name: Install MPI if necessary
