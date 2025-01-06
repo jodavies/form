@@ -464,7 +464,7 @@ ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const b
 		}
 	}
 
-	fmpz_t coeff;
+	fmpz_t coeff; // There is no fmpz_mpoly_get_term_coeff_ptr
 	fmpz_init(coeff);
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::mpoly_to_argument");
 	LONG exponents[var_map.size()];
@@ -475,7 +475,7 @@ ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const b
 		var_map_inv[x.second] = x.first;
 	}
 
-	// TODO fast notation
+	// TODO fast notation for single symbol arg
 
 	WORD* arg_size = 0;
 	WORD* arg_flag = 0;
@@ -750,8 +750,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 		}
 	}
 
-	fmpz_t coeff;
-	fmpz_init(coeff);
+	fmpz *coeff; // No init, we can get pointers directly to the poly's coefficients
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::poly_to_argument");
 
 	// Create the inverse of var_map, so we don't have to search it for each symbol written
@@ -760,7 +759,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 		var_map_inv[x.second] = x.first;
 	}
 
-	// TODO fast notation
+	// TODO fast notation for single symbol arg
 
 	WORD* arg_size = 0;
 	WORD* arg_flag = 0;
@@ -778,8 +777,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 	// In reverse, since we want a "highfirst" output
 	for (LONG i = n_terms-1; i >= 0; i--) {
 
-		// TODO use ptr to read coeff directly with no copy?
-		fmpz_poly_get_coeff_fmpz(coeff, poly, i);
+		coeff = fmpz_poly_get_coeff_ptr(poly, i);
 
 		// fmpz_poly is dense, there might be many zero coefficients:
 		if ( !fmpz_is_zero(coeff) ) {
@@ -789,10 +787,9 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 
 			// Now we have the coeff size, we can determine the output size
 			// Check it fits if necessary: symbol code,power, num,den of "coeff_size", +1 for total coeff size
-			// Strictly, if i == 0, no symbol is written this iteration.
 			unsigned current_size = prev_size + (out - arg_size) + 1 + 2*ABS(coeff_size) + 1;
 			if ( i > 0 ) {
-				// symbols header, code,power of the symbol
+				// and also symbols header, code,power of the symbol
 				current_size += 4;
 			}
 			if ( must_fit_term && (sizeof(WORD)*current_size > (size_t)AM.MaxTer) ) {
@@ -836,7 +833,6 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 		*out++ = 0;
 	}
 
-	fmpz_clear(coeff);
 	NumberFree(tmp_coeff, "flint::poly_to_argument");
 
 	return out - arg_size;
