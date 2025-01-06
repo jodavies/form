@@ -31,10 +31,10 @@ jobs:
         with:
           fetch-depth: 0  # ensures a reachable tag
 
-      - name: Install MPFR
+      - name: Install MPFR and FLINT
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: libmpfr-dev
+          packages: libmpfr-dev libflint-dev
           version: 1.0
 
       - name: Install MPI if necessary
