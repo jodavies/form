@@ -161,9 +161,12 @@ WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit) {
 	e.push_back(b);
 	const map<unsigned,unsigned> var_map = flint_get_variables(e, false, false);
 
-	WORD* res = flint_gcd_mpoly(BHEAD a, b, must_fit, var_map);
-
-	return res;
+	if ( var_map.size() > 1 ) {
+		return flint_gcd_mpoly(BHEAD a, b, must_fit, var_map);
+	}
+	else {
+		return flint_gcd_poly(BHEAD a, b, must_fit, var_map);
+	}
 }
 /*
 	#] flint_gcd :
@@ -206,7 +209,7 @@ WORD* flint_gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit, c
 		res = (WORD *)Malloc1(sizeof(WORD)*(size_a < size_b ? size_a : size_b), "flint_gcd_mpoly");
 	}
 
-	unsigned size = flint_mpoly_to_argument(BHEAD res, false, false, 0, gcd, var_map, ctx);
+	flint_mpoly_to_argument(BHEAD res, false, false, 0, gcd, var_map, ctx);
 
 	fmpz_mpoly_clear(pa, ctx);
 	fmpz_mpoly_clear(pb, ctx);
@@ -219,6 +222,54 @@ WORD* flint_gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit, c
 }
 /*
 	#] flint_gcd_mpoly :
+	#[ flint_gcd_poly :
+*/
+WORD* flint_gcd_poly(PHEAD const WORD *a, const WORD *b, const WORD must_fit, const map<unsigned,unsigned> &var_map) {
+
+	fmpz_poly_t pa, pb, denpa, denpb, gcd;
+	fmpz_poly_init(pa);
+	fmpz_poly_init(pb);
+	fmpz_poly_init(denpa);
+	fmpz_poly_init(denpb);
+	fmpz_poly_init(gcd);
+
+	const unsigned size_a = flint_poly_from_argument(pa, denpa, a, false);
+	const unsigned size_b = flint_poly_from_argument(pb, denpb, b, false);
+	// denpa, denpb should be 1:
+	if ( fmpz_poly_is_one(denpa) != 1 ) {
+		cout << "gcd error: denpa != 1";
+		Terminate(-1);
+	}
+	if ( fmpz_poly_is_one(denpb) != 1 ) {
+		cout << "gcd error: denpb != 1";
+		Terminate(-1);
+	}
+
+	fmpz_poly_gcd(gcd, pa, pb);
+
+	// This is freed by the caller
+	WORD *res;
+	if ( must_fit ) {
+		res = TermMalloc("flint_gcd_poly");
+	}
+	else {
+		// The GCD result can not exceed the size of the smaller of the input polynomials.
+		// TODO This will often be an over-allocation, but we avoid determining the exact size.
+		res = (WORD *)Malloc1(sizeof(WORD)*(size_a < size_b ? size_a : size_b), "flint_gcd_poly");
+	}
+
+	flint_poly_to_argument(BHEAD res, false, false, 0, gcd, var_map);
+
+	fmpz_poly_clear(pa);
+	fmpz_poly_clear(pb);
+	fmpz_poly_clear(denpa);
+	fmpz_poly_clear(denpb);
+	fmpz_poly_clear(gcd);
+
+	return res;
+}
+/*
+	#] flint_gcd_poly :
 	#[ flint_get_variables :
 */
 // TODO sort vars
@@ -577,7 +628,7 @@ unsigned flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const W
 	// Now we can iterate through the terms of the argument. If we have
 	// an ARGHEAD, we already know where to terminate. Otherwise we'll have
 	// to loop until the terminating 0.
-	const WORD* arg_stop = with_arghead ? args+args[0] : (WORD*)INT_MAX;
+	const WORD* arg_stop = with_arghead ? args+args[0] : (WORD*)ULONG_MAX;
 	unsigned arg_size = 0;
 	if ( with_arghead ) {
 		arg_size = args[0];
