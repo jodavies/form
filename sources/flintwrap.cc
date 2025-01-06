@@ -32,11 +32,11 @@ WORD* flint_gcd_poly(PHEAD const WORD *, const WORD *, const WORD, const map<uns
 
 map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &, const bool, const bool);
 
-void flint_mpoly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const bool, const map<unsigned,unsigned> &, const fmpz_mpoly_ctx_t);
-ULONG flint_mpoly_to_argument(WORD *, const bool, const bool, const ULONG, const fmpz_mpoly_t, const map<unsigned,unsigned> &, const fmpz_mpoly_ctx_t);
+unsigned flint_mpoly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const bool, const map<unsigned,unsigned> &, const fmpz_mpoly_ctx_t);
+ULONG flint_mpoly_to_argument(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_mpoly_t, const map<unsigned,unsigned> &, const fmpz_mpoly_ctx_t);
 
-void flint_poly_from_argument(fmpz_poly_t, fmpz_poly_t, const WORD *, const bool);
-ULONG flint_poly_to_argument(WORD *, const bool, const bool, const ULONG, const fmpz_poly_t, const map<unsigned,unsigned> &);
+unsigned flint_poly_from_argument(fmpz_poly_t, fmpz_poly_t, const WORD *, const bool);
+ULONG flint_poly_to_argument(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_poly_t, const map<unsigned,unsigned> &);
 
 void flint_ratfun_add_mpoly(PHEAD WORD *, WORD *, WORD *, const map<unsigned,unsigned> &);
 void flint_ratfun_add_poly(PHEAD WORD *, WORD *, WORD *, const map<unsigned,unsigned> &);
@@ -51,6 +51,7 @@ void flint_ratfun_read_poly(const WORD *, fmpz_poly_t, fmpz_poly_t);
 	#[ flint_fmpz_get_form :
 */
 // Write FORM's long integer representation of an fmpz at a, and put the number of WORDs at na.
+// na carries the sign of the integer.
 WORD flint_fmpz_get_form(fmpz_t z, WORD *a) {
 
 	WORD na = 0;
@@ -180,8 +181,8 @@ WORD* flint_gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit, c
 	fmpz_mpoly_init(denpb, ctx);
 	fmpz_mpoly_init(gcd, ctx);
 
-	flint_mpoly_from_argument(pa, denpa, a, false, var_map, ctx);
-	flint_mpoly_from_argument(pb, denpb, b, false, var_map, ctx);
+	const unsigned size_a = flint_mpoly_from_argument(pa, denpa, a, false, var_map, ctx);
+	const unsigned size_b = flint_mpoly_from_argument(pb, denpb, b, false, var_map, ctx);
 	// denpa, denpb should be 1:
 	if ( fmpz_mpoly_is_one(denpa, ctx) != 1 ) {
 		cout << "gcd error: denpa != 1";
@@ -194,23 +195,18 @@ WORD* flint_gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit, c
 
 	fmpz_mpoly_gcd(gcd, pa, pb, ctx);
 
-	// TODO now need to conv notation back, sort of need to know size to allocate
-	// space for the result? I skipped this "size of form notation" earlier. Ideally we
-	// don't want the iteration through just to get the size. Could I use the workspace for the output?
-	// It might not be be enough, in principle this can compute rather large GCDs from dollar vars etc.
-	// It is probably a good idea to use this also in the add and normalize routines,
-	// currently those just assume there is enough space in the workspace.
-
 	// This is freed by the caller
 	WORD *res;
 	if ( must_fit ) {
 		res = TermMalloc("flint_gcd_mpoly");
 	}
 	else {
-		res = (WORD *)Malloc1((size_t)AM.MaxTer, "flint_gcd_mpoly");
+		// The GCD result can not exceed the size of the smaller of the input polynomials.
+		// TODO This will often be an over-allocation, but we avoid determining the exact size.
+		res = (WORD *)Malloc1(sizeof(WORD)*(size_a < size_b ? size_a : size_b), "flint_gcd_mpoly");
 	}
 
-	unsigned size = flint_mpoly_to_argument(res, false, false, 0, gcd, var_map, ctx);
+	unsigned size = flint_mpoly_to_argument(BHEAD res, false, false, 0, gcd, var_map, ctx);
 
 	fmpz_mpoly_clear(pa, ctx);
 	fmpz_mpoly_clear(pb, ctx);
@@ -281,41 +277,29 @@ map<unsigned,unsigned> flint_get_variables(const vector <WORD *> &es, const bool
 		}
 	}
 
-//	cout << "vars: ";
-//	for (auto x: var_map) {
-//		cout << x.second << " " << x.first << endl;
-//	}
-
 	return var_map;
 }
 /*
 	#] flint_get_variables :
 	#[ flint_mpoly_from_argument :
 */
-// TODO with arghead
-void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args, const bool with_arghead, const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
+unsigned flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args, const bool with_arghead, const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
 
 	// First check for "fast notation" arguments:
 	if ( *args == -SNUMBER ) {
 		fmpz_mpoly_set_si(poly, *(args+1), ctx);
 		fmpz_mpoly_set_si(denpoly, 1, ctx);
-		return;
+		return 2;
 	}
 
 	if ( *args == -SYMBOL ) {
 		// A "fast notation" SYMBOL has a power and coefficient of 1:
-// TODO use set si instead of making an fmpz
-		fmpz_t coeff;
-		fmpz_init(coeff);
-		fmpz_set_si(coeff, (long)1);
-
 		unsigned long exponents[var_map.size()] = {0};
 		exponents[var_map.at(*(args+1))] = 1;
 
-		fmpz_mpoly_set_coeff_fmpz_ui(poly, coeff, exponents, ctx);
-		fmpz_mpoly_set_si(denpoly, 1, ctx);
-		fmpz_clear(coeff);
-		return;
+		fmpz_mpoly_set_coeff_ui_ui(poly, (unsigned long)1, exponents, ctx);
+		fmpz_mpoly_set_ui(denpoly, (unsigned long)1, ctx);
+		return 2;
 	}
 
 
@@ -323,7 +307,11 @@ void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WO
 	// an ARGHEAD, we already know where to terminate. Otherwise we'll have
 	// to loop until the terminating 0.
 	const WORD* arg_stop = with_arghead ? args+args[0] : (WORD*)ULONG_MAX;
-	if ( with_arghead ) { args += ARGHEAD; }
+	unsigned arg_size = 0;
+	if ( with_arghead ) {
+		arg_size = args[0];
+		args += ARGHEAD;
+	}
 
 
 	// Search for numerical or symbol denominators to create "denpoly".
@@ -343,10 +331,6 @@ void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WO
 			// Just a number, no symbols
 		}
 		else {
-			if (*t != SYMBOL) {
-				// get_variables already determined that this won't happen
-				cout << "    error, found a non-symbol: " << *t << endl;
-			}
 			t++; // this entry is SYMBOL
 			t++; // this entry just has the size of the symbol array, but we can use symbol_stop
 
@@ -370,9 +354,11 @@ void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WO
 		if ( *term_stop == 0 ) {
 			// This should only ever happen when with_arghead is false
 			if ( with_arghead ) {
-				cout << "arghead error" << endl;
+				cout << "flint_mpoly_from_argument: arghead error" << endl;
 				Terminate(-1);
 			}
+			// + 1 for the terminating 0
+			arg_size = term_stop - args + 1;
 			break;
 		}
 
@@ -398,10 +384,6 @@ void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WO
 			// Just a number, no symbols
 		}
 		else {
-			if (*t != SYMBOL) {
-				// get_variables already determined that this won't happen
-				cout << "    error, found a non-symbol: " << *t << endl;
-			}
 			t++; // this entry is SYMBOL
 			t++; // this entry just has the size of the symbol array, but we can use symbol_stop
 			for (const WORD* s = t; s < symbol_stop; s+=2) {
@@ -436,7 +418,7 @@ void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WO
 		if ( *term_stop == 0 ) {
 			// This should only ever happen when with_arghead is false
 			if ( with_arghead ) {
-				cout << "arghead error" << endl;
+				cout << "flint_mpoly_from_argument: arghead error" << endl;
 				Terminate(-1);
 			}
 			break;
@@ -445,13 +427,22 @@ void flint_mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WO
 	}
 
 	fmpz_clear(den_coeff);
+
+	return arg_size;
 }
 /*
 	#] flint_mpoly_from_argument :
 	#[ flint_mpoly_to_argument :
 */
-// TODO with arghead
-ULONG flint_mpoly_to_argument(WORD *out, const bool with_arghead, const bool must_fit_term, const ULONG prev_size, const fmpz_mpoly_t poly, const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
+ULONG flint_mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const bool must_fit_term, const ULONG prev_size, const fmpz_mpoly_t poly, const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
+
+	// Check there is at least space for ARGHEAD WORDs (the arghead or a fast-notation number)
+	if ( must_fit_term && (sizeof(WORD)*(prev_size + ARGHEAD) > (size_t)AM.MaxTer) ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint_mpoly_to_argument: output exceeds MaxTermSize");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	const LONG n_terms = fmpz_mpoly_length(poly, ctx);
 
@@ -469,7 +460,14 @@ ULONG flint_mpoly_to_argument(WORD *out, const bool with_arghead, const bool mus
 
 	fmpz_t coeff;
 	fmpz_init(coeff);
+	WORD *tmp_coeff = (WORD *)NumberMalloc("flint_mpoly_to_argument");
 	LONG exponents[var_map.size()];
+
+	// Create the inverse of var_map, so we don't have to search it for each symbol written
+	map<unsigned,unsigned> var_map_inv;
+	for (auto x: var_map) {
+		var_map_inv[x.second] = x.first;
+	}
 
 	// TODO fast notation
 
@@ -481,42 +479,57 @@ ULONG flint_mpoly_to_argument(WORD *out, const bool with_arghead, const bool mus
 		*arg_flag = 0; // clean argument
 	}
 	else {
-		// If we are not writing an ARGHEAD, we can still keep track of the
+		// If we are not writing an ARGHEAD, we still keep track of the
 		// size of the sum of terms, but must not write to this location!
 		arg_size = out;
 	}
 
 	for (LONG i = 0; i < n_terms; i++) {
-		WORD* term_size = out++;
 
 		fmpz_mpoly_get_term_exp_si(exponents, poly, i, ctx);
 		fmpz_mpoly_get_term_coeff_fmpz(coeff, poly, i, ctx);
 
-		bool has_symbols = 0;
+		int num_symbols = 0;
 		for ( unsigned i = 0; i < var_map.size(); i++ ) {
-			if ( exponents[i] != 0 ) { has_symbols = 1; }
+			if ( exponents[i] != 0 ) { num_symbols += 1; }
 		}
-		if ( has_symbols ) {
+
+		// Convert the coefficient, write in temporary space
+		const int coeff_size = flint_fmpz_get_form(coeff, tmp_coeff);
+
+		// Now we have the number of symbols and the coeff size, we can determine the output size.
+		// Check it fits if necessary: term size, num,den of "coeff_size", +1 for the total coeff size
+		unsigned current_size = prev_size + (out - arg_size) + 1 + 2*ABS(coeff_size) + 1;
+		if ( num_symbols ) {
+			// symbols header, code,power of each symbol:
+			current_size += 2 + 2*num_symbols;
+		}
+		if ( must_fit_term && (sizeof(WORD)*current_size > (size_t)AM.MaxTer) ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("flint_mpoly_to_argument: output exceeds MaxTermSize");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+
+		WORD* term_size = out++;
+		if ( num_symbols ) {
 			*out++ = SYMBOL;
 			WORD* symbol_size = out++;
 			*symbol_size = 2;
 
 			for ( unsigned i = 0; i < var_map.size(); i++ ) {
 				if ( exponents[i] != 0 ) {
-					// TODO this seems bad
-					for (auto x: var_map) {
-						if ( x.second == i ) {
-							*out++ = x.first;
-						}
-					}
+					*out++ = var_map_inv[i];
 					*out++ = exponents[i];
 					*symbol_size += 2;
 				}
 			}
 		}
 
-		int coeff_size = flint_fmpz_get_form(coeff, out);
-		out += ABS(coeff_size);
+		// Copy numerator
+		for ( int i = 0; i < ABS(coeff_size); i++ ) {
+			*out++ = tmp_coeff[i];
+		}
 		*out++ = 1; // the denominator
 		for (int i = 0; i < ABS(coeff_size)-1; i++) {
 			*out++ = 0;
@@ -526,14 +539,6 @@ ULONG flint_mpoly_to_argument(WORD *out, const bool with_arghead, const bool mus
 		out++;
 
 		*term_size = out - term_size;
-
-		if ( must_fit_term && ( sizeof(WORD)*(prev_size + out - arg_size) >= (size_t)AM.MaxTer ) ) {
-			MLOCK(ErrorMessageLock);
-			MesPrint("flint_mpoly_to_argument: output exceeds MaxTermSize");
-			MUNLOCK(ErrorMessageLock);
-			Terminate(-1);
-		}
-
 	}
 
 	if ( with_arghead ) {
@@ -545,6 +550,7 @@ ULONG flint_mpoly_to_argument(WORD *out, const bool with_arghead, const bool mus
 	}
 
 	fmpz_clear(coeff);
+	NumberFree(tmp_coeff, "flint_mpoly_to_argument");
 
 	return out - arg_size;
 }
@@ -552,27 +558,31 @@ ULONG flint_mpoly_to_argument(WORD *out, const bool with_arghead, const bool mus
 	#] flint_mpoly_to_argument :
 	#[ flint_poly_from_argument :
 */
-void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD *args, const bool with_arghead) {
+unsigned flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD *args, const bool with_arghead) {
 
 	// First check for "fast notation" arguments:
 	if ( *args == -SNUMBER ) {
 		fmpz_poly_set_si(poly, *(args+1));
 		fmpz_poly_set_si(denpoly, 1);
-		return;
+		return 2;
 	}
 	
 	if ( *args == -SYMBOL ) {
 		// A "fast notation" SYMBOL has a power and coefficient of 1:
 		fmpz_poly_set_coeff_si(poly, 1, 1);
 		fmpz_poly_set_si(denpoly, 1);
-		return;
+		return 2;
 	}
 
 	// Now we can iterate through the terms of the argument. If we have
 	// an ARGHEAD, we already know where to terminate. Otherwise we'll have
 	// to loop until the terminating 0.
 	const WORD* arg_stop = with_arghead ? args+args[0] : (WORD*)INT_MAX;
-	if ( with_arghead ) { args += ARGHEAD; }
+	unsigned arg_size = 0;
+	if ( with_arghead ) {
+		arg_size = args[0];
+		args += ARGHEAD;
+	}
 
 	// Search for numerical or symbol denominators to create "denpoly".
 	fmpz_t den_coeff;
@@ -582,14 +592,6 @@ void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD 
 	for (const WORD* term = args; term < arg_stop; term += term[0]) {
 
 		const WORD* term_stop = term+term[0];
-		if ( *term_stop == 0 ) {
-			// This should only ever happen when with_arghead is false
-			if ( with_arghead ) {
-				cout << "arghead error" << endl;
-				Terminate(-1);
-			}
-			continue;
-		}
 		const WORD  coeff_size = (term_stop)[-1];
 		const WORD* symbol_stop = term_stop - ABS(coeff_size);
 		const WORD* t = term;
@@ -599,10 +601,6 @@ void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD 
 			// Just a number, no symbols
 		}
 		else {
-			if (*t != SYMBOL) {
-				// get_variables already determined that this won't happen
-				cout << "    error, found a non-symbol: " << *t << endl;
-			}
 			t++; // this entry is SYMBOL
 			t++; // this is the symbol code
 			if ( *t < 0 ) {
@@ -619,6 +617,17 @@ void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD 
 			fmpz_lcm(den_coeff, den_coeff, tmp);
 			fmpz_clear(tmp);
 		}
+
+		if ( *term_stop == 0 ) {
+			// This should only ever happen when with_arghead is false
+			if ( with_arghead ) {
+				cout << "flint_poly_from_argument: arghead error" << endl;
+				Terminate(-1);
+			}
+			// + 1 for the terminating 0
+			arg_size = term_stop - args + 1;
+			break;
+		}
 	}
 	// Assemble denpoly.
 	fmpz_poly_set_coeff_fmpz(denpoly, neg_exponent, den_coeff);
@@ -627,14 +636,6 @@ void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD 
 	for (const WORD* term = args; term < arg_stop; term += term[0]) {
 
 		const WORD* term_stop = term+term[0];
-		if ( *term_stop == 0 ) {
-			// This should only ever happen when with_arghead is false
-			if ( with_arghead ) {
-				cout << "arghead error" << endl;
-				Terminate(-1);
-			}
-			continue;
-		}
 		const WORD  coeff_size = (term_stop)[-1];
 		const WORD* symbol_stop = term_stop - ABS(coeff_size);
 		const WORD* t = term;
@@ -649,16 +650,9 @@ void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD 
 			// Just a number, no symbols
 		}
 		else {
-			if (*t != SYMBOL) {
-				// get_variables already determined that this won't happen
-				cout << "    error, found a non-symbol: " << *t << endl;
-			}
 			t++; // this entry is SYMBOL
 			t++; // this entry just has the size of the symbol array, but we can use symbol_stop
-// TODO don't need this loop for univar
-			for (const WORD* s = t; s < symbol_stop; s+=2) {
-				exponent = *(s+1);
-			}
+			exponent = *(t+1);
 		}
 		// Now read the coefficient
 		flint_fmpz_set_form(coeff, (UWORD*)symbol_stop, coeff_size/2);
@@ -666,10 +660,8 @@ void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD 
 		// Multiply by denominator LCM
 		fmpz_mul(coeff, coeff, den_coeff);
 
-		// Shift by neg_exponents
-//		for (unsigned i = 0; i < var_map.size(); i++) {
-			exponent += neg_exponent;
-//		}
+		// Shift by neg_exponent
+		exponent += neg_exponent;
 
 		// Read the denominator if there is one, and divide it out of the coefficient
 		if (*(symbol_stop+ABS(coeff_size/2)) != 1) {
@@ -684,16 +676,34 @@ void flint_poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD 
 		// Add the term to the poly
 		fmpz_poly_set_coeff_fmpz(poly, exponent, coeff);
 		fmpz_clear(coeff);
+
+		if ( *term_stop == 0 ) {
+			// This should only ever happen when with_arghead is false
+			if ( with_arghead ) {
+				cout << "flint_poly_from_argument: arghead error" << endl;
+				Terminate(-1);
+			}
+			break;
+		}
 	}
 
 	fmpz_clear(den_coeff);
 
+	return arg_size;
 }
 /*
 	#] flint_poly_from_argument :
 	#[ flint_poly_to_argument :
 */
-ULONG flint_poly_to_argument(WORD *out, const bool with_arghead, const bool must_fit_term, const ULONG prev_size, const fmpz_poly_t poly, const map<unsigned,unsigned> &var_map) {
+ULONG flint_poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bool must_fit_term, const ULONG prev_size, const fmpz_poly_t poly, const map<unsigned,unsigned> &var_map) {
+
+	// Check there is at least space for ARGHEAD WORDs (the arghead or a fast-notation number)
+	if ( must_fit_term && (sizeof(WORD)*(prev_size + ARGHEAD) > (size_t)AM.MaxTer) ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint_poly_to_argument: output exceeds MaxTermSize");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	const LONG n_terms = fmpz_poly_length(poly);
 
@@ -711,6 +721,13 @@ ULONG flint_poly_to_argument(WORD *out, const bool with_arghead, const bool must
 
 	fmpz_t coeff;
 	fmpz_init(coeff);
+	WORD *tmp_coeff = (WORD *)NumberMalloc("flint_poly_to_argument");
+
+	// Create the inverse of var_map, so we don't have to search it for each symbol written
+	map<unsigned,unsigned> var_map_inv;
+	for (auto x: var_map) {
+		var_map_inv[x.second] = x.first;
+	}
 
 	// TODO fast notation
 
@@ -729,26 +746,43 @@ ULONG flint_poly_to_argument(WORD *out, const bool with_arghead, const bool must
 
 	// In reverse, since we want a "highfirst" output
 	for (LONG i = n_terms-1; i >= 0; i--) {
+
 		fmpz_poly_get_coeff_fmpz(coeff, poly, i);
 
 		// fmpz_poly is dense, there might be many zero coefficients:
 		if ( !fmpz_is_zero(coeff) ) {
+
+			// Convert the coefficient, write in temporary space
+			const int coeff_size = flint_fmpz_get_form(coeff, tmp_coeff);
+
+			// Now we have the coeff size, we can determine the output size
+			// Check it fits if necessary: symbol code,power, num,den of "coeff_size", +1 for total coeff size
+			// Strictly, if i == 0, no symbol is written this iteration.
+			unsigned current_size = prev_size + (out - arg_size) + 1 + 2*ABS(coeff_size) + 1;
+			if ( i > 0 ) {
+				// symbols header, code,power of the symbol
+				current_size += 4;
+			}
+			if ( must_fit_term && (sizeof(WORD)*current_size > (size_t)AM.MaxTer) ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("flint_poly_to_argument: output exceeds MaxTermSize");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+
 			WORD* term_size = out++;
 
 			if ( i > 0 ) {
 				*out++ = SYMBOL;
 				*out++ = 4; // The symbol array size, it is univariate
-				// TODO this seems bad
-				for (auto x: var_map) {
-					if ( x.second == 0 ) {
-						*out++ = x.first;
-					}
-				}
+				*out++ = var_map_inv[0];
 				*out++ = i;
 			}
 
-			int coeff_size = flint_fmpz_get_form(coeff, out);
-			out += ABS(coeff_size);
+			// Copy numerator
+			for ( int i = 0; i < ABS(coeff_size); i++ ) {
+				*out++ = tmp_coeff[i];
+			}
 			*out++ = 1; // the denominator
 			for (int i = 0; i < ABS(coeff_size)-1; i++) {
 				*out++ = 0;
@@ -758,14 +792,6 @@ ULONG flint_poly_to_argument(WORD *out, const bool with_arghead, const bool must
 			out++;
 
 			*term_size = out - term_size;
-
-			if ( must_fit_term && ( sizeof(WORD)*(prev_size + out - arg_size) >= (size_t)AM.MaxTer ) ) {
-				MLOCK(ErrorMessageLock);
-				MesPrint("flint_poly_to_argument: output exceeds MaxTermSize");
-				MUNLOCK(ErrorMessageLock);
-				Terminate(-1);
-			}
-
 		}
 
 	}
@@ -779,6 +805,7 @@ ULONG flint_poly_to_argument(WORD *out, const bool with_arghead, const bool must
 	}
 
 	fmpz_clear(coeff);
+	NumberFree(tmp_coeff, "flint_poly_to_argument");
 
 	return out - arg_size;
 }
@@ -866,12 +893,11 @@ void flint_ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsig
 	*out++ = AR.PolyFun;
 	WORD* args_size = out++;
 	WORD* args_flag = out++;
-//	*args_flag &= ~MUSTCLEANPRF;
 	*args_flag = 0; // clean prf
-	FILLFUN3(out); // TODO ?
+	FILLFUN3(out); // Remainder of funhead, if it is larger than 3
 
-	out += flint_mpoly_to_argument(out, true, false, out-args_size, num1, var_map, ctx);
-	out += flint_mpoly_to_argument(out, true, false, out-args_size, den1, var_map, ctx);
+	out += flint_mpoly_to_argument(BHEAD out, true, false, out-args_size, num1, var_map, ctx);
+	out += flint_mpoly_to_argument(BHEAD out, true, false, out-args_size, den1, var_map, ctx);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 	AT.WorkPointer = out;
@@ -934,12 +960,11 @@ void flint_ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsign
 	*out++ = AR.PolyFun;
 	WORD* args_size = out++;
 	WORD* args_flag = out++;
-//	*args_flag &= ~MUSTCLEANPRF;
 	*args_flag = 0; // clean prf
-	FILLFUN3(out); // TODO ?
+	FILLFUN3(out); // Remainder of funhead, if it is larger than 3
 
-	out += flint_poly_to_argument(out, true, false, out-args_size, num1, var_map);
-	out += flint_poly_to_argument(out, true, false, out-args_size, den1, var_map);
+	out += flint_poly_to_argument(BHEAD out, true, false, out-args_size, num1, var_map);
+	out += flint_poly_to_argument(BHEAD out, true, false, out-args_size, den1, var_map);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 	AT.WorkPointer = out;
@@ -1116,8 +1141,8 @@ void flint_ratfun_normalize_mpoly(PHEAD WORD *term, const map<unsigned,unsigned>
 	WORD* args_flag = out++;
 	*args_flag &= ~MUSTCLEANPRF;
 
-	out += flint_mpoly_to_argument(out, true, false, out-args_size, num1, var_map, ctx);
-	out += flint_mpoly_to_argument(out, true, false, out-args_size, den1, var_map, ctx);
+	out += flint_mpoly_to_argument(BHEAD out, true, false, out-args_size, num1, var_map, ctx);
+	out += flint_mpoly_to_argument(BHEAD out, true, false, out-args_size, den1, var_map, ctx);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 
@@ -1234,8 +1259,8 @@ void flint_ratfun_normalize_poly(PHEAD WORD *term, const map<unsigned,unsigned> 
 	WORD* args_flag = out++;
 	*args_flag &= ~MUSTCLEANPRF;
 
-	out += flint_poly_to_argument(out, true, false, out-args_size, num1, var_map);
-	out += flint_poly_to_argument(out, true, false, out-args_size, den1, var_map);
+	out += flint_poly_to_argument(BHEAD out, true, false, out-args_size, num1, var_map);
+	out += flint_poly_to_argument(BHEAD out, true, false, out-args_size, den1, var_map);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 
@@ -1261,8 +1286,6 @@ void flint_ratfun_normalize_poly(PHEAD WORD *term, const map<unsigned,unsigned> 
 	#[ flint_ratfun_read_mpoly :
 */
 void flint_ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den, const map<unsigned,unsigned> &var_map, fmpz_mpoly_ctx_t ctx) {
-
-//	MesPrint("flint_ratfun_read_mpoly: %a", *(a+1), a);
 
 	// The end of the arguments:
 	const WORD* arg_stop = a+a[1];
@@ -1321,8 +1344,6 @@ void flint_ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den, 
 	#[ flint_ratfun_read_poly :
 */
 void flint_ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
-
-//	MesPrint("flint_ratfun_read_poly: %a", *(a+1), a);
 
 	// The end of the arguments:
 	const WORD* arg_stop = a+a[1];
