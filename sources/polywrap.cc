@@ -123,6 +123,11 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool is_fun_arg, string mes
  */
 WORD *poly_gcd(PHEAD WORD *a, WORD *b, WORD fit) {
 
+	if ( AC.FlintPolyFlag ) {
+		WORD *ret = flint_gcd(BHEAD a, b, fit);
+		return ret;
+	}
+
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_gcd" << endl;
 #endif
