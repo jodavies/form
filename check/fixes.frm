@@ -1267,21 +1267,18 @@ PolyRatFun rat;  * <-- workaround: renormalize rat
 .sort
 L FF = F^2;
 L GG = G^2;
+.sort
+L F = F - (cw*sw*e*rat(MZ, - 2*sp12 + MZ));
+L G = G - (cw*sw*e*rat(MZ, - 2*sp12 + MZ));
+L FF = FF - (cw^2*sw^2*e^2*rat(MZ^2,4*sp12^2 - 4*sp12*MZ + MZ^2));
+L GG = GG - (cw^2*sw^2*e^2*rat(MZ^2,4*sp12^2 - 4*sp12*MZ + MZ^2));
 P +s;
 .end
 assert succeeded?
-assert result("F") =~ expr("
-       + cw*sw*e*rat(MZ, - 2*sp12 + MZ)
-")
-assert result("G") =~ expr("
-       + cw*sw*e*rat(MZ, - 2*sp12 + MZ)
-")
-assert result("FF") =~ expr("
-       + cw^2*sw^2*e^2*rat(MZ^2,4*sp12^2 - 4*sp12*MZ + MZ^2)
-")
-assert result("GG") =~ expr("
-       + cw^2*sw^2*e^2*rat(MZ^2,4*sp12^2 - 4*sp12*MZ + MZ^2)
-")
+assert result("F") =~ expr("0")
+assert result("G") =~ expr("0")
+assert result("FF") =~ expr("0")
+assert result("GG") =~ expr("0")
 *--#] Issue128 : 
 *--#[ Issue129_1 :
 * Redefining a hidden expression #129
