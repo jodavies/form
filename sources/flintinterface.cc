@@ -464,6 +464,28 @@ ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const b
 		}
 	}
 
+	// The mpoly might be constant, use fast notation if so and the coefficient is small enough
+	if ( with_arghead && n_terms == 1 ) {
+		if ( fmpz_mpoly_is_fmpz(poly, ctx) ) {
+
+			fmpz_t fast_coeff_tmp;
+			fmpz_init(fast_coeff_tmp);
+			fmpz_mpoly_get_term_coeff_fmpz(fast_coeff_tmp, poly, 0, ctx);
+
+			if ( fmpz_fits_si(fast_coeff_tmp) ) {
+				const long fast_coeff = fmpz_get_si(fast_coeff_tmp);
+				// While ">=", could work here, FORM does not use fast notation for INT_MIN
+				if ( fast_coeff > INT_MIN && fast_coeff <= INT_MAX ) {
+					*out++ = -SNUMBER;
+					*out++ = (WORD)fast_coeff;
+					fmpz_clear(fast_coeff_tmp);
+					return 2;
+				}
+			}
+			fmpz_clear(fast_coeff_tmp);
+		}
+	}
+
 	fmpz_t coeff; // There is no fmpz_mpoly_get_term_coeff_ptr
 	fmpz_init(coeff);
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::mpoly_to_argument");
@@ -740,7 +762,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 	// The poly is constant, use fast notation if the coefficient is small enough
 	if ( with_arghead && n_terms == 1 ) {
 		if ( fmpz_fits_si(fmpz_poly_get_coeff_ptr(poly, 0)) ) {
-			long fast_coeff = fmpz_poly_get_coeff_si(poly, 0);
+			const long fast_coeff = fmpz_poly_get_coeff_si(poly, 0);
 			// While ">=", could work here, FORM does not use fast notation for INT_MIN
 			if ( fast_coeff > INT_MIN && fast_coeff <= INT_MAX ) {
 				*out++ = -SNUMBER;
