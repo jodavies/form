@@ -1078,6 +1078,10 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_factorize_argument" << endl;
 #endif
+	if ( AC.FlintPolyFlag ) {
+		flint_factorize_argument(BHEAD argin, argout);
+		return 0;
+	}
 
 	poly_factorize(BHEAD argin,argout,true,true);
 	return 0;
@@ -1105,6 +1109,10 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_factorize_dollar" << endl;
 #endif
+
+	if ( AC.FlintPolyFlag ) {
+		return flint_factorize_dollar(BHEAD argin);
+	}
 
 	return poly_factorize(BHEAD argin,NULL,false,false);
 }
