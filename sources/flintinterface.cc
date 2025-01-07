@@ -10,6 +10,70 @@ extern "C" {
 #include "flintinterface.h"
 
 /*
+	#[ flint::factorize :
+*/
+WORD* flint::factorize(PHEAD WORD *argin, WORD *argout, const bool with_arghead, const bool is_fun_arg) {
+
+	const map<unsigned,unsigned> var_map = flint::get_variables(vector<WORD*>(1,argin), with_arghead, false);
+
+	fmpz_mpoly_ctx_t ctx;
+	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
+
+	fmpz_mpoly_t arg, den;
+	fmpz_mpoly_init(arg, ctx);
+	fmpz_mpoly_init(den, ctx);
+
+	flint::mpoly_from_argument(arg, den, argin, with_arghead, var_map, ctx);
+	// The denominator must be 1:
+	if ( fmpz_mpoly_is_one(den, ctx) != 1 ) {
+		cout << "flint::factorize error: den != 1";
+		fmpz_mpoly_clear(den, ctx);
+		Terminate(-1);
+	}
+	fmpz_mpoly_clear(den, ctx);
+
+
+	// Now we can factor the mpoly:
+	fmpz_mpoly_factor_t arg_fac;
+	fmpz_mpoly_factor_init(arg_fac, ctx);
+	fmpz_mpoly_factor(arg_fac, arg, ctx);
+	const long num_factors = fmpz_mpoly_factor_length(arg_fac, ctx);
+
+
+	// Construct the output. If argout is not NULL, we write the result there.
+	// Otherwise, allocate memory (TODO: for now just maxtermxize).
+	// The output is zero-terminated list of factors. If with_arghead, each
+	// has an arghead which contains its size. Otherwise, the factors are zero
+	// separated.
+	if ( argout == NULL ) {
+		argout = (WORD*)Malloc1(sizeof(WORD)*AM.MaxTer, "flint::factorize");
+	}
+
+	WORD* old_argout = argout;
+
+	for ( long i = 0; i < num_factors; i++ ) {
+		fmpz_mpoly_t base;
+		fmpz_mpoly_init(base, ctx);
+		fmpz_mpoly_factor_get_base(base, arg_fac, i, ctx);
+		const long exponent = fmpz_mpoly_factor_get_exp_si(arg_fac, i, ctx);
+
+		for ( long j = 0; j < exponent; j++ ) {
+			argout += flint::mpoly_to_argument(BHEAD argout, with_arghead, is_fun_arg, argout-old_argout, base, var_map, ctx);
+		}
+
+		fmpz_mpoly_clear(base, ctx);
+	}
+	*argout = 0;
+
+
+	fmpz_mpoly_factor_clear(arg_fac, ctx);
+	fmpz_mpoly_clear(arg, ctx);
+	fmpz_mpoly_ctx_clear(ctx);
+
+	return old_argout;
+}
+/*
+	#] flint::factorize :
 	#[ flint::fmpz_get_form :
 */
 // Write FORM's long integer representation of an fmpz at a, and put the number of WORDs at na.
@@ -353,12 +417,7 @@ unsigned flint::mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 			fmpz_clear(tmp);
 		}
 
-		if ( *term_stop == 0 ) {
-			// This should only ever happen when with_arghead is false
-			if ( with_arghead ) {
-				cout << "flint::mpoly_from_argument: arghead error" << endl;
-				Terminate(-1);
-			}
+		if ( !with_arghead && *term_stop == 0 ) {
 			// + 1 for the terminating 0
 			arg_size = term_stop - args + 1;
 			break;
@@ -417,12 +476,7 @@ unsigned flint::mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 		fmpz_mpoly_set_coeff_fmpz_ui(poly, coeff, exponents, ctx);
 		fmpz_clear(coeff);
 
-		if ( *term_stop == 0 ) {
-			// This should only ever happen when with_arghead is false
-			if ( with_arghead ) {
-				cout << "flint::mpoly_from_argument: arghead error" << endl;
-				Terminate(-1);
-			}
+		if ( !with_arghead && *term_stop == 0 ) {
 			break;
 		}
 
@@ -486,7 +540,7 @@ ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const b
 		}
 	}
 
-	fmpz_t coeff; // There is no fmpz_mpoly_get_term_coeff_ptr
+	fmpz_t coeff; // There is no fmpz_mpoly_get_term_coeff_ptr : TODO but there is fmpz_mpoly_term_coeff_ref
 	fmpz_init(coeff);
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::mpoly_to_argument");
 	LONG exponents[var_map.size()];
@@ -1041,10 +1095,7 @@ void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const map<unsigned,unsigned
 			if ((t[2] & MUSTCLEANPRF) != 0) { // first normalize TODO do this inside read?
 				fmpz_mpoly_t gcd;
 				fmpz_mpoly_init(gcd, ctx);
-				if (!fmpz_mpoly_gcd_cofactors(gcd, num2, den2, num2, den2, ctx)) {
-					cout << "flint::ratfun_normalize: error in fmpz_mpoly_gcd_cofactors" << endl;
-					Terminate(-1);
-				}
+				fmpz_mpoly_gcd_cofactors(gcd, num2, den2, num2, den2, ctx);
 				fmpz_mpoly_clear(gcd, ctx);
 			}
 

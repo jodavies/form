@@ -10,6 +10,7 @@ extern "C" {
 
 
 #include <flint/fmpz_mpoly.h>
+#include <flint/fmpz_mpoly_factor.h>
 #include <flint/fmpz_poly.h>
 
 
@@ -27,6 +28,8 @@ using std::vector;
 
 
 namespace flint {
+
+	WORD* factorize(PHEAD WORD *, WORD *, const bool, const bool);
 
 	WORD fmpz_get_form(fmpz_t, WORD *);
 	void fmpz_set_form(fmpz_t, UWORD *, WORD);

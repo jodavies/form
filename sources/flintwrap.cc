@@ -10,6 +10,21 @@ extern "C" {
 #include "flintinterface.h"
 
 /*
+	#[ flint_factorize_argument :
+*/
+int flint_factorize_argument(PHEAD WORD *argin, WORD *argout) {
+	flint::factorize(BHEAD argin, argout, true, true);
+	return 0;
+}
+/*
+	#] flint_factorize_argument :
+	#[ flint_factorize_dollar :
+*/
+WORD* flint_factorize_dollar(PHEAD WORD *argin) {
+	return flint::factorize(BHEAD argin, NULL, false, false);
+}
+/*
+	#] flint_factorize_dollar :
 	#[ flint_gcd :
 */
 WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit) {
