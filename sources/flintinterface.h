@@ -57,9 +57,9 @@ namespace flint {
 		fmpz_mpoly_ctx_t);
 	void ratfun_read_poly(const WORD *, fmpz_poly_t, fmpz_poly_t);
 
-	ULONG to_argument_mpoly(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_mpoly_t,
-		const var_map_t &, const fmpz_mpoly_ctx_t);
-	ULONG to_argument_poly(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_poly_t,
-		const var_map_t &);
+	ULONG to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+		const fmpz_mpoly_t, const var_map_t &, const fmpz_mpoly_ctx_t);
+	ULONG to_argument_poly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+		const fmpz_poly_t, const var_map_t &);
 
 }
