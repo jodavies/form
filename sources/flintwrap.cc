@@ -32,7 +32,7 @@ WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit) {
 	vector<WORD *> e;
 	e.push_back(a);
 	e.push_back(b);
-	const map<unsigned,unsigned> var_map = flint::get_variables(e, false, false);
+	const flint::var_map_t var_map = flint::get_variables(e, false, false);
 
 	if ( var_map.size() > 1 ) {
 		return flint::gcd_mpoly(BHEAD a, b, must_fit, var_map);
@@ -64,7 +64,7 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 		e.push_back(t);
 		NEXTARG(t);
 	}
-	const map<unsigned,unsigned> var_map = flint::get_variables(e, true, true);
+	const flint::var_map_t var_map = flint::get_variables(e, true, true);
 
 	if ( var_map.size() > 1 ) {
 		flint::ratfun_add_mpoly(BHEAD t1, t2, oldworkpointer, var_map);
@@ -127,7 +127,7 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 			}
 		}
 	}
-	const map<unsigned,unsigned> var_map = flint::get_variables(e, true, true);
+	const flint::var_map_t var_map = flint::get_variables(e, true, true);
 
 	if ( var_map.size() > 1 ) {
 		flint::ratfun_normalize_mpoly(BHEAD term, var_map);
