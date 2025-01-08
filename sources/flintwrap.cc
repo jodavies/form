@@ -1,6 +1,6 @@
 /** @file flintwrap.cc
  *
- *   Contains methods to call flint polynomial interface routines from the rest of FORM.
+ *   Contains functions to call FLINT interface from the rest of FORM.
  */
 
 extern "C" {
@@ -13,7 +13,10 @@ extern "C" {
 	#[ flint_factorize_argument :
 */
 int flint_factorize_argument(PHEAD WORD *argin, WORD *argout) {
-	flint::factorize(BHEAD argin, argout, true, true);
+
+	const flint::var_map_t var_map = flint::get_variables(vector<WORD*>(1,argin), true, false);
+
+	flint::factorize_mpoly(BHEAD argin, argout, true, true, var_map);
 	return 0;
 }
 /*
@@ -21,7 +24,10 @@ int flint_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 	#[ flint_factorize_dollar :
 */
 WORD* flint_factorize_dollar(PHEAD WORD *argin) {
-	return flint::factorize(BHEAD argin, NULL, false, false);
+
+	const flint::var_map_t var_map = flint::get_variables(vector<WORD*>(1,argin), false, false);
+
+	return flint::factorize_mpoly(BHEAD argin, NULL, false, false, var_map);
 }
 /*
 	#] flint_factorize_dollar :

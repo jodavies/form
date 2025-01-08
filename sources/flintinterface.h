@@ -31,7 +31,8 @@ namespace flint {
 
 	typedef std::map<unsigned,unsigned> var_map_t;
 
-	WORD* factorize(PHEAD WORD *, WORD *, const bool, const bool);
+	WORD* factorize_mpoly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
+	WORD* factorize_poly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
 
 	WORD fmpz_get_form(fmpz_t, WORD *);
 	void fmpz_set_form(fmpz_t, UWORD *, WORD);
@@ -41,13 +42,13 @@ namespace flint {
 
 	var_map_t get_variables(const vector <WORD *> &, const bool, const bool);
 
-	unsigned mpoly_from_argument(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const bool,
+	unsigned from_argument_mpoly(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const bool,
 		const var_map_t &, const fmpz_mpoly_ctx_t);
-	ULONG mpoly_to_argument(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_mpoly_t,
+	ULONG to_argument_mpoly(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_mpoly_t,
 		const var_map_t &, const fmpz_mpoly_ctx_t);
 
-	unsigned poly_from_argument(fmpz_poly_t, fmpz_poly_t, const WORD *, const bool);
-	ULONG poly_to_argument(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_poly_t,
+	unsigned from_argument_poly(fmpz_poly_t, fmpz_poly_t, const WORD *, const bool);
+	ULONG to_argument_poly(PHEAD WORD *, const bool, const bool, const ULONG, const fmpz_poly_t,
 		const var_map_t &);
 
 	void ratfun_add_mpoly(PHEAD WORD *, WORD *, WORD *, const var_map_t &);
