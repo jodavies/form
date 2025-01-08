@@ -16,7 +16,13 @@ int flint_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 
 	const flint::var_map_t var_map = flint::get_variables(vector<WORD*>(1,argin), true, false);
 
-	flint::factorize_mpoly(BHEAD argin, argout, true, true, var_map);
+	if ( var_map.size() > 1 ) {
+		flint::factorize_mpoly(BHEAD argin, argout, true, true, var_map);
+	}
+	else {
+		flint::factorize_poly(BHEAD argin, argout, true, true, var_map);
+	}
+
 	return 0;
 }
 /*
@@ -27,7 +33,12 @@ WORD* flint_factorize_dollar(PHEAD WORD *argin) {
 
 	const flint::var_map_t var_map = flint::get_variables(vector<WORD*>(1,argin), false, false);
 
-	return flint::factorize_mpoly(BHEAD argin, NULL, false, false, var_map);
+	if ( var_map.size() > 1 ) {
+		return flint::factorize_mpoly(BHEAD argin, NULL, false, false, var_map);
+	}
+	else {
+		return flint::factorize_poly(BHEAD argin, NULL, false, false, var_map);
+	}
 }
 /*
 	#] flint_factorize_dollar :
