@@ -12,9 +12,10 @@ extern "C" {
 /*
 	#[ flint::factorize :
 */
-WORD* flint::factorize(PHEAD WORD *argin, WORD *argout, const bool with_arghead, const bool is_fun_arg) {
+WORD* flint::factorize(PHEAD WORD *argin, WORD *argout, const bool with_arghead,
+	const bool is_fun_arg) {
 
-	const map<unsigned,unsigned> var_map = flint::get_variables(vector<WORD*>(1,argin), with_arghead, false);
+	const var_map_t var_map = flint::get_variables(vector<WORD*>(1,argin), with_arghead, false);
 
 	fmpz_mpoly_ctx_t ctx;
 	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
@@ -58,7 +59,8 @@ WORD* flint::factorize(PHEAD WORD *argin, WORD *argout, const bool with_arghead,
 		const long exponent = fmpz_mpoly_factor_get_exp_si(arg_fac, i, ctx);
 
 		for ( long j = 0; j < exponent; j++ ) {
-			argout += flint::mpoly_to_argument(BHEAD argout, with_arghead, is_fun_arg, argout-old_argout, base, var_map, ctx);
+			argout += flint::mpoly_to_argument(BHEAD argout, with_arghead, is_fun_arg,
+				argout-old_argout, base, var_map, ctx);
 		}
 
 		fmpz_mpoly_clear(base, ctx);
@@ -114,9 +116,8 @@ WORD flint::fmpz_get_form(fmpz_t z, WORD *a) {
 	#] flint::fmpz_get_form :
 	#[ flint::fmpz_set_form :
 */
-// Create an fmpz directly from FORM's long integer representation. fmpz uses 64bit
-// unsigned limbs, but FORM uses 32bit UWORDs on 64bit architectures so we can't use
-// fmpz_set_ui_array directly.
+// Create an fmpz directly from FORM's long integer representation. fmpz uses 64bit unsigned limbs,
+// but FORM uses 32bit UWORDs on 64bit architectures so we can't use fmpz_set_ui_array directly.
 void flint::fmpz_set_form(fmpz_t z, UWORD *a, WORD na) {
 
 	if ( na == 0 ) {
@@ -131,16 +132,16 @@ void flint::fmpz_set_form(fmpz_t z, UWORD *a, WORD na) {
 		na = -na;
 	}
 
-	// Remove padding. FORM stores numerators and denominators with equal numbers
-	// of limbs but we don't need to do this within the fmpz. It is not necessary
-	// to do this really, the fmpz doesn't add zero limbs unnecessarily, but we
-	// might be able to avoid creating the limb_data array below.
+	// Remove padding. FORM stores numerators and denominators with equal numbers of limbs but we
+	// don't need to do this within the fmpz. It is not necessary to do this really, the fmpz
+	// doesn't add zero limbs unnecessarily, but we might be able to avoid creating the limb_data
+	// array below.
 	while ( a[na-1] == 0 ) {
 		na--;
 	}
 
-	// If the number fits in fixed-size  fmpz_set functions, we don't need to use
-	// additional memory to convert to ULONG. These probably cover most real cases.
+	// If the number fits in fixed-size  fmpz_set functions, we don't need to use additional memory
+	// to convert to ULONG. These probably cover most real cases.
 	if ( na == 1 ) {
 		fmpz_set_ui(z, (ULONG)a[0]);
 	}
@@ -182,7 +183,8 @@ void flint::fmpz_set_form(fmpz_t z, UWORD *a, WORD na) {
 // Return a pointer to a buffer containing the GCD of the 0-terminated term lists at a and b.
 // If must_fit_term, this should be a TermMalloc buffer. Otherwise Malloc1 the buffer.
 // For multi-variate cases.
-WORD* flint::gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_term, const map<unsigned,unsigned> &var_map) {
+WORD* flint::gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_term,
+	const var_map_t &var_map) {
 
 	fmpz_mpoly_ctx_t ctx;
 	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
@@ -237,7 +239,8 @@ WORD* flint::gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_t
 // Return a pointer to a buffer containing the GCD of the 0-terminated term lists at a and b.
 // If must_fit_term, this should be a TermMalloc buffer. Otherwise Malloc1 the buffer.
 // For uni-variate cases.
-WORD* flint::gcd_poly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_term, const map<unsigned,unsigned> &var_map) {
+WORD* flint::gcd_poly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_term,
+	const var_map_t &var_map) {
 
 	fmpz_poly_t pa, pb, denpa, denpb, gcd;
 	fmpz_poly_init(pa);
@@ -286,16 +289,18 @@ WORD* flint::gcd_poly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_te
 	#[ flint::get_variables :
 */
 // Get the list of symbols which appear in the vector of expressions. These are polyratfun
-// numerators, denominators or expressions from calls to gcd_ etc. Return this list as a
-// map between indices and symbol codes.
+// numerators, denominators or expressions from calls to gcd_ etc. Return this list as a map
+// between indices and symbol codes.
 // TODO sort vars
-map<unsigned,unsigned> flint::get_variables(const vector <WORD *> &es, const bool with_arghead, const bool sort_vars) {
+flint::var_map_t flint::get_variables(const vector <WORD *> &es, const bool with_arghead,
+	const bool sort_vars) {
+
 	DUMMYUSE(sort_vars);
 
 	int num_vars = 0;
 	// To be used if we sort by highest degree, as the polu code does.
 	vector<int> degrees;
-	map<unsigned,unsigned> var_map;
+	var_map_t var_map;
 
 	// extract all variables
 	for (unsigned ei=0; ei < es.size(); ei++) {
@@ -345,11 +350,11 @@ map<unsigned,unsigned> flint::get_variables(const vector <WORD *> &es, const boo
 	#] flint::get_variables :
 	#[ flint::mpoly_from_argument :
 */
-// Convert a FORM argument (or 0-terminated list of terms: with_arghead == false) to
-// a (multi-variate) fmpz_mpoly_t poly. The "denominator" is return in denpoly,
-// and contains the overall negative-power numeric and symbolic factor.
-unsigned flint::mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args, const bool with_arghead,
-	const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
+// Convert a FORM argument (or 0-terminated list of terms: with_arghead == false) to a
+// (multi-variate) fmpz_mpoly_t poly. The "denominator" is return in denpoly, and contains the
+// overall negative-power numeric and symbolic factor.
+unsigned flint::mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, const WORD *args,
+	const bool with_arghead, const var_map_t &var_map, const fmpz_mpoly_ctx_t ctx) {
 
 	// First check for "fast notation" arguments:
 	if ( *args == -SNUMBER ) {
@@ -402,7 +407,8 @@ unsigned flint::mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 
 			for (const WORD* s = t; s < symbol_stop; s+=2) {
 				if ( *(s+1) < 0 ) {
-					neg_exponents[var_map.at(*s)] = MaX(neg_exponents[var_map.at(*s)], (unsigned long)(-(*(s+1))) );
+					neg_exponents[var_map.at(*s)] =
+						MaX(neg_exponents[var_map.at(*s)], (unsigned long)(-(*(s+1))) );
 				}
 			}
 		}
@@ -490,11 +496,12 @@ unsigned flint::mpoly_from_argument(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 	#] flint::mpoly_from_argument :
 	#[ flint::mpoly_to_argument :
 */
-// Convert a fmpz_mpoly_t to a FORM argument (or 0-terminated list of terms: with_arghead == false).
+// Convert a fmpz_mpoly_t to a FORM argument (or 0-terminated list of terms: with_arghead==false).
 // If the caller is building an output term, prev_size contains the size of the term so far, to
 // check that the output fits if must_fit_term.
-ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const bool must_fit_term, const ULONG prev_size,
-	const fmpz_mpoly_t poly, const map<unsigned,unsigned> &var_map, const fmpz_mpoly_ctx_t ctx) {
+ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const bool must_fit_term,
+	const ULONG prev_size, const fmpz_mpoly_t poly, const var_map_t &var_map,
+	const fmpz_mpoly_ctx_t ctx) {
 
 	// Check there is at least space for ARGHEAD WORDs (the arghead or a fast-notation number)
 	if ( must_fit_term && (sizeof(WORD)*(prev_size + ARGHEAD) > (size_t)AM.MaxTer) ) {
@@ -546,7 +553,7 @@ ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const b
 	LONG exponents[var_map.size()];
 
 	// Create the inverse of var_map, so we don't have to search it for each symbol written
-	map<unsigned,unsigned> var_map_inv;
+	var_map_t var_map_inv;
 	for (auto x: var_map) {
 		var_map_inv[x.second] = x.first;
 	}
@@ -580,7 +587,7 @@ ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const b
 		const int coeff_size = flint::fmpz_get_form(coeff, tmp_coeff);
 
 		// Now we have the number of symbols and the coeff size, we can determine the output size.
-		// Check it fits if necessary: term size, num,den of "coeff_size", +1 for the total coeff size
+		// Check it fits if necessary: term size, num,den of "coeff_size", +1 for total coeff size
 		unsigned current_size = prev_size + (out - arg_size) + 1 + 2*ABS(coeff_size) + 1;
 		if ( num_symbols ) {
 			// symbols header, code,power of each symbol:
@@ -640,10 +647,11 @@ ULONG flint::mpoly_to_argument(PHEAD WORD *out, const bool with_arghead, const b
 	#] flint::mpoly_to_argument :
 	#[ flint::poly_from_argument :
 */
-// Convert a FORM argument (or 0-terminated list of terms: with_arghead == false) to
-// a (uni-variate) fmpz_poly_t poly. The "denominator" is return in denpoly,
-// and contains the overall negative-power numeric and symbolic factor.
-unsigned flint::poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD *args, const bool with_arghead) {
+// Convert a FORM argument (or 0-terminated list of terms: with_arghead == false) to a
+// (uni-variate) fmpz_poly_t poly. The "denominator" is return in denpoly, and contains the
+// overall negative-power numeric and symbolic factor.
+unsigned flint::poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const WORD *args,
+	const bool with_arghead) {
 
 	// First check for "fast notation" arguments:
 	if ( *args == -SNUMBER ) {
@@ -784,11 +792,11 @@ unsigned flint::poly_from_argument(fmpz_poly_t poly, fmpz_poly_t denpoly, const 
 	#] flint::poly_from_argument :
 	#[ flint::poly_to_argument :
 */
-// Convert a fmpz_poly_t to a FORM argument (or 0-terminated list of terms: with_arghead == false).
+// Convert a fmpz_poly_t to a FORM argument (or 0-terminated list of terms: with_arghead==false).
 // If the caller is building an output term, prev_size contains the size of the term so far, to
 // check that the output fits if must_fit_term.
-ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bool must_fit_term, const ULONG prev_size,
-	const fmpz_poly_t poly, const map<unsigned,unsigned> &var_map) {
+ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bool must_fit_term,
+	const ULONG prev_size, const fmpz_poly_t poly, const var_map_t &var_map) {
 
 	// Check there is at least space for ARGHEAD WORDs (the arghead or a fast-notation number)
 	if ( must_fit_term && (sizeof(WORD)*(prev_size + ARGHEAD) > (size_t)AM.MaxTer) ) {
@@ -830,7 +838,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::poly_to_argument");
 
 	// Create the inverse of var_map, so we don't have to search it for each symbol written
-	map<unsigned,unsigned> var_map_inv;
+	var_map_t var_map_inv;
 	for (auto x: var_map) {
 		var_map_inv[x.second] = x.first;
 	}
@@ -862,7 +870,8 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 			const int coeff_size = flint::fmpz_get_form(coeff, tmp_coeff);
 
 			// Now we have the coeff size, we can determine the output size
-			// Check it fits if necessary: symbol code,power, num,den of "coeff_size", +1 for total coeff size
+			// Check it fits if necessary: symbol code,power, num,den of "coeff_size",
+			// +1 for total coeff size
 			unsigned current_size = prev_size + (out - arg_size) + 1 + 2*ABS(coeff_size) + 1;
 			if ( i > 0 ) {
 				// and also symbols header, code,power of the symbol
@@ -918,7 +927,7 @@ ULONG flint::poly_to_argument(PHEAD WORD *out, const bool with_arghead, const bo
 	#[ flint::ratfun_add_mpoly :
 */
 // Add the multi-variate FORM rational polynomials at t1 and t2. The result is written at out.
-void flint::ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsigned,unsigned> &var_map) {
+void flint::ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t &var_map) {
 
 	fmpz_mpoly_ctx_t ctx;
 	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
@@ -985,7 +994,7 @@ void flint::ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsi
 	#[ flint::ratfun_add_poly :
 */
 // Add the uni-variate FORM rational polynomials at t1 and t2. The result is written at out.
-void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsigned,unsigned> &var_map) {
+void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t &var_map) {
 
 	fmpz_poly_t gcd, num1, den1, num2, den2;
 	fmpz_poly_init(gcd);
@@ -1053,7 +1062,7 @@ void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const map<unsig
 */
 // Multiply and simplify occurrences of the multi-variate FORM rational polynomials found in term.
 // The final term is written in place, with the rational polynomial at the end.
-void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const map<unsigned,unsigned> &var_map) {
+void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const var_map_t &var_map) {
 
 	// The length of the coefficient
 	const int ncoeff = (term + *term)[-1];
@@ -1170,7 +1179,7 @@ void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const map<unsigned,unsigned
 */
 // Multiply and simplify occurrences of the uni-variate FORM rational polynomials found in term.
 // The final term is written in place, with the rational polynomial at the end.
-void flint::ratfun_normalize_poly(PHEAD WORD *term, const map<unsigned,unsigned> &var_map) {
+void flint::ratfun_normalize_poly(PHEAD WORD *term, const var_map_t &var_map) {
 
 	// The length of the coefficient
 	const int ncoeff = (term + *term)[-1];
@@ -1282,9 +1291,10 @@ void flint::ratfun_normalize_poly(PHEAD WORD *term, const map<unsigned,unsigned>
 	#] flint::ratfun_normalize_poly :
 	#[ flint::ratfun_read_mpoly :
 */
-// Read the multi-variate FORM rational polynomial at a and create fmpz_mpoly_t numerator and denominator
-void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den, const map<unsigned,unsigned> &var_map,
-	fmpz_mpoly_ctx_t ctx) {
+// Read the multi-variate FORM rational polynomial at a and create fmpz_mpoly_t numerator and
+// denominator.
+void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
+	const var_map_t &var_map, fmpz_mpoly_ctx_t ctx) {
 
 	// The end of the arguments:
 	const WORD* arg_stop = a+a[1];
@@ -1342,7 +1352,8 @@ void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
 	#] flint::ratfun_read_mpoly :
 	#[ flint::ratfun_read_poly :
 */
-// Read the uni-variate FORM rational polynomial at a and create fmpz_mpoly_t numerator and denominator
+// Read the uni-variate FORM rational polynomial at a and create fmpz_mpoly_t numerator and
+// denominator.
 void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 
 	// The end of the arguments:
