@@ -46,7 +46,7 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 	// has an arghead which contains its size. Otherwise, the factors are zero
 	// separated.
 	if ( argout == NULL ) {
-		argout = (WORD*)Malloc1(sizeof(WORD)*AM.MaxTer, "flint::factorize");
+		argout = (WORD*)Malloc1(sizeof(WORD)*AM.MaxTer, "flint::factorize_mpoly");
 	}
 
 	WORD* old_argout = argout;
@@ -109,7 +109,7 @@ WORD* flint::factorize_poly(PHEAD WORD *argin, WORD *argout, const bool with_arg
 	// has an arghead which contains its size. Otherwise, the factors are zero
 	// separated.
 	if ( argout == NULL ) {
-		argout = (WORD*)Malloc1(sizeof(WORD)*AM.MaxTer, "flint::factorize");
+		argout = (WORD*)Malloc1(sizeof(WORD)*AM.MaxTer, "flint::factorize_poly");
 	}
 
 	WORD* old_argout = argout;
@@ -1216,9 +1216,7 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 	if ( with_arghead && n_terms == 1 ) {
 		if ( fmpz_mpoly_is_fmpz(poly, ctx) ) {
 
-			fmpz_t fast_coeff_tmp;
-			fmpz_init(fast_coeff_tmp);
-			fmpz_mpoly_get_term_coeff_fmpz(fast_coeff_tmp, poly, 0, ctx);
+			fmpz* fast_coeff_tmp = fmpz_mpoly_term_coeff_ref((fmpz_mpoly_struct*)poly, 0, ctx);
 
 			if ( fmpz_fits_si(fast_coeff_tmp) ) {
 				const long fast_coeff = fmpz_get_si(fast_coeff_tmp);
@@ -1226,16 +1224,12 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 				if ( fast_coeff > INT_MIN && fast_coeff <= INT_MAX ) {
 					*out++ = -SNUMBER;
 					*out++ = (WORD)fast_coeff;
-					fmpz_clear(fast_coeff_tmp);
 					return 2;
 				}
 			}
-			fmpz_clear(fast_coeff_tmp);
 		}
 	}
 
-	fmpz_t coeff; // There is no fmpz_mpoly_get_term_coeff_ptr : TODO but there is fmpz_mpoly_term_coeff_ref
-	fmpz_init(coeff);
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::to_argument_mpoly");
 	LONG exponents[var_map.size()];
 
@@ -1263,7 +1257,7 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 	for (LONG i = 0; i < n_terms; i++) {
 
 		fmpz_mpoly_get_term_exp_si(exponents, poly, i, ctx);
-		fmpz_mpoly_get_term_coeff_fmpz(coeff, poly, i, ctx);
+		fmpz* coeff = fmpz_mpoly_term_coeff_ref((fmpz_mpoly_struct*)poly, i, ctx);
 
 		int num_symbols = 0;
 		for ( unsigned i = 0; i < var_map.size(); i++ ) {
@@ -1325,7 +1319,6 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 		*out++ = 0;
 	}
 
-	fmpz_clear(coeff);
 	NumberFree(tmp_coeff, "flint::to_argument_mpoly");
 
 	return out - arg_size;
