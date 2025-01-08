@@ -1190,7 +1190,7 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 	const ULONG prev_size, const fmpz_mpoly_t poly, const var_map_t &var_map,
 	const fmpz_mpoly_ctx_t ctx) {
 
-	// Check there is at least space for ARGHEAD WORDs (the arghead or a fast-notation number)
+	// Check there is at least space for ARGHEAD WORDs (the arghead or fast-notation number/symbol)
 	if ( must_fit_term && (sizeof(WORD)*(prev_size + ARGHEAD) > (size_t)AM.MaxTer) ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("flint::to_argument_mpoly: output exceeds MaxTermSize");
@@ -1198,6 +1198,13 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 		Terminate(-1);
 	}
 
+	// Create the inverse of var_map, so we don't have to search it for each symbol written
+	var_map_t var_map_inv;
+	for (auto x: var_map) {
+		var_map_inv[x.second] = x.first;
+	}
+
+	LONG exponents[var_map.size()];
 	const LONG n_terms = fmpz_mpoly_length(poly, ctx);
 
 	if ( n_terms == 0 ) {
@@ -1212,9 +1219,11 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 		}
 	}
 
-	// The mpoly might be constant, use fast notation if so and the coefficient is small enough
+	// The mpoly might be constant or a single symbol with coeff 1. Use fast notation if possible.
 	if ( with_arghead && n_terms == 1 ) {
+
 		if ( fmpz_mpoly_is_fmpz(poly, ctx) ) {
+			// The mpoly is constant. Use fast notation if the number is small enough:
 
 			fmpz* fast_coeff_tmp = fmpz_mpoly_term_coeff_ref((fmpz_mpoly_struct*)poly, 0, ctx);
 
@@ -1228,18 +1237,32 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 				}
 			}
 		}
+
+		else {
+			if ( fmpz_is_one(fmpz_mpoly_term_coeff_ref((fmpz_mpoly_struct*)poly, 0, ctx)) ) {
+				// The coefficient is one. Now check the symbol powers:
+
+				fmpz_mpoly_get_term_exp_si(exponents, poly, 0, ctx);
+				int use_fast = 0;
+				WORD fast_symbol = 0;
+
+				for ( int i = 0; i < var_map.size(); i++ ) {
+					if ( exponents[i] == 1 ) fast_symbol = var_map_inv[i];
+					use_fast += exponents[i];
+				}
+
+				// use_fast has collected the total degree. If it is 1, then fast_symbol holds the code
+				if ( use_fast == 1 ) {
+					*out++ = -SYMBOL;
+					*out++ = fast_symbol;
+					return 2;
+				}
+			}
+		}
+
 	}
 
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::to_argument_mpoly");
-	LONG exponents[var_map.size()];
-
-	// Create the inverse of var_map, so we don't have to search it for each symbol written
-	var_map_t var_map_inv;
-	for (auto x: var_map) {
-		var_map_inv[x.second] = x.first;
-	}
-
-	// TODO fast notation for single symbol arg
 
 	WORD* arg_size = 0;
 	WORD* arg_flag = 0;
@@ -1333,12 +1356,18 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 ULONG flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead, const bool must_fit_term,
 	const ULONG prev_size, const fmpz_poly_t poly, const var_map_t &var_map) {
 
-	// Check there is at least space for ARGHEAD WORDs (the arghead or a fast-notation number)
+	// Check there is at least space for ARGHEAD WORDs (the arghead or fast-notation number/symbol)
 	if ( must_fit_term && (sizeof(WORD)*(prev_size + ARGHEAD) > (size_t)AM.MaxTer) ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("flint::to_argument_poly: output exceeds MaxTermSize");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+	}
+
+	// Create the inverse of var_map, so we don't have to search it for each symbol written
+	var_map_t var_map_inv;
+	for (auto x: var_map) {
+		var_map_inv[x.second] = x.first;
 	}
 
 	const LONG n_terms = fmpz_poly_length(poly);
@@ -1369,16 +1398,21 @@ ULONG flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead, const bo
 		}
 	}
 
-	fmpz *coeff; // No init, we can get pointers directly to the poly's coefficients
-	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::to_argument_poly");
-
-	// Create the inverse of var_map, so we don't have to search it for each symbol written
-	var_map_t var_map_inv;
-	for (auto x: var_map) {
-		var_map_inv[x.second] = x.first;
+	// The poly might be a single symbol with coeff 1, use fast notation if so.
+	if ( with_arghead && n_terms == 2 ) {
+		if ( fmpz_is_zero(fmpz_poly_get_coeff_ptr(poly, 0)) ) {
+			// The constant term is zero
+			if ( fmpz_is_one(fmpz_poly_get_coeff_ptr(poly, 1)) ) {
+				// Single symbol with coeff 1. Use fast notation:
+				*out++ = -SYMBOL;
+				*out++ = var_map_inv[0];
+				return 2;
+			}
+		}
 	}
 
-	// TODO fast notation for single symbol arg
+	fmpz *coeff; // No init, we can get pointers directly to the poly's coefficients
+	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::to_argument_poly");
 
 	WORD* arg_size = 0;
 	WORD* arg_flag = 0;
