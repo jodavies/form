@@ -16,8 +16,6 @@ SRCBASE = \
 	extcmd.c \
 	factor.c \
 	findpat.c \
-	flintinterface.cc \
-	flintwrap.cc \
 	form3.h \
 	fsizes.h \
 	ftypes.h \
@@ -84,6 +82,12 @@ endif
 if ONWINDOWS
 SRCBASE += \
 	fwin.h
+endif
+
+if WITHFLINT
+SRCBASE += \
+	flintinterface.cc \
+	flintwrap.cc
 endif
 
 if WITHFLOAT
