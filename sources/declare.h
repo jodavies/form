@@ -1644,6 +1644,7 @@ extern void  poly_free_poly_vars(PHEAD const char *);
 extern int   flint_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD* flint_factorize_dollar(PHEAD WORD *);
 extern WORD* flint_gcd(PHEAD WORD *, WORD *, const WORD);
+extern WORD* flint_mul(PHEAD WORD *, WORD *);
 extern WORD* flint_ratfun_add(PHEAD WORD *, WORD *);
 extern int   flint_ratfun_normalize(PHEAD WORD *);
 
