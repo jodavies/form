@@ -471,16 +471,43 @@ WORD flint::fmpz_get_form(fmpz_t z, WORD *a) {
 	// This works but is UB?
 	//fmpz_get_ui_array(reinterpret_cast<ULONG*>(a), nlimbs, z);
 
-	unsigned long limb_data[nlimbs] = {0};
-	fmpz_get_ui_array(limb_data, nlimbs, z);
-	for ( long i = 0; i < nlimbs; i++ ) {
-		a[2*i] = (WORD)(limb_data[i] & 0xFFFFFFFF);
+	// Use fixed-size functions to get limb data where possible. These probably cover most real
+	// cases. 
+	if ( nlimbs == 1 ) {
+		const unsigned long limb = fmpz_get_ui(z);
+		a[0] = (WORD)(limb & 0xFFFFFFFF);
 		na++;
-		a[2*i+1] = (WORD)(limb_data[i] >> BITSINWORD);
-		if ( a[2*i+1] != 0 || i < (nlimbs-1) ) {
-			// The final limb might fit in a single 32bit WORD. Only
-			// increment na if the final WORD is non zero.
+		a[1] = (WORD)(limb >> BITSINWORD);
+		if ( a[1] != 0 ) {
 			na++;
+		}
+	}
+	else if ( nlimbs == 2 ) {
+		unsigned long limb_hi = 0, limb_lo = 0;
+		fmpz_get_uiui(&limb_hi, &limb_lo, z);
+		a[0] = (WORD)(limb_lo & 0xFFFFFFFF);
+			na++;
+		a[1] = (WORD)(limb_lo >> BITSINWORD);
+			na++;
+		a[2] = (WORD)(limb_hi & 0xFFFFFFFF);
+			na++;
+		a[3] = (WORD)(limb_hi >> BITSINWORD);
+		if ( a[3] != 0 ) {
+			na++;
+		}
+	}
+	else {
+		unsigned long limb_data[nlimbs] = {0};
+		fmpz_get_ui_array(limb_data, nlimbs, z);
+		for ( long i = 0; i < nlimbs; i++ ) {
+			a[2*i] = (WORD)(limb_data[i] & 0xFFFFFFFF);
+			na++;
+			a[2*i+1] = (WORD)(limb_data[i] >> BITSINWORD);
+			if ( a[2*i+1] != 0 || i < (nlimbs-1) ) {
+				// The final limb might fit in a single 32bit WORD. Only
+				// increment na if the final WORD is non zero.
+				na++;
+			}
 		}
 	}
 
@@ -519,7 +546,7 @@ void flint::fmpz_set_form(fmpz_t z, UWORD *a, WORD na) {
 		na--;
 	}
 
-	// If the number fits in fixed-size  fmpz_set functions, we don't need to use additional memory
+	// If the number fits in fixed-size fmpz_set functions, we don't need to use additional memory
 	// to convert to ULONG. These probably cover most real cases.
 	if ( na == 1 ) {
 		fmpz_set_ui(z, (ULONG)a[0]);
