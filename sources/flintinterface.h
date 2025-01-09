@@ -47,6 +47,9 @@ namespace flint {
 
 	var_map_t get_variables(const vector <WORD *> &, const bool, const bool);
 
+	WORD* mul_mpoly(PHEAD const WORD *, const WORD *, const var_map_t &);
+	WORD* mul_poly(PHEAD const WORD *, const WORD *, const var_map_t &);
+
 	void ratfun_add_mpoly(PHEAD WORD *, WORD *, WORD *, const var_map_t &);
 	void ratfun_add_poly(PHEAD WORD *, WORD *, WORD *, const var_map_t &);
 
@@ -59,7 +62,18 @@ namespace flint {
 
 	ULONG to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
 		const fmpz_mpoly_t, const var_map_t &, const fmpz_mpoly_ctx_t);
+	ULONG to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+		const fmpz_mpoly_t, const var_map_t &, const fmpz_mpoly_ctx_t, const fmpz_t);
 	ULONG to_argument_poly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
 		const fmpz_poly_t, const var_map_t &);
+	ULONG to_argument_poly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+		const fmpz_poly_t, const var_map_t &, const fmpz_t);
+
+
+	namespace util {
+
+		void simplify_fmpz(fmpz_t, fmpz_t, fmpz_t);
+
+	}
 
 }
