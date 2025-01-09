@@ -1387,7 +1387,11 @@ WORD IniVars(VOID)
 	AC.lPolyFunExp = AM.gPolyFunExp = 0;
 	AC.lPolyFunVar = AM.gPolyFunVar = 0;
 	AC.lPolyFunPow = AM.gPolyFunPow = 0;
+#ifdef FLINT
 	AC.FlintPolyFlag = 1;
+#else
+	AC.FlintPolyFlag = 0;
+#endif
 	AC.DirtPow = 0;
 	AC.lDefDim = AM.gDefDim = 4;
 	AC.lDefDim4 = AM.gDefDim4 = 0;

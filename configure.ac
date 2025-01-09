@@ -456,12 +456,13 @@ AS_IF([test "x$with_flint" != xno],
 	AS_IF([$flag], [AC_CHECK_HEADER([flint/flint.h], [], [flag=false])])
 	AS_IF([$flag], [AC_CHECK_LIB([flint], [fmpz_mpoly_init], [LIBS="-lflint $LIBS"], [flag=false])])
 	AS_IF([$flag],
-		[AC_DEFINE(WITHZLIB, [], [Define to use flint for polynomial arithmetic.])
+		[AC_DEFINE(WITHFLINT, [], [Define to use flint for polynomial arithmetic.])
 		with_flint=yes],
 		[AS_IF([test "x$with_flint" = xyes],
 			[AC_MSG_FAILURE([test for flint failed. Give --without-flint if you want to compile without flint])])
 		AC_MSG_NOTICE([flint is not available])
 		with_flint=no])])
+AM_CONDITIONAL([WITHFLINT], [test "x$with_flint" = xyes])
 
 # enable-scalar/threaded/parform/debug/float
 AC_ARG_ENABLE([scalar],
@@ -1186,6 +1187,10 @@ echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
 echo
 echo "Optionally linked libraries:"
 atleastone=no
+if test "x$with_flint" = xyes; then
+	echo "    flint"
+	atleastone=yes
+fi
 if test "x$with_gmp" = xyes; then
 	echo "    gmp"
 	atleastone=yes

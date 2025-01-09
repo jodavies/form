@@ -905,6 +905,12 @@ int CoOn(UBYTE *s)
 				}
 			}
 		}
+		else if ( StrICont(t,(UBYTE *)"flint") == 0 ) {
+#ifndef WITHFLINT
+			MesPrint("&Warning: FORM was not built with FLINT support.");
+			MesPrint("Statement has no effect.");
+#endif
+		}
 		else { *s = c; }
 		*onoffoptions[i].var = onoffoptions[i].type;
 		AR.SortType = AC.SortType;
