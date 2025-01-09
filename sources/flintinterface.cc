@@ -26,7 +26,9 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 	flint::from_argument_mpoly(arg, den, argin, with_arghead, var_map, ctx);
 	// The denominator must be 1:
 	if ( fmpz_mpoly_is_one(den, ctx) != 1 ) {
-		cout << "flint::factorize_mpoly error: den != 1";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::factorize_mpoly error: den != 1");
+		MUNLOCK(ErrorMessageLock);
 		fmpz_mpoly_clear(den, ctx);
 		Terminate(-1);
 	}
@@ -108,7 +110,9 @@ WORD* flint::factorize_poly(PHEAD WORD *argin, WORD *argout, const bool with_arg
 	flint::from_argument_poly(arg, den, argin, with_arghead);
 	// The denominator must be 1:
 	if ( fmpz_poly_is_one(den) != 1 ) {
-		cout << "flint::factorize_poly error: den != 1";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::factorize_poly error: den != 1");
+		MUNLOCK(ErrorMessageLock);
 		fmpz_poly_clear(den);
 		Terminate(-1);
 	}
@@ -608,11 +612,15 @@ WORD* flint::gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_t
 
 	// denpa, denpb must be 1:
 	if ( fmpz_mpoly_is_one(denpa, ctx) != 1 ) {
-		cout << "gcd error: denpa != 1";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::gcd_mpoly: error: denpa != 1");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( fmpz_mpoly_is_one(denpb, ctx) != 1 ) {
-		cout << "gcd error: denpb != 1";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::gcd_mpoly: error: denpb != 1");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
@@ -671,11 +679,15 @@ WORD* flint::gcd_poly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_te
 
 	// denpa, denpb must be 1:
 	if ( fmpz_poly_is_one(denpa) != 1 ) {
-		cout << "gcd error: denpa != 1";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::gcd_poly: error: denpa != 1");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( fmpz_poly_is_one(denpb) != 1 ) {
-		cout << "gcd error: denpb != 1";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::gcd_poly: error: denpb != 1");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
@@ -745,7 +757,7 @@ flint::var_map_t flint::get_variables(const vector <WORD *> &es, const bool with
 		// JD: Here we need to check for non-symbol/number terms in fast notation.
 		else if ( *e < 0 ) {
 			MLOCK(ErrorMessageLock);
-			MesPrint ((char*)"ERROR: polynomials and polyratfuns must contain symbols only");
+			MesPrint("ERROR: polynomials and polyratfuns must contain symbols only");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(1);
 		}
@@ -753,7 +765,7 @@ flint::var_map_t flint::get_variables(const vector <WORD *> &es, const bool with
 			for ( int i = with_arghead ? ARGHEAD:0; with_arghead ? i < e[0]:e[i] != 0; i += e[i] ) {
 				if ( i+1 < i+e[i]-ABS(e[i+e[i]-1]) && e[i+1] != SYMBOL ) {
 					MLOCK(ErrorMessageLock);
-					MesPrint ((char*)"ERROR: polynomials and polyratfuns must contain symbols only");
+					MesPrint("ERROR: polynomials and polyratfuns must contain symbols only");
 					MUNLOCK(ErrorMessageLock);
 					Terminate(1);
 				}
@@ -796,11 +808,15 @@ WORD* flint::mul_mpoly(PHEAD const WORD *a, const WORD *b, const var_map_t &var_
 
 	// denpa, denpb must be integers. Negative symbol powers have been converted to extra symbols.
 	if ( fmpz_mpoly_is_fmpz(denpa, ctx) != 1 ) {
-		cout << "flint::mul_mpoly: error: denpa is non-constant";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::mul_mpoly: error: denpa is non-constant");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( fmpz_mpoly_is_fmpz(denpb, ctx) != 1 ) {
-		cout << "flint::mul_mpoly: error: denpb is non-constant";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::mul_mpoly: error: denpb is non-constant");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
@@ -855,11 +871,15 @@ WORD* flint::mul_poly(PHEAD const WORD *a, const WORD *b, const var_map_t &var_m
 
 	// denpa, denpb must be integers. Negative symbol powers have been converted to extra symbols.
 	if ( fmpz_poly_degree(denpa) != 0 ) {
-		cout << "flint::mul_poly: error: denpa is non-constant";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::mul_poly: error: denpa is non-constant");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 	if ( fmpz_poly_degree(denpb) != 0 ) {
-		cout << "flint::mul_poly: error: denpb is non-constant";
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::mul_poly: error: denpb is non-constant");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
@@ -1283,7 +1303,7 @@ void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
 	a += FUNHEAD;
 	if ( a >= arg_stop ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint((char*)"ERROR: PolyRatFun cannot have zero arguments");
+		MesPrint("ERROR: PolyRatFun cannot have zero arguments");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -1306,13 +1326,14 @@ void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
 	}
 	else {
 		// The denominator is 1
-		cout << "implement this" << endl;
+		MLOCK(ErrorMessageLock);
+		MesPrint("implement this");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
-		// TODO I am not sure how to get here... the poly code seems buggy?
 	}
 	if ( a < arg_stop ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint((char*)"ERROR: PolyRatFun cannot have more than two arguments");
+		MesPrint("ERROR: PolyRatFun cannot have more than two arguments");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -1348,7 +1369,7 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 	a += FUNHEAD;
 	if ( a >= arg_stop ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint ((char*)"ERROR: PolyRatFun cannot have zero arguments");
+		MesPrint("ERROR: PolyRatFun cannot have zero arguments");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -1371,13 +1392,14 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 	}
 	else {
 		// The denominator is 1
-		cout << "implement this" << endl;
+		MLOCK(ErrorMessageLock);
+		MesPrint("implement this");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
-		// TODO I am not sure how to get here... the poly code seems buggy?
 	}
 	if ( a < arg_stop ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint((char*)"ERROR: PolyRatFun cannot have more than two arguments");
+		MesPrint("ERROR: PolyRatFun cannot have more than two arguments");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -1417,7 +1439,9 @@ ULONG flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead, const b
 
 	// denscale should be positive, check this:
 	if ( fmpz_sgn(denscale) == -1 ) {
-		cout << "flint::to_argument_mpoly: error: denscale < 0" << endl;
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::to_argument_mpoly: error: denscale < 0");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
@@ -1650,7 +1674,9 @@ ULONG flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead, const bo
 
 	// denscale should be positive, check this:
 	if ( fmpz_sgn(denscale) == -1 ) {
-		cout << "flint::to_argument_poly: error: denscale < 0" << endl;
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::to_argument_poly: error: denscale < 0");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
