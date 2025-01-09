@@ -9,6 +9,7 @@ extern "C" {
 
 #include "flintinterface.h"
 
+
 /*
 	#[ flint_factorize_argument :
 */
@@ -44,7 +45,7 @@ WORD* flint_factorize_dollar(PHEAD WORD *argin) {
 	#] flint_factorize_dollar :
 	#[ flint_gcd :
 */
-WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit) {
+WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 	// Extract expressions
 	vector<WORD *> e;
 	e.push_back(a);
@@ -52,14 +53,32 @@ WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit) {
 	const flint::var_map_t var_map = flint::get_variables(e, false, false);
 
 	if ( var_map.size() > 1 ) {
-		return flint::gcd_mpoly(BHEAD a, b, must_fit, var_map);
+		return flint::gcd_mpoly(BHEAD a, b, must_fit_term, var_map);
 	}
 	else {
-		return flint::gcd_poly(BHEAD a, b, must_fit, var_map);
+		return flint::gcd_poly(BHEAD a, b, must_fit_term, var_map);
 	}
 }
 /*
 	#] flint_gcd :
+	#[ flint_mul :
+*/
+WORD* flint_mul(PHEAD WORD *a, WORD *b) {
+	// Extract expressions
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	const flint::var_map_t var_map = flint::get_variables(e, false, false);
+
+	if ( var_map.size() > 1 ) {
+		return flint::mul_mpoly(BHEAD a, b, var_map);
+	}
+	else {
+		return flint::mul_poly(BHEAD a, b, var_map);
+	}
+}
+/*
+	#] flint_mul :
 	#[ flint_ratfun_add :
 */
 WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
