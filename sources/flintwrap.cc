@@ -84,7 +84,9 @@ WORD* flint_mul(PHEAD WORD *a, WORD *b) {
 WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 
 	if ( AR.PolyFunExp == 1 ) {
+		MLOCK(ErrorMessageLock);
 		MesPrint("flint_ratfun_add: PolyFunExp unimplemented.");
+		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
 
