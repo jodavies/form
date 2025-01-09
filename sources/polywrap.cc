@@ -1829,6 +1829,10 @@ WORD *poly_mul(PHEAD WORD *a, WORD *b) {
 	cout << "*** [" << thetime() << "]  CALL : poly_mul" << endl;
 #endif
 
+	if ( AC.FlintPolyFlag ) {
+		return flint_mul(BHEAD a, b);
+	}
+
 	// Extract variables
 	vector<WORD *> e;
 	e.push_back(a);
