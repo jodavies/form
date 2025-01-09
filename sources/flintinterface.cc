@@ -1085,13 +1085,6 @@ void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const var_map_t &var_map) {
 			fmpz_mpoly_init(den2, ctx);
 			flint::ratfun_read_mpoly(t, num2, den2, var_map, ctx);
 
-			if ( (t[2] & MUSTCLEANPRF) != 0 ) { // first normalize TODO do this inside read?
-				fmpz_mpoly_t gcd;
-				fmpz_mpoly_init(gcd, ctx);
-				fmpz_mpoly_gcd_cofactors(gcd, num2, den2, num2, den2, ctx);
-				fmpz_mpoly_clear(gcd, ctx);
-			}
-
 			// get gcd of num1,den2 and num2,den1 and then assemble
 			fmpz_mpoly_t gcd;
 			fmpz_mpoly_init(gcd, ctx);
@@ -1204,15 +1197,6 @@ void flint::ratfun_normalize_poly(PHEAD WORD *term, const var_map_t &var_map) {
 			fmpz_poly_init(den2);
 			flint::ratfun_read_poly(t, num2, den2);
 
-			if ( (t[2] & MUSTCLEANPRF) != 0 ) { // first normalize TODO do this inside read?
-				fmpz_poly_t gcd;
-				fmpz_poly_init(gcd);
-				fmpz_poly_gcd(gcd, num2, den2);
-				fmpz_poly_div(num2, num2, gcd);
-				fmpz_poly_div(den2, den2, gcd);
-				fmpz_poly_clear(gcd);
-			}
-
 			// get gcd of num1,den2 and num2,den1 and then assemble
 			fmpz_poly_t gcd;
 			fmpz_poly_init(gcd);
@@ -1294,13 +1278,12 @@ void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
 	// The end of the arguments:
 	const WORD* arg_stop = a+a[1];
 
-	// TODO Do we need to normalize? This is done outside of read currently, but maybe it is better here?
-//	const bool clean = (a[2] & MUSTCLEANPRF) == 0;
+	const bool must_normalize = (a[2] & MUSTCLEANPRF) != 0;
 
 	a += FUNHEAD;
 	if ( a >= arg_stop ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint ((char*)"ERROR: PolyRatFun cannot have zero arguments");
+		MesPrint((char*)"ERROR: PolyRatFun cannot have zero arguments");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -1314,8 +1297,8 @@ void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
 
 	// Read the numerator
 	flint::from_argument_mpoly(num, den_num, a, true, var_map, ctx);
-
 	NEXTARG(a);
+
 	if ( a < arg_stop ) {
 		// Read the denominator
 		flint::from_argument_mpoly(den, den_den, a, true, var_map, ctx);
@@ -1327,21 +1310,27 @@ void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
 		Terminate(-1);
 		// TODO I am not sure how to get here... the poly code seems buggy?
 	}
+	if ( a < arg_stop ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint((char*)"ERROR: PolyRatFun cannot have more than two arguments");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	// Multiply the num by den_den and den by den_num:
 	fmpz_mpoly_mul(num, num, den_den, ctx);
 	fmpz_mpoly_mul(den, den, den_num, ctx);
 
+	if ( must_normalize ) {
+		fmpz_mpoly_t gcd;
+		fmpz_mpoly_init(gcd, ctx);
+		fmpz_mpoly_gcd_cofactors(gcd, num, den, num, den, ctx);
+		fmpz_mpoly_clear(gcd, ctx);
+	}
+
 
 	fmpz_mpoly_clear(den_num, ctx);
 	fmpz_mpoly_clear(den_den, ctx);
-
-	if ( a < arg_stop ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint ((char*)"ERROR: PolyRatFun cannot have more than two arguments");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
-	}
 }
 /*
 	#] flint::ratfun_read_mpoly :
@@ -1354,8 +1343,7 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 	// The end of the arguments:
 	const WORD* arg_stop = a+a[1];
 
-	// TODO Do we need to normalize? This is done outside of read currently, but maybe it is better here?
-//	const bool clean = (a[2] & MUSTCLEANPRF) == 0;
+	const bool must_normalize = (a[2] & MUSTCLEANPRF) != 0;
 
 	a += FUNHEAD;
 	if ( a >= arg_stop ) {
@@ -1374,8 +1362,8 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 
 	// Read the numerator
 	flint::from_argument_poly(num, den_num, a, true);
-
 	NEXTARG(a);
+
 	if ( a < arg_stop ) {
 		// Read the denominator
 		flint::from_argument_poly(den, den_den, a, true);
@@ -1387,21 +1375,29 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 		Terminate(-1);
 		// TODO I am not sure how to get here... the poly code seems buggy?
 	}
+	if ( a < arg_stop ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint((char*)"ERROR: PolyRatFun cannot have more than two arguments");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	// Multiply the num by den_den and den by den_num:
 	fmpz_poly_mul(num, num, den_den);
 	fmpz_poly_mul(den, den, den_num);
 
+	if ( must_normalize ) {
+		fmpz_poly_t gcd;
+		fmpz_poly_init(gcd);
+		fmpz_poly_gcd(gcd, num, den);
+		fmpz_poly_div(num, num, gcd);
+		fmpz_poly_div(den, den, gcd);
+		fmpz_poly_clear(gcd);
+	}
+
 
 	fmpz_poly_clear(den_num);
 	fmpz_poly_clear(den_den);
-
-	if ( a < arg_stop ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint ((char*)"ERROR: PolyRatFun cannot have more than two arguments");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
-	}
 }
 /*
 	#] flint::ratfun_read_poly :
