@@ -1147,8 +1147,10 @@ void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t
 
 	if ( fmpz_poly_equal(den1, den2) == 0 ) {
 		fmpz_poly_gcd(gcd, den1, den2);
-		fmpz_poly_div(den1, den1, gcd);
-		fmpz_poly_div(den2, den2, gcd);
+		if ( !fmpz_poly_is_one(gcd) ) {
+			fmpz_poly_div(den1, den1, gcd);
+			fmpz_poly_div(den2, den2, gcd);
+		}
 
 		fmpz_poly_mul(num1, num1, den2);
 		fmpz_poly_mul(num2, num2, den1);
@@ -1163,8 +1165,10 @@ void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t
 
 	// Finally divide out any common factors between the resulting num1, den1:
 	fmpz_poly_gcd(gcd, num1, den1);
-	fmpz_poly_div(num1, num1, gcd);
-	fmpz_poly_div(den1, den1, gcd);
+	if ( !fmpz_poly_is_one(gcd) ) {
+		fmpz_poly_div(num1, num1, gcd);
+		fmpz_poly_div(den1, den1, gcd);
+	}
 
 	// Fix sign: the leading denominator term should have a positive coeff.
 //	fmpz_t leading_coeff;
@@ -1354,11 +1358,15 @@ void flint::ratfun_normalize_poly(PHEAD WORD *term, const var_map_t &var_map) {
 
 			// get gcd of num1,den2 and num2,den1 and then assemble
 			fmpz_poly_gcd(gcd, num1, den2);
-			fmpz_poly_div(num1, num1, gcd);
-			fmpz_poly_div(den2, den2, gcd);
+			if ( !fmpz_poly_is_one(gcd) ) {
+				fmpz_poly_div(num1, num1, gcd);
+				fmpz_poly_div(den2, den2, gcd);
+			}
 			fmpz_poly_gcd(gcd, num2, den1);
-			fmpz_poly_div(num2, num2, gcd);
-			fmpz_poly_div(den1, den1, gcd);
+			if ( !fmpz_poly_is_one(gcd) ) {
+				fmpz_poly_div(num2, num2, gcd);
+				fmpz_poly_div(den1, den1, gcd);
+			}
 
 			fmpz_poly_mul(num1, num1, num2);
 			fmpz_poly_mul(den1, den1, den2);
@@ -1545,8 +1553,10 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 		fmpz_poly_t gcd;
 		fmpz_poly_init(gcd);
 		fmpz_poly_gcd(gcd, num, den);
-		fmpz_poly_div(num, num, gcd);
-		fmpz_poly_div(den, den, gcd);
+		if ( !fmpz_poly_is_one(gcd) ) {
+			fmpz_poly_div(num, num, gcd);
+			fmpz_poly_div(den, den, gcd);
+		}
 		fmpz_poly_clear(gcd);
 	}
 
@@ -2024,8 +2034,10 @@ ULONG flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead, const bo
 // Divide the GCD out of num and den
 inline void flint::util::simplify_fmpz(fmpz_t num, fmpz_t den, fmpz_t gcd) {
 	fmpz_gcd(gcd, num, den);
-	fmpz_divexact(num, num, gcd);
-	fmpz_divexact(den, den, gcd);
+	if ( !fmpz_is_one(gcd) ) {
+		fmpz_divexact(num, num, gcd);
+		fmpz_divexact(den, den, gcd);
+	}
 }
 /*
 	#] flint::util::simplify_fmpz :
