@@ -4,6 +4,13 @@
  *   multivariate polynomials and perform factorization.
  */
 
+#ifdef HAVE_CONFIG_H
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+#include <config.h>
+#endif
+#endif
+
 extern "C" {
 #include "form3.h"
 }
@@ -1146,11 +1153,7 @@ void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t
 	flint::ratfun_read_poly(t2, num2, den2);
 
 	if ( fmpz_poly_equal(den1, den2) == 0 ) {
-		fmpz_poly_gcd(gcd, den1, den2);
-		if ( !fmpz_poly_is_one(gcd) ) {
-			fmpz_poly_div(den1, den1, gcd);
-			fmpz_poly_div(den2, den2, gcd);
-		}
+		flint::util::simplify_fmpz_poly(den1, den2, gcd);
 
 		fmpz_poly_mul(num1, num1, den2);
 		fmpz_poly_mul(num2, num2, den1);
@@ -1164,11 +1167,7 @@ void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t
 	}
 
 	// Finally divide out any common factors between the resulting num1, den1:
-	fmpz_poly_gcd(gcd, num1, den1);
-	if ( !fmpz_poly_is_one(gcd) ) {
-		fmpz_poly_div(num1, num1, gcd);
-		fmpz_poly_div(den1, den1, gcd);
-	}
+	flint::util::simplify_fmpz_poly(num1, den1, gcd);
 
 	// Fix sign: the leading denominator term should have a positive coeff.
 //	fmpz_t leading_coeff;
@@ -1357,16 +1356,8 @@ void flint::ratfun_normalize_poly(PHEAD WORD *term, const var_map_t &var_map) {
 			flint::ratfun_read_poly(t, num2, den2);
 
 			// get gcd of num1,den2 and num2,den1 and then assemble
-			fmpz_poly_gcd(gcd, num1, den2);
-			if ( !fmpz_poly_is_one(gcd) ) {
-				fmpz_poly_div(num1, num1, gcd);
-				fmpz_poly_div(den2, den2, gcd);
-			}
-			fmpz_poly_gcd(gcd, num2, den1);
-			if ( !fmpz_poly_is_one(gcd) ) {
-				fmpz_poly_div(num2, num2, gcd);
-				fmpz_poly_div(den1, den1, gcd);
-			}
+			flint::util::simplify_fmpz_poly(num1, den2, gcd);
+			flint::util::simplify_fmpz_poly(num2, den1, gcd);
 
 			fmpz_poly_mul(num1, num1, num2);
 			fmpz_poly_mul(den1, den1, den2);
@@ -1552,11 +1543,7 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 	if ( must_normalize ) {
 		fmpz_poly_t gcd;
 		fmpz_poly_init(gcd);
-		fmpz_poly_gcd(gcd, num, den);
-		if ( !fmpz_poly_is_one(gcd) ) {
-			fmpz_poly_div(num, num, gcd);
-			fmpz_poly_div(den, den, gcd);
-		}
+		flint::util::simplify_fmpz_poly(num, den, gcd);
 		fmpz_poly_clear(gcd);
 	}
 
@@ -2041,4 +2028,22 @@ inline void flint::util::simplify_fmpz(fmpz_t num, fmpz_t den, fmpz_t gcd) {
 }
 /*
 	#] flint::util::simplify_fmpz :
+	#[ flint::util::simplify_fmpz_poly :
+*/
+// Divide the GCD out of num and den
+inline void flint::util::simplify_fmpz_poly(fmpz_poly_t num, fmpz_poly_t den, fmpz_poly_t gcd) {
+	fmpz_poly_gcd(gcd, num, den);
+	if ( !fmpz_poly_is_one(gcd) ) {
+#ifdef WITHFLINT310
+		// This should be faster than fmpz_poly_div, see https://github.com/flintlib/flint/pull/1766
+		fmpz_poly_divexact(num, num, gcd);
+		fmpz_poly_divexact(den, den, gcd);
+#else
+		fmpz_poly_div(num, num, gcd);
+		fmpz_poly_div(den, den, gcd);
+#endif
+	}
+}
+/*
+	#] flint::util::simplify_fmpz_poly :
 */
