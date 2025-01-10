@@ -9,6 +9,7 @@ extern "C" {
 }
 
 
+#include <flint/fmpz.h>
 #include <flint/fmpz_mpoly.h>
 #include <flint/fmpz_mpoly_factor.h>
 #include <flint/fmpz_poly.h>
@@ -76,6 +77,7 @@ namespace flint {
 	namespace util {
 
 		void simplify_fmpz(fmpz_t, fmpz_t, fmpz_t);
+		void simplify_fmpz_poly(fmpz_poly_t, fmpz_poly_t, fmpz_poly_t);
 
 	}
 

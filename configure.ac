@@ -455,6 +455,7 @@ AS_IF([test "x$with_flint" != xno],
 	[flag=:
 	AS_IF([$flag], [AC_CHECK_HEADER([flint/flint.h], [], [flag=false])])
 	AS_IF([$flag], [AC_CHECK_LIB([flint], [fmpz_mpoly_init], [LIBS="-lflint $LIBS"], [flag=false])])
+	AS_IF([$flag], [AC_CHECK_LIB([flint], [fmpz_poly_divexact], AC_DEFINE([WITHFLINT310], [], [Define to use version-specific flint features.]), [])])
 	AS_IF([$flag],
 		[AC_DEFINE(WITHFLINT, [], [Define to use flint for polynomial arithmetic.])
 		with_flint=yes],
