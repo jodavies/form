@@ -26,6 +26,7 @@ using std::cout;
 using std::endl;
 using std::map;
 using std::vector;
+using std::swap;
 
 
 namespace flint {
@@ -34,6 +35,8 @@ namespace flint {
 
 	WORD* factorize_mpoly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
 	WORD* factorize_poly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
+
+	void form_sort(PHEAD WORD *);
 
 	unsigned from_argument_mpoly(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const bool,
 		const var_map_t &, const fmpz_mpoly_ctx_t);
