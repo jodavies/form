@@ -796,6 +796,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 					while ( --j >= 0 ) *to++ = *t++;
 				}
 				*to = 0;
+				retval = to - buffer;
 			}
 			goto RetRetval;
 		}
