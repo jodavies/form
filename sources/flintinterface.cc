@@ -1,7 +1,7 @@
 /** @file flintinterface.cc
  *
- *   Contains functions which interface with FLINT functions to perform arithmetic with uni and
- *   multivariate polynomials and perform factorization.
+ *   Contains functions which interface with FLINT functions to perform arithmetic with uni- and
+ *   multi-variate polynomials and perform factorization.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -37,7 +37,6 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 		MLOCK(ErrorMessageLock);
 		MesPrint("flint::factorize_mpoly error: den != 1");
 		MUNLOCK(ErrorMessageLock);
-		fmpz_mpoly_clear(den, ctx);
 		Terminate(-1);
 	}
 	fmpz_mpoly_clear(den, ctx);
@@ -49,6 +48,17 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 	fmpz_mpoly_factor(arg_fac, arg, ctx);
 	const long num_factors = fmpz_mpoly_factor_length(arg_fac, ctx);
 
+	fmpz_t overall_constant;
+	fmpz_init(overall_constant);
+	fmpz_mpoly_factor_get_constant_fmpz(overall_constant, arg_fac, ctx);
+	// FORM should always have taken the overall constant out in the content. Thus this overall
+	// constant factor should be +- 1 here. Verify this:
+	if ( ! ( fmpz_equal_si(overall_constant, 1) || fmpz_equal_si(overall_constant, -1) ) ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::factorize_mpoly error: overall constant factor != +-1");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	// Construct the output. If argout is not NULL, we write the result there.
 	// Otherwise, allocate memory.
@@ -56,67 +66,99 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 	// contains its size. Otherwise, the factors are zero separated.
 
 	// We only need to determine the size of the output if we are allocating memory, but we need to
-	// loop through the factors to check for an overall sign anyway. Do both together:
-	int overall_sign = 1;
+	// loop through the factors to fix their signs anyway. Do both together in one loop:
 
 	// Initially 1, for the final trailing 0.
 	unsigned long output_size = 1;
+
+	// For finding the highest symbol, in FORM's lexicographic ordering
+	var_map_t var_map_inv;
+	for ( auto x: var_map ) {
+		var_map_inv[x.second] = x.first;
+	}
+
+	// Store whether we should flip the factor sign in the ouput:
+	int base_sign[num_factors] = {0};
 
 	for ( long i = 0; i < num_factors; i++ ) {
 		fmpz_mpoly_factor_get_base(base, arg_fac, i, ctx);
 		const long exponent = fmpz_mpoly_factor_get_exp_si(arg_fac, i, ctx);
 
-		// poly_factorize makes sure that the highest power of the highest symbol has a positive
-		// coefficient. This should be the last term of the mpoly. Check the sign:
-		if ( fmpz_sgn(fmpz_mpoly_term_coeff_ref(base, fmpz_mpoly_length(base, ctx)-1, ctx)) == -1 ) {
-			if ( exponent % 2 == 1 ) {
-				overall_sign *= -1;
+		// poly_factorize makes sure the highest power of the "highest symbol" (in FORM's
+		// lexicographic ordering) has a positive coefficient. Check this, update overall_constant
+		// of the factorization if necessary.
+		// Store the sign per factor, so that we can flip the signs in the output without re-checking
+		// the individual terms again.
+		unsigned max_var = 0; // FORM symbols start at 20, 0 is a good initial value.
+		int max_pow = -1;
+		long base_term_exponents[var_map.size()] = {0};
+
+		for ( unsigned j = 0; j < fmpz_mpoly_length(base, ctx); j++ ) {
+			fmpz_mpoly_get_term_exp_si(base_term_exponents, base, j, ctx);
+
+			for ( unsigned k = 0; k < var_map.size(); k++ ) {
+				if ( base_term_exponents[k] > 0 && ( var_map_inv.at(k) > max_var ||
+					( var_map_inv.at(k) == max_var && base_term_exponents[k] > max_pow ) ) ) {
+
+					max_var = var_map_inv.at(k);
+					max_pow = base_term_exponents[k];
+					base_sign[i] = fmpz_sgn(fmpz_mpoly_term_coeff_ref(base, j, ctx));
+				}
 			}
 		}
+		// If this base's sign will be flipped an odd number of times, there is a contribution to
+		// the overall sign of the whole factorization:
+		if ( ( base_sign[i] == -1 ) && ( exponent % 2 == 1 ) ) {
+			fmpz_neg(overall_constant, overall_constant);
+		}
 
-		const bool write = false;
-		for ( long j = 0; j < exponent; j++ ) {
-			output_size += (unsigned long)flint::to_argument_mpoly(BHEAD NULL, with_arghead,
-				is_fun_arg, write, 0, base, var_map, ctx);
+		// Now determine the output size of the factor, if we are allocating the memory
+		if ( argout == NULL ) {
+			const bool write = false;
+			for ( long j = 0; j < exponent; j++ ) {
+				output_size += (unsigned long)flint::to_argument_mpoly(BHEAD NULL, with_arghead,
+					is_fun_arg, write, 0, base, var_map, ctx);
+			}
 		}
 	}
-	if ( overall_sign == -1 ) {
-		// Add space for a number and an ARGHEAD or zero separator
+	if ( fmpz_sgn(overall_constant) == -1 && argout == NULL ) {
+		// Add space for a normal-notation number and an ARGHEAD or zero separator
 		output_size += 4 + with_arghead ? ARGHEAD : 1;
 	}
 
-	// Now make the allocation of necessary:
+	// Now make the allocation if necessary:
 	if ( argout == NULL ) {
 		argout = (WORD*)Malloc1(sizeof(WORD)*output_size, "flint::factorize_mpoly");
 	}
 
 
+	// And now comes the actual output:
 	WORD* old_argout = argout;
 
 	// If the overall sign is negative, first write a full-notation -1. It will be absorbed into the
 	// overall factor in the content by the caller.
-	if ( with_arghead ) {
-		*argout++ = 4 + ARGHEAD;
-		*argout++ = 0;
-		for ( int i = 2; i < ARGHEAD; i++ ) {
+	if ( fmpz_sgn(overall_constant) == -1 ) {
+		if ( with_arghead ) {
+			*argout++ = 4 + ARGHEAD;
 			*argout++ = 0;
+			for ( int i = 2; i < ARGHEAD; i++ ) {
+				*argout++ = 0;
+			}
 		}
-	}
-	*argout++ = 4; // term size
-	*argout++ = 1; // numerator
-	*argout++ = 1; // denominator
-	*argout++ = -3; // coeff size, negative number
-	if ( !with_arghead ) {
-		*argout++ = 0; // factor separator
+		*argout++ = 4; // term size
+		*argout++ = 1; // numerator
+		*argout++ = 1; // denominator
+		*argout++ = -3; // coeff size, negative number
+		if ( !with_arghead ) {
+			*argout++ = 0; // factor separator
+		}
 	}
 
 	for ( long i = 0; i < num_factors; i++ ) {
 		fmpz_mpoly_factor_get_base(base, arg_fac, i, ctx);
 		const long exponent = fmpz_mpoly_factor_get_exp_si(arg_fac, i, ctx);
 
-		// poly_factorize makes sure that the highest power of the highest symbol has a positive
-		// coefficient. This should be the last term of the mpoly. Fix the sign:
-		if ( fmpz_sgn(fmpz_mpoly_term_coeff_ref(base, fmpz_mpoly_length(base, ctx)-1, ctx)) == -1 ) {
+		if ( base_sign[i] == -1 ) {
 			fmpz_mpoly_neg(base, base, ctx);
 		}
 
