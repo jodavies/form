@@ -132,12 +132,12 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 int flint_ratfun_normalize(PHEAD WORD *term) {
 
 	// The length of the coefficient
-	const int ncoeff = (term + *term)[-1];
+	const WORD ncoeff = (term + *term)[-1];
 	// The end of the term data, before the coefficient:
 	const WORD *tstop = term + *term - ABS(ncoeff);
 
 	// Search the term for multiple PolyFun or one dirty one.
-	int num_polyratfun = 0;
+	unsigned num_polyratfun = 0;
 	for (WORD *t = term+1; t < tstop; t += t[1]) {
 		if (*t == AR.PolyFun) {
 			// Found one!
