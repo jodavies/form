@@ -16,32 +16,33 @@ extern "C" {
 #include <flint/fmpz_poly_factor.h>
 
 
-#include <iostream>
-#include <vector>
-#include <map>
 #include <cassert>
+#include <cstdint>
+#include <iostream>
+#include <map>
+#include <vector>
 
 
 // The bits of std that are needed:
 using std::cout;
 using std::endl;
 using std::map;
-using std::vector;
 using std::swap;
+using std::vector;
 
 
 namespace flint {
 
-	typedef std::map<unsigned,unsigned> var_map_t;
+	typedef std::map<uint32_t,uint32_t> var_map_t;
 
 	WORD* factorize_mpoly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
 	WORD* factorize_poly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
 
 	void form_sort(PHEAD WORD *);
 
-	unsigned from_argument_mpoly(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const bool,
+	uint64_t from_argument_mpoly(fmpz_mpoly_t, fmpz_mpoly_t, const WORD *, const bool,
 		const var_map_t &, const fmpz_mpoly_ctx_t);
-	unsigned from_argument_poly(fmpz_poly_t, fmpz_poly_t, const WORD *, const bool);
+	uint64_t from_argument_poly(fmpz_poly_t, fmpz_poly_t, const WORD *, const bool);
 
 	WORD fmpz_get_form(fmpz_t, WORD *);
 	void fmpz_set_form(fmpz_t, UWORD *, WORD);
@@ -64,13 +65,13 @@ namespace flint {
 		fmpz_mpoly_ctx_t);
 	void ratfun_read_poly(const WORD *, fmpz_poly_t, fmpz_poly_t);
 
-	ULONG to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+	uint64_t to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const uint64_t,
 		const fmpz_mpoly_t, const var_map_t &, const fmpz_mpoly_ctx_t);
-	ULONG to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+	uint64_t to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const uint64_t,
 		const fmpz_mpoly_t, const var_map_t &, const fmpz_mpoly_ctx_t, const fmpz_t);
-	ULONG to_argument_poly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+	uint64_t to_argument_poly(PHEAD WORD *, const bool, const bool, const bool, const uint64_t,
 		const fmpz_poly_t, const var_map_t &);
-	ULONG to_argument_poly(PHEAD WORD *, const bool, const bool, const bool, const ULONG,
+	uint64_t to_argument_poly(PHEAD WORD *, const bool, const bool, const bool, const uint64_t,
 		const fmpz_poly_t, const var_map_t &, const fmpz_t);
 
 
