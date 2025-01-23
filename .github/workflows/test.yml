@@ -10,7 +10,7 @@ jobs:
   # the committer has forgotten running "make check".
   check:
     name: Test (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -92,7 +92,7 @@ jobs:
   # jobs, we divide the tests into smaller parts.
   valgrind-check:
     name: Valgrind check for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }} (${{ matrix.group }})
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -181,7 +181,7 @@ jobs:
   # we measure code coverage only for tests checked with Valgrind.
   coverage:
     name: Code coverage for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
