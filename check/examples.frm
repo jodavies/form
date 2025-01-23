@@ -649,10 +649,15 @@ assert result("G") =~ expr("
     Local dummy = 1;
     .sort
     Fill B(1) = dummy;
-    Drop dummy;
-    .sort
-    Local F = B(1);
-    Print;
+*   This test originally demonstrated the actual crash due to the reference to
+*   the dropped "dummy" via the table element, as explained in the manual. For
+*   the purposes of CI testing, we don't need to actually hit the segfault,
+*   only check that the warning message is printed. On some test images, this
+*   test hits the timeout limit otherwise.
+*    Drop dummy;
+*    .sort
+*    Local F = B(1);
+*    Print;
     .end
     assert finished?
     assert warning?
