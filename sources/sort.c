@@ -997,6 +997,7 @@ TooLarge:
 							}
 							*((WORD **)buffer) = to;
 							NCOPY(to,t,jj);
+							retval = to - buffer - 1;
 						}
 						else {
 							j = newout->POfill - t;
@@ -1010,6 +1011,7 @@ TooLarge:
 								goto TooLarge;
 							}
 							NCOPY(to,t,j);
+							retval = to - buffer - 1;
 						}
 					}
 				}
