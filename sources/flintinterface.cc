@@ -235,8 +235,8 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 		}
 	}
 	if ( fmpz_sgn(overall_constant) == -1 && argout == NULL ) {
-		// Add space for a normal-notation number and an ARGHEAD or zero separator
-		output_size += 4 + (with_arghead ? ARGHEAD : 1);
+		// Add space for a fast-notation number or a normal-notation number and zero separator
+		output_size += with_arghead ? 2 : 4+1;
 	}
 
 	// Now make the allocation if necessary:
@@ -252,17 +252,16 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 	// overall factor in the content by the caller.
 	if ( fmpz_sgn(overall_constant) == -1 ) {
 		if ( with_arghead ) {
-			*argout++ = 4 + ARGHEAD;
-			*argout++ = 0;
-			for ( uint32_t i = 2; i < ARGHEAD; i++ ) {
-				*argout++ = 0;
-			}
+			// poly writes in fast notation in this case. Fast notation is expected by the caller, to
+			// properly merge it with the overall factor of the content.
+			*argout++ = -SNUMBER;
+			*argout++ = -1;
 		}
-		*argout++ = 4; // term size
-		*argout++ = 1; // numerator
-		*argout++ = 1; // denominator
-		*argout++ = -3; // coeff size, negative number
-		if ( !with_arghead ) {
+		else {
+			*argout++ = 4; // term size
+			*argout++ = 1; // numerator
+			*argout++ = 1; // denominator
+			*argout++ = -3; // coeff size, negative number
 			*argout++ = 0; // factor separator
 		}
 	}
