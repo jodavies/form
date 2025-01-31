@@ -434,6 +434,13 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 */
 WORD *poly_div(PHEAD WORD *a, WORD *b, WORD fit) {
 
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		WORD *ret = flint_div(BHEAD a, b, fit);
+		return ret;
+	}
+#endif
+
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_div" << endl;
 #endif
@@ -454,6 +461,13 @@ WORD *poly_div(PHEAD WORD *a, WORD *b, WORD fit) {
 	terminated sequence of terms (or just zero).
 */
 WORD *poly_rem(PHEAD WORD *a, WORD *b, WORD fit) {
+
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		WORD *ret = flint_rem(BHEAD a, b, fit);
+		return ret;
+	}
+#endif
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_rem" << endl;

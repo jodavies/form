@@ -1387,7 +1387,7 @@ WORD IniVars(VOID)
 	AC.lPolyFunExp = AM.gPolyFunExp = 0;
 	AC.lPolyFunVar = AM.gPolyFunVar = 0;
 	AC.lPolyFunPow = AM.gPolyFunPow = 0;
-#ifdef FLINT
+#ifdef WITHFLINT
 	AC.FlintPolyFlag = 1;
 #else
 	AC.FlintPolyFlag = 0;
