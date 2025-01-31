@@ -11,6 +11,27 @@ extern "C" {
 
 
 /*
+	#[ flint_div :
+*/
+WORD* flint_div(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
+	// Extract expressions
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	const bool with_arghead = false;
+	const bool sort_vars = false;
+	const flint::var_map_t var_map = flint::get_variables(e, with_arghead, sort_vars);
+
+	const bool return_rem = false;
+	if ( var_map.size() > 0 ) {
+		return flint::divmod_mpoly(BHEAD a, b, return_rem, must_fit_term, var_map);
+	}
+	else {
+		return flint::divmod_poly(BHEAD a, b, return_rem, must_fit_term, var_map);
+	}
+}
+/*
+	#] flint_div :
 	#[ flint_factorize_argument :
 */
 int flint_factorize_argument(PHEAD WORD *argin, WORD *argout) {
@@ -199,4 +220,25 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 }
 /*
 	#] flint_ratfun_normalize :
+	#[ flint_rem :
+*/
+WORD* flint_rem(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
+	// Extract expressions
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	const bool with_arghead = false;
+	const bool sort_vars = false;
+	const flint::var_map_t var_map = flint::get_variables(e, with_arghead, sort_vars);
+
+	const bool return_rem = true;
+	if ( var_map.size() > 0 ) {
+		return flint::divmod_mpoly(BHEAD a, b, return_rem, must_fit_term, var_map);
+	}
+	else {
+		return flint::divmod_poly(BHEAD a, b, return_rem, must_fit_term, var_map);
+	}
+}
+/*
+	#] flint_rem :
 */
