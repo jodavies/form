@@ -35,6 +35,9 @@ namespace flint {
 
 	typedef std::map<uint32_t,uint32_t> var_map_t;
 
+	WORD* divmod_mpoly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);
+	WORD* divmod_poly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);
+
 	WORD* factorize_mpoly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
 	WORD* factorize_poly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
 
