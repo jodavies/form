@@ -23,7 +23,7 @@ WORD* flint_div(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 	const flint::var_map_t var_map = flint::get_variables(e, with_arghead, sort_vars);
 
 	const bool return_rem = false;
-	if ( var_map.size() > 0 ) {
+	if ( var_map.size() > 1 ) {
 		return flint::divmod_mpoly(BHEAD a, b, return_rem, must_fit_term, var_map);
 	}
 	else {
@@ -92,6 +92,26 @@ WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 }
 /*
 	#] flint_gcd :
+	#[ flint_inverse :
+*/
+WORD* flint_inverse(PHEAD WORD *a, WORD *b) {
+	// Extract expressions
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	const flint::var_map_t var_map = flint::get_variables(e, false, false);
+
+	if ( var_map.size() > 1 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint_inverse: error: only univariate polynomials are supported.");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+
+	return flint::inverse_poly(BHEAD a, b, var_map);
+}
+/*
+	#] flint_inverse :
 	#[ flint_mul :
 */
 WORD* flint_mul(PHEAD WORD *a, WORD *b) {
@@ -232,7 +252,7 @@ WORD* flint_rem(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 	const flint::var_map_t var_map = flint::get_variables(e, with_arghead, sort_vars);
 
 	const bool return_rem = true;
-	if ( var_map.size() > 0 ) {
+	if ( var_map.size() > 1 ) {
 		return flint::divmod_mpoly(BHEAD a, b, return_rem, must_fit_term, var_map);
 	}
 	else {
