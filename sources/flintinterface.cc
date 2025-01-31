@@ -127,6 +127,87 @@ WORD* flint::divmod_mpoly(PHEAD const WORD *a, const WORD *b, const bool return_
 */
 WORD* flint::divmod_poly(PHEAD const WORD *a, const WORD *b, const bool return_rem,
 	const WORD must_fit_term, const var_map_t &var_map) {
+
+	fmpz_poly_t pa, pb, denpa, denpb;
+	fmpz_poly_init(pa);
+	fmpz_poly_init(pb);
+	fmpz_poly_init(denpa);
+	fmpz_poly_init(denpb);
+
+	flint::from_argument_poly(pa, denpa, a, false);
+	flint::from_argument_poly(pb, denpb, b, false);
+
+	// The input won't have any symbols with negative powers, but there may be rational
+	// coefficients. Verify this:
+	if ( fmpz_poly_length(denpa) != 1 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::divmod_poly: error: denpa is non-constant");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( fmpz_poly_length(denpb) != 1 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::divmod_poly: error: denpb is non-constant");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+
+	fmpz_t scale;
+	fmpz_init(scale);
+	uint64_t scale_power = 0;
+	fmpz_poly_t div, rem;
+	fmpz_poly_init(div);
+	fmpz_poly_init(rem);
+
+	// Get the leading coefficient of pb. fmpz_poly_pseudo_divrem returns only the scaling power.
+	fmpz_poly_get_coeff_fmpz(scale, pb, fmpz_poly_degree(pb));
+
+	fmpz_poly_pseudo_divrem(div, rem, &scale_power, pa, pb);
+
+	// The quotient must be multiplied by the denominator of the divisor
+	fmpz_poly_mul(div, div, denpb);
+
+	// The overall denominator of both div and rem is given by scale^scale_power*denpa. This we will
+	// pass to to_argument_poly's "denscale" argument which performs the division in the result. We
+	// have already checked denpa is just an fmpz.
+	fmpz_pow_ui(scale, scale, scale_power);
+	fmpz_mul(scale, scale, fmpz_poly_get_coeff_ptr(denpa, 0));
+
+
+	// Determine the size of the output by passing write = false.
+	const bool with_arghead = false;
+	bool write = false;
+	const uint64_t prev_size = 0;
+	const uint64_t out_size = return_rem ?
+		(uint64_t)flint::to_argument_poly(BHEAD NULL, with_arghead, must_fit_term, write, prev_size,
+			rem, var_map, scale)
+		:
+		(uint64_t)flint::to_argument_poly(BHEAD NULL, with_arghead, must_fit_term, write, prev_size,
+			div, var_map, scale)
+		;
+	WORD* res = (WORD *)Malloc1(sizeof(WORD)*out_size, "flint::divrem_poly");
+
+
+	// Write out the result
+	write = true;
+	if ( return_rem ) {
+		(uint64_t)flint::to_argument_poly(BHEAD res, with_arghead, must_fit_term, write, prev_size,
+			rem, var_map, scale);
+	}
+	else {
+		(uint64_t)flint::to_argument_poly(BHEAD res, with_arghead, must_fit_term, write, prev_size,
+			div, var_map, scale);
+	}
+
+	fmpz_poly_clear(pa);
+	fmpz_poly_clear(pb);
+	fmpz_poly_clear(denpa);
+	fmpz_poly_clear(denpb);
+	fmpz_clear(scale);
+	fmpz_poly_clear(div);
+	fmpz_poly_clear(rem);
+
+	return res;
 }
 /*
 	#] flint::divmod_poly :
@@ -1088,6 +1169,13 @@ flint::var_map_t flint::get_variables(const vector <WORD *> &es, const bool with
 }
 /*
 	#] flint::get_variables :
+
+	#[ flint::inverse_poly :
+*/
+WORD* flint::inverse_poly(PHEAD const WORD *a, const WORD *b, const var_map_t &var_map) {
+}
+/*
+	#] flint::inverse_poly :
 
 	#[ flint::mul_mpoly :
 */

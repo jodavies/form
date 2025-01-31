@@ -55,6 +55,8 @@ namespace flint {
 
 	var_map_t get_variables(const vector <WORD *> &, const bool, const bool);
 
+	WORD* inverse_poly(PHEAD const WORD *, const WORD *, const var_map_t &);
+
 	WORD* mul_mpoly(PHEAD const WORD *, const WORD *, const var_map_t &);
 	WORD* mul_poly(PHEAD const WORD *, const WORD *, const var_map_t &);
 
