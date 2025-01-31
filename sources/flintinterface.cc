@@ -35,6 +35,102 @@ static_assert(BITSINWORD == 32);
 */
 
 /*
+	#[ flint::divmod_mpoly :
+*/
+WORD* flint::divmod_mpoly(PHEAD const WORD *a, const WORD *b, const bool return_rem,
+	const WORD must_fit_term, const var_map_t &var_map) {
+
+	fmpz_mpoly_ctx_t ctx;
+	fmpz_mpoly_ctx_init(ctx, var_map.size(), ORD_LEX);
+
+	fmpz_mpoly_t pa, pb, denpa, denpb;
+	fmpz_mpoly_init(pa, ctx);
+	fmpz_mpoly_init(pb, ctx);
+	fmpz_mpoly_init(denpa, ctx);
+	fmpz_mpoly_init(denpb, ctx);
+
+	flint::from_argument_mpoly(pa, denpa, a, false, var_map, ctx);
+	flint::from_argument_mpoly(pb, denpb, b, false, var_map, ctx);
+
+	// The input won't have any symbols with negative powers, but there may be rational
+	// coefficients. Verify this:
+	if ( fmpz_mpoly_is_fmpz(denpa, ctx) != 1 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::divmod_mpoly: error: denpa is non-constant");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( fmpz_mpoly_is_fmpz(denpb, ctx) != 1 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::divmod_mpoly: error: denpb is non-constant");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+
+
+	fmpz_t scale;
+	fmpz_init(scale);
+	fmpz_mpoly_t div, rem;
+	fmpz_mpoly_init(div, ctx);
+	fmpz_mpoly_init(rem, ctx);
+
+	fmpz_mpoly_quasidivrem(scale, div, rem, pa, pb, ctx);
+
+	// The quotient must be multiplied by the denominator of the divisor
+	fmpz_mpoly_mul(div, div, denpb, ctx);
+
+	// The overall denominator of both div and rem is given by scale*denpa. This we will pass to
+	// to_argument_mpoly's "denscale" argument which performs the division in the result. We have
+	// already checked denpa is just an fmpz.
+	fmpz_mul(scale, scale, fmpz_mpoly_term_coeff_ref(denpa, 0, ctx));
+
+
+	// Determine the size of the output by passing write = false.
+	const bool with_arghead = false;
+	bool write = false;
+	const uint64_t prev_size = 0;
+	const uint64_t out_size = return_rem ?
+		(uint64_t)flint::to_argument_mpoly(BHEAD NULL, with_arghead, must_fit_term, write, prev_size,
+			rem, var_map, ctx, scale)
+		:
+		(uint64_t)flint::to_argument_mpoly(BHEAD NULL, with_arghead, must_fit_term, write, prev_size,
+			div, var_map, ctx, scale)
+		;
+	WORD* res = (WORD *)Malloc1(sizeof(WORD)*out_size, "flint::divrem_mpoly");
+
+
+	// Write out the result
+	write = true;
+	if ( return_rem ) {
+		(uint64_t)flint::to_argument_mpoly(BHEAD res, with_arghead, must_fit_term, write, prev_size,
+			rem, var_map, ctx, scale);
+	}
+	else {
+		(uint64_t)flint::to_argument_mpoly(BHEAD res, with_arghead, must_fit_term, write, prev_size,
+			div, var_map, ctx, scale);
+	}
+
+	fmpz_mpoly_clear(pa, ctx);
+	fmpz_mpoly_clear(pb, ctx);
+	fmpz_mpoly_clear(denpa, ctx);
+	fmpz_mpoly_clear(denpb, ctx);
+	fmpz_clear(scale);
+	fmpz_mpoly_clear(div, ctx);
+	fmpz_mpoly_clear(rem, ctx);
+	fmpz_mpoly_ctx_clear(ctx);
+
+	return res;
+}
+/*
+	#] flint::divmod_mpoly :
+	#[ flint::divmod_poly :
+*/
+WORD* flint::divmod_poly(PHEAD const WORD *a, const WORD *b, const bool return_rem,
+	const WORD must_fit_term, const var_map_t &var_map) {
+}
+/*
+	#] flint::divmod_poly :
+
 	#[ flint::factorize_mpoly :
 */
 WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_arghead,
