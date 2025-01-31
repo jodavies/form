@@ -236,7 +236,7 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 	}
 	if ( fmpz_sgn(overall_constant) == -1 && argout == NULL ) {
 		// Add space for a normal-notation number and an ARGHEAD or zero separator
-		output_size += 4 + with_arghead ? ARGHEAD : 1;
+		output_size += 4 + (with_arghead ? ARGHEAD : 1);
 	}
 
 	// Now make the allocation if necessary:
