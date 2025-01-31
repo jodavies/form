@@ -1716,7 +1716,7 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 // All coefficients will be divided by denscale (which might just be 1).
 // If write is false, we never write to out but only track the total would-be size. This lets this
 // function be repurposed as a "size of FORM notation" function without duplicating the code.
-#define IFW(x) { if ( write ) x; }
+#define IFW(x) { if ( write ) {x;} }
 uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 	const bool must_fit_term, const bool write, const uint64_t prev_size, const fmpz_mpoly_t poly,
 	const var_map_t &var_map, const fmpz_mpoly_ctx_t ctx, const fmpz_t denscale) {
@@ -1829,6 +1829,7 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 		}
 	}
 
+
 	WORD *tmp_coeff = (WORD *)NumberMalloc("flint::to_argument_mpoly");
 	WORD *tmp_den = (WORD *)NumberMalloc("flint::to_argument_mpoly");
 
@@ -1857,8 +1858,8 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 		const WORD num_size = flint::fmpz_get_form(coeff, tmp_coeff);
 		const WORD den_size = flint::fmpz_get_form(den, tmp_den);
 		assert(den_size >= 1);
-		// It is important that this comparison is >=, or we loose the sign!
-		const WORD coeff_size = ABS(num_size) >= ABS(den_size) ? num_size : den_size;
+		const WORD coeff_size_tmp = ABS(num_size) >= ABS(den_size) ? ABS(num_size) : ABS(den_size);
+		const WORD coeff_size = num_size < 0 ? - coeff_size_tmp : coeff_size_tmp;
 
 		// Now we have the number of symbols and the coeff size, we can determine the output size.
 		// Check it fits if necessary: term size, num,den of "coeff_size", +1 for total coeff size
@@ -2081,8 +2082,8 @@ uint64_t flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead,
 			const WORD num_size = flint::fmpz_get_form(coeff, tmp_coeff);
 			const WORD den_size = flint::fmpz_get_form(den, tmp_den);
 			assert(den_size >= 1);
-			// It is important that this comparison is >=, or we loose the sign!
-			const WORD coeff_size = ABS(num_size) >= ABS(den_size) ? num_size : den_size;
+			const WORD coeff_size_tmp = ABS(num_size) >= ABS(den_size) ? ABS(num_size) : ABS(den_size);
+			const WORD coeff_size = num_size < 0 ? - coeff_size_tmp : coeff_size_tmp;
 
 			// Now we have the coeff size, we can determine the output size
 			// Check it fits if necessary: symbol code,power, num,den of "coeff_size",
