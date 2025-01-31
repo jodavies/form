@@ -1729,6 +1729,12 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 
 WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 
+#ifdef WITHFLINT
+	if ( AC.FlintPolyFlag ) {
+		return flint_inverse(BHEAD arga, argb);
+	}
+#endif
+
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_inverse" << endl;
 #endif
