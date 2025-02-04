@@ -963,7 +963,49 @@ WORD* flint::gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_t
 		Terminate(-1);
 	}
 
-	fmpz_mpoly_gcd(gcd, pa, pb, ctx);
+	// poly returns pa if pa == pb, regardless of the lcoeff sign
+	if ( fmpz_mpoly_equal(pa, pb, ctx) ) {
+		fmpz_mpoly_set(gcd, pa, ctx);
+	}
+	else {
+		// We need some gymnastics to have the same sign conventions as the poly class. It takes the
+		// integer or univar content out of a,b, with the convention that the content sign matches
+		// the lcoeff sign. Since FORM has already taken out the content, we are left with +-1. In
+		// Flint, the content always has a positive sign so here we should find +1. Check this:
+		fmpz_mpoly_t tmp;
+		fmpz_mpoly_init(tmp, ctx);
+		fmpz_mpoly_term_content(tmp, pa, ctx);
+		if ( fmpz_mpoly_is_one(tmp, ctx) != 1 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("flint::gcd_mpoly: error: content of 1st arg != 1");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		fmpz_mpoly_term_content(tmp, pb, ctx);
+		if ( fmpz_mpoly_is_one(tmp, ctx) != 1 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("flint::gcd_mpoly: error: content of 2nd arg != 1");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		fmpz_mpoly_clear(tmp, ctx);
+
+		// The poly class now divides the content out of a,b so that they have a positive lcoeff.
+		// Then it muliplies the final gcd (which is given a positive lcoeff also) by
+		// gcd(cont a, cont b). There it has gcd(1,1) = gcd(-1,1) = gcd(1,-1) = 1, and
+		// gcd(-1,-1) = -1 (because of the pa==pb early return). So: if both input polys have a
+		// negative lcoeff, we will flip the sign in the final result.
+		bool flip_sign = 0;
+		if ( ( fmpz_sgn(fmpz_mpoly_term_coeff_ref(pa, 0, ctx)) == -1 ) &&
+			( fmpz_sgn(fmpz_mpoly_term_coeff_ref(pb, 0, ctx)) == -1 ) ) {
+			flip_sign = 1;
+		}
+
+		fmpz_mpoly_gcd(gcd, pa, pb, ctx);
+		if ( flip_sign ) {
+			fmpz_mpoly_neg(gcd, gcd, ctx);
+		}
+	}
 
 	// This is freed by the caller
 	WORD *res;
@@ -1030,7 +1072,34 @@ WORD* flint::gcd_poly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_te
 		Terminate(-1);
 	}
 
-	fmpz_poly_gcd(gcd, pa, pb);
+	// poly returns pa if pa == pb, regardless of the lcoeff sign
+	if ( fmpz_poly_equal(pa, pb) ) {
+		fmpz_poly_set(gcd, pa);
+	}
+	else {
+		// Here, we don't have to make any sign flips like the mpoly case, because poly's
+		// integer_gcd(1,1) = integer_gcd(-1,1) = integer_gcd(1,-1) = integer_gcd(-1,-1) = +1.
+		// Still, verify that the content is 1:
+		fmpz_t tmp;
+		fmpz_init(tmp);
+		fmpz_poly_content(tmp, pa);
+		if ( fmpz_is_one(tmp) != 1 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("flint::gcd_poly: error: content of 1st arg != 1");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		fmpz_poly_content(tmp, pb);
+		if ( fmpz_is_one(tmp) != 1 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("flint::gcd_poly: error: content of 2nd arg != 1");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		fmpz_clear(tmp);
+
+		fmpz_poly_gcd(gcd, pa, pb);
+	}
 
 	// This is freed by the caller
 	WORD *res;
