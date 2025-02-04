@@ -1852,14 +1852,6 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 	const bool must_fit_term, const bool write, const uint64_t prev_size, const fmpz_mpoly_t poly,
 	const var_map_t &var_map, const fmpz_mpoly_ctx_t ctx, const fmpz_t denscale) {
 
-	// denscale should be positive, check this:
-	if ( fmpz_sgn(denscale) == -1 ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint("flint::to_argument_mpoly: error: denscale < 0");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
-	}
-
 	// out is modified later, keep the pointer at entry
 	const WORD* out_entry = out;
 
@@ -1988,9 +1980,10 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 		// Convert the coefficient, write in temporary space
 		const WORD num_size = flint::fmpz_get_form(coeff, tmp_coeff);
 		const WORD den_size = flint::fmpz_get_form(den, tmp_den);
-		assert(den_size >= 1);
-		const WORD coeff_size_tmp = ABS(num_size) >= ABS(den_size) ? ABS(num_size) : ABS(den_size);
-		const WORD coeff_size = num_size < 0 ? - coeff_size_tmp : coeff_size_tmp;
+		const WORD coeff_size = [num_size, den_size] () -> WORD {
+			WORD size = ABS(num_size) > ABS(den_size) ? ABS(num_size) : ABS(den_size);
+			return size * SGN(num_size) * SGN(den_size);
+		}();
 
 		// Now we have the number of symbols and the coeff size, we can determine the output size.
 		// Check it fits if necessary: term size, num,den of "coeff_size", +1 for total coeff size
@@ -2094,14 +2087,6 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 uint64_t flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead,
 	const bool must_fit_term, const bool write, const uint64_t prev_size, const fmpz_poly_t poly,
 	const var_map_t &var_map, const fmpz_t denscale) {
-
-	// denscale should be positive, check this:
-	if ( fmpz_sgn(denscale) == -1 ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint("flint::to_argument_poly: error: denscale < 0");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
-	}
 
 	// Track the total size written. We could do this with pointer differences, but if
 	// write == false we don't write to or move out to be able to find the size that way.
@@ -2212,9 +2197,10 @@ uint64_t flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead,
 			// Convert the coefficient, write in temporary space
 			const WORD num_size = flint::fmpz_get_form(coeff, tmp_coeff);
 			const WORD den_size = flint::fmpz_get_form(den, tmp_den);
-			assert(den_size >= 1);
-			const WORD coeff_size_tmp = ABS(num_size) >= ABS(den_size) ? ABS(num_size) : ABS(den_size);
-			const WORD coeff_size = num_size < 0 ? - coeff_size_tmp : coeff_size_tmp;
+			const WORD coeff_size = [num_size, den_size] () -> WORD {
+				WORD size = ABS(num_size) > ABS(den_size) ? ABS(num_size) : ABS(den_size);
+				return size * SGN(num_size) * SGN(den_size);
+			}();
 
 			// Now we have the coeff size, we can determine the output size
 			// Check it fits if necessary: symbol code,power, num,den of "coeff_size",
