@@ -1410,15 +1410,7 @@ void flint::ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_
 	// Finally divide out any common factors between the resulting num1, den1:
 	fmpz_mpoly_gcd_cofactors(gcd, num1, den1, num1, den1, ctx);
 
-	// Fix sign: the leading denominator term should have a positive coeff.
-//	fmpz_t leading_coeff;
-//	fmpz_init(leading_coeff);
-//	fmpz_mpoly_get_term_coeff_fmpz(leading_coeff, den1, 0, ctx);
-//	if ( fmpz_sgn(leading_coeff) == -1 ) {
-//		fmpz_mpoly_neg(num1, num1, ctx);
-//		fmpz_mpoly_neg(den1, den1, ctx);
-//	}
-//	fmpz_clear(leading_coeff);
+	flint::util::fix_sign_fmpz_mpoly_ratfun(num1, den1, ctx);
 
 	// Result in FORM notation:
 	*out++ = AR.PolyFun;
@@ -1479,15 +1471,7 @@ void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t
 	// Finally divide out any common factors between the resulting num1, den1:
 	flint::util::simplify_fmpz_poly(num1, den1, gcd);
 
-	// Fix sign: the leading denominator term should have a positive coeff.
-//	fmpz_t leading_coeff;
-//	fmpz_init(leading_coeff);
-//	fmpz_mpoly_get_term_coeff_fmpz(leading_coeff, den1, 0, ctx);
-//	if ( fmpz_sgn(leading_coeff) == -1 ) {
-//		fmpz_mpoly_neg(num1, num1, ctx);
-//		fmpz_mpoly_neg(den1, den1, ctx);
-//	}
-//	fmpz_clear(leading_coeff);
+	flint::util::fix_sign_fmpz_poly_ratfun(num1, den1);
 
 	// Result in FORM notation:
 	*out++ = AR.PolyFun;
@@ -1578,11 +1562,7 @@ void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const var_map_t &var_map) {
 		}
 	}
 
-	// Fix sign: leading term of den should be positive.
-	if ( fmpz_sgn(fmpz_mpoly_term_coeff_ref(den1, 0, ctx)) == -1 ) {
-		fmpz_mpoly_neg(num1, num1, ctx);
-		fmpz_mpoly_neg(den1, den1, ctx);
-	}
+	flint::util::fix_sign_fmpz_mpoly_ratfun(num1, den1, ctx);
 
 	// Result in FORM notation:
 	WORD* out = s;
@@ -1683,12 +1663,7 @@ void flint::ratfun_normalize_poly(PHEAD WORD *term, const var_map_t &var_map) {
 		}
 	}
 
-	// Fix sign: leading term of den should be positive. Since to_argument_poly writes
-	// out the terms in high-first order, the "leading term" is the final term:
-	if ( fmpz_sgn(fmpz_poly_get_coeff_ptr(den1, fmpz_poly_degree(den1))) == -1 ) {
-		fmpz_poly_neg(num1, num1);
-		fmpz_poly_neg(den1, den1);
-	}
+	flint::util::fix_sign_fmpz_poly_ratfun(num1, den1);
 
 	// Result in FORM notation:
 	WORD* out = s;
@@ -2358,4 +2333,27 @@ inline void flint::util::simplify_fmpz_poly(fmpz_poly_t num, fmpz_poly_t den, fm
 }
 /*
 	#] flint::util::simplify_fmpz_poly :
+	#[ flint::util::fix_sign_fmpz_mpoly_ratfun :
+*/
+inline void flint::util::fix_sign_fmpz_mpoly_ratfun(fmpz_mpoly_t num, fmpz_mpoly_t den,
+	const fmpz_mpoly_ctx_t ctx) {
+	// Fix sign to align with poly: the leading denominator term should have a positive coeff
+	if ( fmpz_sgn(fmpz_mpoly_term_coeff_ref(den, 0, ctx)) == -1 ) {
+		fmpz_mpoly_neg(num, num, ctx);
+		fmpz_mpoly_neg(den, den, ctx);
+	}
+}
+/*
+	#] flint::util::fix_sign_fmpz_mpoly_ratfun :
+	#[ flint::util::fix_sign_fmpz_poly_ratfun :
+*/
+inline void flint::util::fix_sign_fmpz_poly_ratfun(fmpz_poly_t num, fmpz_poly_t den) {
+	// Fix sign to align with poly: the leading denominator term should have a positive coeff
+	if ( fmpz_sgn(fmpz_poly_get_coeff_ptr(den, fmpz_poly_degree(den))) == -1 ) {
+		fmpz_poly_neg(num, num);
+		fmpz_poly_neg(den, den);
+	}
+}
+/*
+	#] flint::util::fix_sign_fmpz_poly_ratfun :
 */

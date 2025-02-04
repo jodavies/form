@@ -85,6 +85,9 @@ namespace flint {
 		void simplify_fmpz(fmpz_t, fmpz_t, fmpz_t);
 		void simplify_fmpz_poly(fmpz_poly_t, fmpz_poly_t, fmpz_poly_t);
 
+		void fix_sign_fmpz_mpoly_ratfun(fmpz_mpoly_t, fmpz_mpoly_t, const fmpz_mpoly_ctx_t);
+		void fix_sign_fmpz_poly_ratfun(fmpz_poly_t, fmpz_poly_t);
+
 	}
 
 }
