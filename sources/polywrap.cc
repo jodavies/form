@@ -1754,7 +1754,8 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	}
 	
 	// Convert to polynomials
-	poly a(poly::argument_to_poly(BHEAD arga, false, true));
+	poly dena(BHEAD 0); // We need to keep the overall denominator of arga, to multiply the result
+	poly a(poly::argument_to_poly(BHEAD arga, false, true, &dena));
 	poly b(poly::argument_to_poly(BHEAD argb, false, true));
 
 	// Check for modulus calculus
@@ -1768,7 +1769,7 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	}
 
 	poly amodp(a,modp,1);
-	poly bmodp(b,modp,1);	
+	poly bmodp(b,modp,1);
 
 	// Calculate gcd
 	vector<poly> xgcd(polyfact::extended_gcd_Euclidean_lifted(amodp,bmodp));
@@ -1850,6 +1851,18 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 		
 		primepower *= primepower;
 	}
+
+	// One more round trip from form -> poly -> form, to multiply by dena in an easy way
+	poly finalden(BHEAD 0); // We need to keep the overall denominator to divide out in the output
+	poly finalres(poly::argument_to_poly(BHEAD res, false, true, &finalden));
+	finalres *= dena;
+	const WORD finalden_size = finalden.terms[finalden.terms[1]];
+	const int finalsize = finalres.size_of_form_notation_with_den(finalden_size)+1;
+	if (ressize < finalsize) {
+		M_free(res, "poly_inverse");
+		res = (WORD *)Malloc1(finalsize*sizeof(WORD), "poly_inverse");
+	}
+	poly::poly_to_argument_with_den(finalres, finalden_size, (UWORD*)&(finalden.terms[finalden.terms[1] - finalden_size]), res, false);
 
 	// clean up and reset modulo calculation
 	poly_free_poly_vars(BHEAD "AN.poly_vars_inverse");
