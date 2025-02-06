@@ -28,6 +28,7 @@ using std::cout;
 using std::endl;
 using std::map;
 using std::swap;
+using std::string;
 using std::vector;
 
 
@@ -42,12 +43,14 @@ namespace flint {
 			fmpz_t d;
 			fmpz() { fmpz_init(d); }
 			~fmpz() { fmpz_clear(d); }
+			void print(string text) { cout << text; fmpz_print(d); cout << endl; }
 	};
 	class poly {
 		public:
 			fmpz_poly_t d;
 			poly() { fmpz_poly_init(d); }
 			~poly() { fmpz_poly_clear(d); }
+			void print(string text) { cout << text; fmpz_poly_print_pretty(d, "x"); cout << endl; }
 	};
 	class poly_factor {
 		public:
@@ -62,14 +65,21 @@ namespace flint {
 			fmpz_mpoly_t d;
 			mpoly(fmpz_mpoly_ctx_struct *ctx_in) { ctx = ctx_in; fmpz_mpoly_init(d, ctx); }
 			~mpoly() { fmpz_mpoly_clear(d, ctx); }
+			void print(string text) {
+				cout << text;
+				fmpz_mpoly_print_pretty(d, 0, ctx);
+				cout << endl;
+			}
 	};
 	class mpoly_factor {
 		private:
 			fmpz_mpoly_ctx_struct *ctx; // We need to keep a copy of the context pointer for clearing.
 		public:
 			fmpz_mpoly_factor_t d;
-			mpoly_factor(fmpz_mpoly_ctx_struct *ctx_in) { ctx = ctx_in;
-				fmpz_mpoly_factor_init(d, ctx); }
+			mpoly_factor(fmpz_mpoly_ctx_struct *ctx_in) {
+				ctx = ctx_in;
+				fmpz_mpoly_factor_init(d, ctx);
+			}
 			~mpoly_factor() { fmpz_mpoly_factor_clear(d, ctx); }
 	};
 	class mpoly_ctx {
