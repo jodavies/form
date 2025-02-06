@@ -1143,6 +1143,58 @@ flint::var_map_t flint::get_variables(const vector <WORD *> &es, const bool with
 	#[ flint::inverse_poly :
 */
 WORD* flint::inverse_poly(PHEAD const WORD *a, const WORD *b, const var_map_t &var_map) {
+
+	flint::poly pa, pb, denpa, denpb;
+
+	flint::from_argument_poly(pa.d, denpa.d, a, false);
+	flint::from_argument_poly(pb.d, denpb.d, b, false);
+
+	// FORM has already taken out the content. Check this, or fmpz_poly_xgcd result is undefined.
+	flint::fmpz content_a, content_b, resultant;
+	flint::poly inverse, tmp;
+	fmpz_poly_content(content_a.d, pa.d);
+	fmpz_poly_content(content_b.d, pb.d);
+	if ( ( fmpz_is_one(content_a.d) != 1 ) || ( fmpz_is_one(content_b.d) != 1 ) ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::inverse_poly error: unexpected content in input");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+
+
+	// Now use the extended Euclidean algorithm to find inverse, resultant, tmp of the Bezout
+	// identity: inverse*pa + tmp*pb = resultant. Then inverse/resultant is the multiplicative
+	// inverse of pa mod pb.
+	fmpz_poly_xgcd(resultant.d, inverse.d, tmp.d, pa.d, pb.d);
+
+	// If the resultant is zero, the inverse does not exist:
+	if ( fmpz_is_zero(resultant.d) ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("flint::inverse_poly error: inverse does not exist");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+
+	// Multiply inverse by denpa. denpb is a numerical multiple of the modulus, so doesn't matter.
+	fmpz_poly_mul(inverse.d, inverse.d, denpa.d);
+
+
+	WORD* res;
+	// First determine the result size, and malloc. The result should have no arghead. Here we use
+	// the "scale" argument of to_argument_poly since resultant might not be 1.
+	const bool with_arghead = false;
+	bool write = false;
+	const bool must_fit_term = false;
+	const uint64_t prev_size = 0;
+	const uint64_t res_size = (uint64_t)flint::to_argument_poly(BHEAD NULL,
+		with_arghead, must_fit_term, write, prev_size, inverse.d, var_map, resultant.d);
+	res = (WORD*)Malloc1(sizeof(WORD)*res_size, "flint::inverse_poly");
+
+	write = true;
+	flint::to_argument_poly(BHEAD res, with_arghead, must_fit_term, write, prev_size, inverse.d,
+		var_map, resultant.d);
+
+	return res;
 }
 /*
 	#] flint::inverse_poly :
