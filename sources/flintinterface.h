@@ -35,6 +35,50 @@ namespace flint {
 
 	typedef std::map<uint32_t,uint32_t> var_map_t;
 
+	// Small wrappers around the flint structs to enable RAII init and clear. "d" represents the
+	// data, and this member will be passed to flint functions.
+	class fmpz {
+		public:
+			fmpz_t d;
+			fmpz() { fmpz_init(d); }
+			~fmpz() { fmpz_clear(d); }
+	};
+	class poly {
+		public:
+			fmpz_poly_t d;
+			poly() { fmpz_poly_init(d); }
+			~poly() { fmpz_poly_clear(d); }
+	};
+	class poly_factor {
+		public:
+			fmpz_poly_factor_t d;
+			poly_factor() { fmpz_poly_factor_init(d); }
+			~poly_factor() { fmpz_poly_factor_clear(d); }
+	};
+	class mpoly {
+		private:
+			fmpz_mpoly_ctx_struct *ctx; // We need to keep a copy of the context pointer for clearing.
+		public:
+			fmpz_mpoly_t d;
+			mpoly(fmpz_mpoly_ctx_struct *ctx_in) { ctx = ctx_in; fmpz_mpoly_init(d, ctx); }
+			~mpoly() { fmpz_mpoly_clear(d, ctx); }
+	};
+	class mpoly_factor {
+		private:
+			fmpz_mpoly_ctx_struct *ctx; // We need to keep a copy of the context pointer for clearing.
+		public:
+			fmpz_mpoly_factor_t d;
+			mpoly_factor(fmpz_mpoly_ctx_struct *ctx_in) { ctx = ctx_in;
+				fmpz_mpoly_factor_init(d, ctx); }
+			~mpoly_factor() { fmpz_mpoly_factor_clear(d, ctx); }
+	};
+	class mpoly_ctx {
+		public:
+			fmpz_mpoly_ctx_t d;
+			mpoly_ctx(int64_t nvars) { fmpz_mpoly_ctx_init(d, nvars, ORD_LEX); }
+			~mpoly_ctx() { fmpz_mpoly_ctx_clear(d); }
+	};
+
 	WORD* divmod_mpoly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);
 	WORD* divmod_poly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);
 
