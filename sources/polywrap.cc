@@ -124,7 +124,7 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool is_fun_arg, string mes
 WORD *poly_gcd(PHEAD WORD *a, WORD *b, WORD fit) {
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		WORD *ret = flint_gcd(BHEAD a, b, fit);
 		return ret;
 	}
@@ -435,7 +435,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 WORD *poly_div(PHEAD WORD *a, WORD *b, WORD fit) {
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		WORD *ret = flint_div(BHEAD a, b, fit);
 		return ret;
 	}
@@ -463,7 +463,7 @@ WORD *poly_div(PHEAD WORD *a, WORD *b, WORD fit) {
 WORD *poly_rem(PHEAD WORD *a, WORD *b, WORD fit) {
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		WORD *ret = flint_rem(BHEAD a, b, fit);
 		return ret;
 	}
@@ -633,7 +633,7 @@ void poly_sort(PHEAD WORD *a) {
 WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		WORD *ret = flint_ratfun_add(BHEAD t1, t2);
 		return ret;
 	}
@@ -762,7 +762,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 int poly_ratfun_normalize (PHEAD WORD *term) {
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		flint_ratfun_normalize(BHEAD term);
 		return 0;
 	}
@@ -1103,7 +1103,7 @@ int poly_factorize_argument(PHEAD WORD *argin, WORD *argout) {
 #endif
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		flint_factorize_argument(BHEAD argin, argout);
 		return 0;
 	}
@@ -1137,7 +1137,7 @@ WORD *poly_factorize_dollar (PHEAD WORD *argin) {
 #endif
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		return flint_factorize_dollar(BHEAD argin);
 	}
 #endif
@@ -1730,7 +1730,7 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		return flint_inverse(BHEAD arga, argb);
 	}
 #endif
@@ -1883,7 +1883,7 @@ WORD *poly_mul(PHEAD WORD *a, WORD *b) {
 #endif
 
 #ifdef WITHFLINT
-	if ( AC.FlintPolyFlag ) {
+	if ( AC.FlintPolyFlag && AC.ncmod==0 ) {
 		return flint_mul(BHEAD a, b);
 	}
 #endif
