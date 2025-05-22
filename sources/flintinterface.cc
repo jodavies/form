@@ -2117,7 +2117,7 @@ inline void flint::util::simplify_fmpz(fmpz_t num, fmpz_t den, fmpz_t gcd) {
 inline void flint::util::simplify_fmpz_poly(fmpz_poly_t num, fmpz_poly_t den, fmpz_poly_t gcd) {
 	fmpz_poly_gcd(gcd, num, den);
 	if ( !fmpz_poly_is_one(gcd) ) {
-#ifdef WITHFLINT310
+#if __FLINT_RELEASE >= 30100
 		// This should be faster than fmpz_poly_div, see https://github.com/flintlib/flint/pull/1766
 		fmpz_poly_divexact(num, num, gcd);
 		fmpz_poly_divexact(den, den, gcd);
