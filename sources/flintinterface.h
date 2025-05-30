@@ -10,6 +10,11 @@ extern "C" {
 
 
 #include <flint/fmpz.h>
+#include <flint/fmpz_mod.h>
+#include <flint/fmpz_mod_mat.h>
+#include <flint/fmpz_mod_poly.h>
+#include <flint/nmod_mat.h>
+#include <flint/nmod_poly.h>
 #include <flint/fmpz_mpoly.h>
 #include <flint/fmpz_mpoly_factor.h>
 #include <flint/fmpz_poly.h>
@@ -123,6 +128,8 @@ namespace flint {
 	void ratfun_read_mpoly(const WORD *, fmpz_mpoly_t, fmpz_mpoly_t, const var_map_t &,
 		fmpz_mpoly_ctx_t);
 	void ratfun_read_poly(const WORD *, fmpz_poly_t, fmpz_poly_t);
+
+	void startup_init(void);
 
 	uint64_t to_argument_mpoly(PHEAD WORD *, const bool, const bool, const bool, const uint64_t,
 		const fmpz_mpoly_t, const var_map_t &, const fmpz_mpoly_ctx_t);
