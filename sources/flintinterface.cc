@@ -1685,6 +1685,89 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 /*
 	#] flint::ratfun_read_poly :
 
+	#[ flint::startup_init :
+*/
+// The purpose of this function is it work around threading issues in flint, reported in
+// https://github.com/flintlib/flint/issues/1652 and fixed in
+// https://github.com/flintlib/flint/pull/1658 . This implies versions prior to 3.1.0.
+// Actually I have never hit this bug in testing, so this is "just in case".
+void flint::startup_init(void) {
+
+	// Here we initialize and free some contexts and types which are used in these routines
+	// or called by functions used in these routines. Avoid the wrappers, since we don't have them
+	// for all types here anyway.
+	const int prime = 19;
+	const int mat_size = 5;
+	const int n_vars = 2;
+
+	fmpz_t dummy_fmpz;
+	fmpz_init(dummy_fmpz);
+	fmpz_set_si(dummy_fmpz, prime);
+
+	fmpz_poly_t dummy_poly;
+	fmpz_poly_init(dummy_poly);
+
+	fmpz_poly_factor_t dummy_poly_factor;
+	fmpz_poly_factor_init(dummy_poly_factor);
+
+	fmpz_mpoly_ctx_t dummy_mpoly_ctx;
+	fmpz_mpoly_ctx_init(dummy_mpoly_ctx, n_vars, ORD_LEX);
+
+	fmpz_mpoly_t dummy_mpoly;
+	fmpz_mpoly_init(dummy_mpoly, dummy_mpoly_ctx);
+
+	fmpz_mpoly_factor_t dummy_mpoly_factor;
+	fmpz_mpoly_factor_init(dummy_mpoly_factor, dummy_mpoly_ctx);
+
+	fmpz_mod_ctx_t dummy_fmpz_mod_ctx;
+	fmpz_mod_ctx_init(dummy_fmpz_mod_ctx, dummy_fmpz);
+
+	fmpz_mod_mat_t dummy_fmpz_mod_mat;
+#if __FLINT_RELEASE >= 30100
+	fmpz_mod_mat_init(dummy_fmpz_mod_mat, mat_size, mat_size, dummy_fmpz_mod_ctx);
+#else
+	fmpz_mod_mat_init(dummy_fmpz_mod_mat, mat_size, mat_size, dummy_fmpz);
+#endif
+
+	fmpz_mod_poly_t dummy_fmpz_mod_poly;
+	fmpz_mod_poly_init(dummy_fmpz_mod_poly, dummy_fmpz_mod_ctx);
+
+	nmod_t dummy_nmod;
+	nmod_init(&dummy_nmod, prime); // This takes a pointer to nmod_t for some reason
+
+	nmod_mat_t dummy_nmod_mat;
+	nmod_mat_init(dummy_nmod_mat, mat_size, mat_size, prime);
+
+	nmod_poly_t dummy_nmod_poly;
+	nmod_poly_init(dummy_nmod_poly, prime);
+
+
+	// And now clear everything
+
+	nmod_poly_clear(dummy_nmod_poly);
+	nmod_mat_clear(dummy_nmod_mat);
+	// nmod_clear(&dummy_nmod); does not exist
+
+	fmpz_mod_poly_clear(dummy_fmpz_mod_poly, dummy_fmpz_mod_ctx);
+#if __FLINT_RELEASE >= 30100
+	fmpz_mod_mat_clear(dummy_fmpz_mod_mat, dummy_fmpz_mod_ctx);
+#else
+	fmpz_mod_mat_clear(dummy_fmpz_mod_mat);
+#endif
+	fmpz_mod_ctx_clear(dummy_fmpz_mod_ctx);
+
+	fmpz_mpoly_factor_clear(dummy_mpoly_factor, dummy_mpoly_ctx);
+	fmpz_mpoly_clear(dummy_mpoly, dummy_mpoly_ctx);
+	fmpz_mpoly_ctx_clear(dummy_mpoly_ctx);
+
+	fmpz_poly_factor_clear(dummy_poly_factor);
+	fmpz_poly_clear(dummy_poly);
+
+	fmpz_clear(dummy_fmpz);
+}
+/*
+	#] flint::startup_init :
+
 	#[ flint::to_argument_mpoly :
 */
 // Convert a fmpz_mpoly_t to a FORM argument (or 0-terminated list of terms: with_arghead==false).
