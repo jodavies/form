@@ -1758,6 +1758,13 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	poly a(poly::argument_to_poly(BHEAD arga, false, true, &dena));
 	poly b(poly::argument_to_poly(BHEAD argb, false, true));
 
+	// Divide out the integer content, FORM has not already done this.
+	poly content_a(BHEAD 0), content_b(BHEAD 0);
+	content_a = polygcd::integer_content(a);
+	content_b = polygcd::integer_content(b);
+	a /= content_a;
+	b /= content_b;
+
 	// Check for modulus calculus
 	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial inverse");
 	a.setmod(modp,1);
@@ -1856,13 +1863,16 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	poly finalden(BHEAD 0); // We need to keep the overall denominator to divide out in the output
 	poly finalres(poly::argument_to_poly(BHEAD res, false, true, &finalden));
 	finalres *= dena;
+	// The overall denominator additionally needs to be multiplied by content_a:
+	finalden *= content_a;
 	const WORD finalden_size = finalden.terms[finalden.terms[1]];
 	const int finalsize = finalres.size_of_form_notation_with_den(finalden_size)+1;
 	if (ressize < finalsize) {
 		M_free(res, "poly_inverse");
 		res = (WORD *)Malloc1(finalsize*sizeof(WORD), "poly_inverse");
 	}
-	poly::poly_to_argument_with_den(finalres, finalden_size, (UWORD*)&(finalden.terms[finalden.terms[1] - finalden_size]), res, false);
+	poly::poly_to_argument_with_den(finalres, finalden_size,
+		(UWORD*)&(finalden.terms[finalden.terms[1] - ABS(finalden_size)]), res, false);
 
 	// clean up and reset modulo calculation
 	poly_free_poly_vars(BHEAD "AN.poly_vars_inverse");
