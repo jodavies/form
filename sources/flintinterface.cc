@@ -1149,22 +1149,22 @@ WORD* flint::inverse_poly(PHEAD const WORD *a, const WORD *b, const var_map_t &v
 	flint::from_argument_poly(pa.d, denpa.d, a, false);
 	flint::from_argument_poly(pb.d, denpb.d, b, false);
 
-	// FORM has already taken out the content. Check this, or fmpz_poly_xgcd result is undefined.
-	flint::fmpz content_a, content_b, resultant;
+	// fmpz_poly_xgcd is undefined if the content of pa and pb are not 1. Take the content out.
+	// fmpz_poly_content gives the non-negative content and fmpz_poly_primitive normalizes to a
+	// non-negative lcoeff, so we need to add the sign to the content if the polys have a negative
+	// lcoeff. We don't need to keep the content of pb, it is a numerical multiple of the modulus.
+	flint::fmpz content_a, resultant;
 	flint::poly inverse, tmp;
 	fmpz_poly_content(content_a.d, pa.d);
-	fmpz_poly_content(content_b.d, pb.d);
-	if ( ( fmpz_is_one(content_a.d) != 1 ) || ( fmpz_is_one(content_b.d) != 1 ) ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint("flint::inverse_poly error: unexpected content in input");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
+	if ( fmpz_sgn(fmpz_poly_lead(pa.d)) == -1 ) {
+		fmpz_neg(content_a.d, content_a.d);
 	}
-
+	fmpz_poly_primitive_part(pa.d, pa.d);
+	fmpz_poly_primitive_part(pb.d, pb.d);
 
 	// Now use the extended Euclidean algorithm to find inverse, resultant, tmp of the Bezout
 	// identity: inverse*pa + tmp*pb = resultant. Then inverse/resultant is the multiplicative
-	// inverse of pa mod pb.
+	// inverse of pa mod pb. We'll divide by resultant in the denscale argument of to_argument_poly.
 	fmpz_poly_xgcd(resultant.d, inverse.d, tmp.d, pa.d, pb.d);
 
 	// If the resultant is zero, the inverse does not exist:
@@ -1176,7 +1176,10 @@ WORD* flint::inverse_poly(PHEAD const WORD *a, const WORD *b, const var_map_t &v
 	}
 
 	// Multiply inverse by denpa. denpb is a numerical multiple of the modulus, so doesn't matter.
+	// We also need to divide by content_a, which we do in the denscale argument of to_argument_poly
+	// by multiplying resultant by content_a here.
 	fmpz_poly_mul(inverse.d, inverse.d, denpa.d);
+	fmpz_mul(resultant.d, resultant.d, content_a.d);
 
 
 	WORD* res;
