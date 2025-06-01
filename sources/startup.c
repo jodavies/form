@@ -1900,6 +1900,13 @@ VOID Terminate(int errorcode)
 #ifdef WITHMPI
 	PF_Terminate(errorcode);
 #endif
+/*
+	We are about to terminate the program. If we are using flint, call the cleanup function.
+	This keeps valgrind happy.
+*/
+#ifdef WITHFLINT
+	flint_final_cleanup_master();
+#endif
 	CleanUp(errorcode);
 	M_print();
 #ifdef VMS

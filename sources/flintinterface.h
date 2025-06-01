@@ -13,6 +13,7 @@ extern "C" {
 #include <flint/fmpz_mod.h>
 #include <flint/fmpz_mod_mat.h>
 #include <flint/fmpz_mod_poly.h>
+#include <flint/nmod.h>
 #include <flint/nmod_mat.h>
 #include <flint/nmod_poly.h>
 #include <flint/fmpz_mpoly.h>
@@ -93,6 +94,9 @@ namespace flint {
 			mpoly_ctx(int64_t nvars) { fmpz_mpoly_ctx_init(d, nvars, ORD_LEX); }
 			~mpoly_ctx() { fmpz_mpoly_ctx_clear(d); }
 	};
+
+	void cleanup(void);
+	void cleanup_master(void);
 
 	WORD* divmod_mpoly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);
 	WORD* divmod_poly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);

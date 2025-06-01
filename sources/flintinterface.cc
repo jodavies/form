@@ -35,6 +35,21 @@ static_assert(BITSINWORD == 32);
 */
 
 /*
+	#[ flint::cleanup :
+*/
+void flint::cleanup(void) {
+	flint_cleanup();
+}
+/*
+	#] flint::cleanup :
+	#[ flint::cleanup_master :
+*/
+void flint::cleanup_master(void) {
+	flint_cleanup_master();
+}
+/*
+	#] flint::cleanup_master :
+
 	#[ flint::divmod_mpoly :
 */
 WORD* flint::divmod_mpoly(PHEAD const WORD *a, const WORD *b, const bool return_rem,

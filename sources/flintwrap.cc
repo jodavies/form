@@ -11,6 +11,20 @@ extern "C" {
 
 
 /*
+	#[ flint_final_cleanup_thread :
+*/
+void flint_final_cleanup_thread(void) {
+	flint::cleanup();
+}
+/*
+	#] flint_final_cleanup_thread :
+	#[ flint_final_cleanup_master :
+*/
+void flint_final_cleanup_master(void) {
+	flint::cleanup_master();
+}
+/*
+	#] flint_final_cleanup_master :
 	#[ flint_div :
 */
 WORD* flint_div(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
