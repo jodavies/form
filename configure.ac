@@ -1178,10 +1178,6 @@ if test "x$with_zstd" = xyes; then
 	echo "    zstd"
 	atleastone=yes
 fi
-if test "x$with_flint" = xyes; then
-	echo "    flint"
-	atleastone=yes
-fi
 if test $atleastone = no; then
 	echo "    <NONE>"
 fi
