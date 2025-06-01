@@ -911,7 +911,7 @@ WORD* flint::gcd_mpoly(PHEAD const WORD *a, const WORD *b, const WORD must_fit_t
 		}
 
 		// The poly class now divides the content out of a,b so that they have a positive lcoeff.
-		// Then it muliplies the final gcd (which is given a positive lcoeff also) by
+		// Then it multiplies the final gcd (which is given a positive lcoeff also) by
 		// gcd(cont a, cont b). There it has gcd(1,1) = gcd(-1,1) = gcd(1,-1) = 1, and
 		// gcd(-1,-1) = -1 (because of the pa==pb early return). So: if both input polys have a
 		// negative lcoeff, we will flip the sign in the final result.
@@ -1045,7 +1045,7 @@ flint::var_map_t flint::get_variables(const vector <WORD *> &es, const bool with
 
 	int32_t num_vars = 0;
 	// To be used if we sort by highest degree, as the polu code does.
-	vector<int> degrees;
+	vector<int32_t> degrees;
 	var_map_t var_map;
 
 	// extract all variables
@@ -1699,9 +1699,9 @@ void flint::startup_init(void) {
 	// Here we initialize and free some contexts and types which are used in these routines
 	// or called by functions used in these routines. Avoid the wrappers, since we don't have them
 	// for all types here anyway.
-	const int prime = 19;
-	const int mat_size = 5;
-	const int n_vars = 2;
+	const int32_t prime = 19;
+	const int32_t mat_size = 5;
+	const int32_t n_vars = 2;
 
 	fmpz_t dummy_fmpz;
 	fmpz_init(dummy_fmpz);
