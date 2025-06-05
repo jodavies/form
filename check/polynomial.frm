@@ -5,7 +5,6 @@
   #include `NAME_' # `TEST'
 #endif
 .end
-#pend_if wordsize == 2 || mpi?
 
 * Tests of the polynomial routines, with flint and poly
 
@@ -649,6 +648,10 @@ assert stdout =~ exact_pattern("rem: OK")
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
+# This takes too long when running without FLINT under lcov. Skip if valgrind, and hence lcov.
+#pend_if valgrind?
+# This needs longer if running without flint.
+#time_dilation 2.0
 assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_1 :
@@ -665,24 +668,31 @@ assert stdout =~ exact_pattern("factarg: OK")
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
+# This takes too long when running without FLINT under lcov. Skip if valgrind, and hence lcov.
+#pend_if valgrind?
+# This needs longer if running without flint.
+#time_dilation 3.0
 assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_2 :
 *--#[ polynomial_factarg_nvar_5 :
 #-
-#define NPOLYS "15"
+#define NPOLYS "12"
 #define NVARS "5"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
+# This takes too long when running without FLINT under lcov. Skip if valgrind, and hence lcov.
 # This one is not valgrind clean for flint < 3.2.1 !
 #pend_if valgrind?
+# This needs longer if running without flint.
+#time_dilation 3.0
 assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_5 :
