@@ -457,7 +457,7 @@ Drop;
 #call testijaik(gcd,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("gcd: OK")
 *--#] polynomial_gcd_nvar_1 :
 *--#[ polynomial_gcd_nvar_2 :
@@ -473,7 +473,7 @@ assert stdout =~ exact_pattern("gcd: OK")
 #call testijaik(gcd,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("gcd: OK")
 *--#] polynomial_gcd_nvar_2 :
 *--#[ polynomial_gcd_nvar_5 :
@@ -489,7 +489,7 @@ assert stdout =~ exact_pattern("gcd: OK")
 #call testijaik(gcd,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("gcd: OK")
 *--#] polynomial_gcd_nvar_5 :
 *--#[ polynomial_mul_nvar_1 :
@@ -505,7 +505,7 @@ assert stdout =~ exact_pattern("gcd: OK")
 #call testiaj(mul,2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("mul: OK")
 *--#] polynomial_mul_nvar_1 :
 *--#[ polynomial_mul_nvar_2 :
@@ -521,7 +521,7 @@ assert stdout =~ exact_pattern("mul: OK")
 #call testiaj(mul,2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("mul: OK")
 *--#] polynomial_mul_nvar_2 :
 *--#[ polynomial_mul_nvar_5 :
@@ -537,7 +537,7 @@ assert stdout =~ exact_pattern("mul: OK")
 #call testiaj(mul,2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("mul: OK")
 *--#] polynomial_mul_nvar_5 :
 *--#[ polynomial_div_nvar_1 :
@@ -553,7 +553,7 @@ assert stdout =~ exact_pattern("mul: OK")
 #call testijaj(div,2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("div: OK")
 *--#] polynomial_div_nvar_1 :
 *--#[ polynomial_div_nvar_2 :
@@ -569,7 +569,7 @@ assert stdout =~ exact_pattern("div: OK")
 #call testijaj(div,2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("div: OK")
 *--#] polynomial_div_nvar_2 :
 *--#[ polynomial_div_nvar_5 :
@@ -585,7 +585,7 @@ assert stdout =~ exact_pattern("div: OK")
 #call testijaj(div,2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("div: OK")
 *--#] polynomial_div_nvar_5 :
 *--#[ polynomial_rem_nvar_1 :
@@ -601,7 +601,7 @@ assert stdout =~ exact_pattern("div: OK")
 #call testijak(rem,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("rem: OK")
 *--#] polynomial_rem_nvar_1 :
 *--#[ polynomial_rem_nvar_2 :
@@ -617,7 +617,7 @@ assert stdout =~ exact_pattern("rem: OK")
 #call testijak(rem,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("rem: OK")
 *--#] polynomial_rem_nvar_2 :
 *--#[ polynomial_rem_nvar_5 :
@@ -633,7 +633,7 @@ assert stdout =~ exact_pattern("rem: OK")
 #call testijak(rem,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("rem: OK")
 *--#] polynomial_rem_nvar_5 :
 *--#[ polynomial_factarg_nvar_1 :
@@ -649,7 +649,7 @@ assert stdout =~ exact_pattern("rem: OK")
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_1 :
 *--#[ polynomial_factarg_nvar_2 :
@@ -665,7 +665,7 @@ assert stdout =~ exact_pattern("factarg: OK")
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_2 :
 *--#[ polynomial_factarg_nvar_5 :
@@ -683,7 +683,7 @@ assert stdout =~ exact_pattern("factarg: OK")
 #pend_if wordsize == 2 || mpi?
 # This one is not valgrind clean for flint < 3.2.1 !
 #pend_if valgrind?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_5 :
 *--#[ polynomial_prf_norm_nvar_1 :
@@ -699,7 +699,7 @@ assert stdout =~ exact_pattern("factarg: OK")
 #call testprf(norm,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("prf norm: OK")
 *--#] polynomial_prf_norm_nvar_1 :
 *--#[ polynomial_prf_norm_nvar_2 :
@@ -715,7 +715,7 @@ assert stdout =~ exact_pattern("prf norm: OK")
 #call testprf(norm,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("prf norm: OK")
 *--#] polynomial_prf_norm_nvar_2 :
 *--#[ polynomial_prf_norm_nvar_5 :
@@ -731,7 +731,7 @@ assert stdout =~ exact_pattern("prf norm: OK")
 #call testprf(norm,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("prf norm: OK")
 *--#] polynomial_prf_norm_nvar_5 :
 *--#[ polynomial_prf_add_nvar_1 :
@@ -747,7 +747,7 @@ assert stdout =~ exact_pattern("prf norm: OK")
 #call testprf(add,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("prf add: OK")
 *--#] polynomial_prf_add_nvar_1 :
 *--#[ polynomial_prf_add_nvar_2 :
@@ -763,7 +763,7 @@ assert stdout =~ exact_pattern("prf add: OK")
 #call testprf(add,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("prf add: OK")
 *--#] polynomial_prf_add_nvar_2 :
 *--#[ polynomial_prf_add_nvar_5 :
@@ -779,6 +779,6 @@ assert stdout =~ exact_pattern("prf add: OK")
 #call testprf(add,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
 .end
 #pend_if wordsize == 2 || mpi?
-assert succeeded?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("prf add: OK")
 *--#] polynomial_prf_add_nvar_5 :
