@@ -1767,28 +1767,55 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 
 	// Check for modulus calculus
 	WORD modp=poly_determine_modulus(BHEAD true, true, "polynomial inverse");
+	const bool mod_calc = modp==0 ? false : true;
 	a.setmod(modp,1);
 	b.setmod(modp,1);
-	
-	if (modp == 0) {
-		vector<int> x(1,0);
-		modp = polyfact::choose_prime(a.integer_lcoeff()*b.integer_lcoeff(), x);
-	}
 
-	poly amodp(a,modp,1);
-	poly bmodp(b,modp,1);
-
-	// Calculate gcd
-	vector<poly> xgcd(polyfact::extended_gcd_Euclidean_lifted(amodp,bmodp));
-	poly invamodp(xgcd[0]);
-	poly invbmodp(xgcd[1]);
-	
-	if (!((invamodp * amodp) % bmodp).is_one()) {
+	// Check the gcd of a,b: if it is != 1, the inverse does not exist.
+	poly gcd(polygcd::gcd(a,b));
+	if (!gcd.is_one()) {
 		MLOCK(ErrorMessageLock);
-		MesPrint ((char*)"ERROR: polynomial inverse does not exist");
+		if (mod_calc) {
+			MesPrint ((char*)"ERROR: polynomial inverse does not exist (mod %d)", modp);
+		}
+		else {
+			MesPrint ((char*)"ERROR: polynomial inverse does not exist");
+		}
 		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);		
+		Terminate(-1);
 	}
+
+	poly invamodp(BHEAD 0), invbmodp(BHEAD 0);
+	bool inv_exists = true;
+	do {
+		// If we are not using modulus calculus, find a suitable prime for xgcd:
+		if (!mod_calc) {
+			vector<int> x(1,0);
+			modp = polyfact::choose_prime(a.integer_lcoeff()*b.integer_lcoeff(), x, modp);
+		}
+
+		poly amodp(a,modp,1);
+		poly bmodp(b,modp,1);
+
+		// Calculate gcd
+		vector<poly> xgcd(polyfact::extended_gcd_Euclidean_lifted(amodp,bmodp));
+		invamodp = poly(xgcd[0]);
+		invbmodp = poly(xgcd[1]);
+
+		inv_exists = ((invamodp * amodp) % bmodp).is_one();
+		if (!inv_exists && mod_calc) {
+			// Control should not reach here!
+			MLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: polynomial inverse does not exist (mod %d) B", modp);
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+
+	// If the inverse does not exist and we are not working in modulus calculus,
+	// choose a new prime and try again. This loop should always terminate, as
+	// we have already checked that gcd(a,b) == 1.
+	} while (!inv_exists);
+
 
 	// estimate of the size of the Form notation; might be extended later
 	int ressize = invamodp.size_of_form_notation()+1;
@@ -1802,7 +1829,7 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	while (true) {
 		// convert to Form notation 
 		int j=0;
-		WORD n=0;		
+		WORD n=0;
 		for (int i=1; i<inva[0]; i+=inva[i]) {
 
 			// check whether res should be extended
@@ -1838,7 +1865,9 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 		// otherwise check over integers
 		poly den(BHEAD 0);
 		poly check(poly::argument_to_poly(BHEAD res, false, true, &den));
-		if (poly::divides(b.integer_lcoeff(), check.integer_lcoeff())) {
+		// Shortcut: if b's lcoeff doesn't divide the lcoeff of check*a,
+		// b certainly doesn't divide check*a:
+		if (poly::divides(b.integer_lcoeff(), check.integer_lcoeff()*a.integer_lcoeff())) {
 			check = check*a - den;
 			if (poly::divides(b, check)) break;
 		}
