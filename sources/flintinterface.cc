@@ -1177,17 +1177,29 @@ WORD* flint::inverse_poly(PHEAD const WORD *a, const WORD *b, const var_map_t &v
 	fmpz_poly_primitive_part(pa.d, pa.d);
 	fmpz_poly_primitive_part(pb.d, pb.d);
 
-	// Now use the extended Euclidean algorithm to find inverse, resultant, tmp of the Bezout
-	// identity: inverse*pa + tmp*pb = resultant. Then inverse/resultant is the multiplicative
-	// inverse of pa mod pb. We'll divide by resultant in the denscale argument of to_argument_poly.
-	fmpz_poly_xgcd(resultant.d, inverse.d, tmp.d, pa.d, pb.d);
+	// Special cases:
+	// Possibly strange that we give 1 for inverse_(x1,1) but here we take MMA's convention.
+	if ( fmpz_poly_is_one(pa.d) && fmpz_poly_is_one(pb.d) ) {
+		fmpz_poly_one(inverse.d);
+		fmpz_one(resultant.d);
+	}
+	else if ( fmpz_poly_is_one(pb.d) ) {
+		fmpz_poly_zero(inverse.d);
+		fmpz_one(resultant.d);
+	}
+	else {
+		// Now use the extended Euclidean algorithm to find inverse, resultant, tmp of the Bezout
+		// identity: inverse*pa + tmp*pb = resultant. Then inverse/resultant is the multiplicative
+		// inverse of pa mod pb. We'll divide by resultant in the denscale argument of to_argument_poly.
+		fmpz_poly_xgcd(resultant.d, inverse.d, tmp.d, pa.d, pb.d);
 
-	// If the resultant is zero, the inverse does not exist:
-	if ( fmpz_is_zero(resultant.d) ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint("flint::inverse_poly error: inverse does not exist");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
+		// If the resultant is zero, the inverse does not exist:
+		if ( fmpz_is_zero(resultant.d) ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("flint::inverse_poly error: inverse does not exist");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
 	}
 
 	// Multiply inverse by denpa. denpb is a numerical multiple of the modulus, so doesn't matter.
