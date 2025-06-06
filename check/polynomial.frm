@@ -431,6 +431,7 @@ UnHide;
 		Print polyprf`op'p`i'p`j'p`k'p`l';
 		Print diffprf`op'p`i'p`j'p`k'p`l';
 		.sort
+		#terminate
 	#endif
 #endif
 #endif
@@ -441,6 +442,71 @@ UnHide;
 Drop;
 .sort
 #message prf `op': OK
+#endprocedure
+
+
+#procedure testinv(x3min,x3max,x1min,x1max)
+
+#reset timer
+On flint;
+#do x3 = `x3min',`x3max'
+#do x1 = `x1min',`x1max'
+*	Construct an x2 which produces an inverse without crashing FORM
+	#$arg2 = $p`x1'*$p`x3'-1;
+*	Avoid 0 for second arg:
+	#if `$arg2' == 0
+		Local flintinvp`x3'p`x1' = 0;
+	#else
+		Local flintinvp`x3'p`x1' = inverse_($p`x1',`$arg2');
+	#endif
+#enddo
+#enddo
+ModuleOption inparallel;
+.sort
+#message inverse: flint runtime: `TIMER_'
+
+#reset timer
+Off flint;
+Hide;
+#do x3 = `x3min',`x3max'
+#do x1 = `x1min',`x1max'
+*	Construct an x2 which produces an inverse without crashing FORM
+	#$arg2 = $p`x1'*$p`x3'-1;
+*	Avoid 0 for second arg:
+	#if `$arg2' == 0
+		Local polyinvp`x3'p`x1' = 0;
+	#else
+		Local polyinvp`x3'p`x1' = inverse_($p`x1',`$arg2');
+	#endif
+#enddo
+#enddo
+ModuleOption inparallel;
+.sort
+#message inverse: poly runtime: `TIMER_'
+
+UnHide;
+#do x3 = `x3min',`x3max'
+#do x1 = `x1min',`x1max'
+	Local diffinvp`x3'p`x1' = flintinvp`x3'p`x1' - polyinvp`x3'p`x1';
+#enddo
+#enddo
+.sort
+
+#do x3 = `x3min',`x3max'
+#do x1 = `x1min',`x1max'
+	#if `ZERO_diffinvp`x3'p`x1'' == 0
+		#message Error: difference in inv p`x3'p`x1'
+		Print flintinvp`x3'p`x1';
+		Print polyinvp`x3'p`x1';
+		Print diffinvp`x3'p`x1';
+		.sort
+	#endif
+#enddo
+#enddo
+
+Drop;
+.sort
+#message inv: OK
 #endprocedure
 *--#] polynomial_prc :
 *--#[ polynomial_gcd_nvar_1 :
@@ -792,3 +858,19 @@ assert stdout =~ exact_pattern("prf add: OK")
 assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("prf add: OK")
 *--#] polynomial_prf_add_nvar_5 :
+*--#[ polynomial_inverse_nvar_1 :
+#-
+#define NPOLYS "30"
+#define NVARS "1"
+#define NEGPOW "0"
+#define MAXPOW "10"
+#define MAXCOEFF "100"
+#define NTERMS "20"
+#include polynomial.frm # polynomial_prc
+#call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
+#call testinv(1,`NPOLYS',2,`NPOLYS')
+.end
+#pend_if wordsize == 2 || mpi?
+assert succeeded? || warning?("FORM was not built with FLINT support.")
+assert stdout =~ exact_pattern("inv: OK")
+*--#] polynomial_inverse_nvar_1 :
