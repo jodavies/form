@@ -24,9 +24,9 @@ extern "C" {
  * systems where WORDs are int32_t, and some functions (fmpz_get_form, fmpz_set_form) require this
  * to be the case. Enforce this:
  */
-static_assert(sizeof(WORD) == sizeof(int32_t));
-static_assert(sizeof(UWORD) == sizeof(uint32_t));
-static_assert(BITSINWORD == 32);
+static_assert(sizeof(WORD) == sizeof(int32_t), "flint interface expects 32bit WORD");
+static_assert(sizeof(UWORD) == sizeof(uint32_t), "flint interface expects 32bit WORD");
+static_assert(BITSINWORD == 32, "flint interface expects 32bit WORD");
 /*
  * Flint functions take arguments or return values which may be "slong" or "ulong" in its
  * documentation, and these are int64_t and uint64_t respectively.
