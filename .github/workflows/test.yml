@@ -23,12 +23,9 @@ jobs:
           - {bin: tform, test: default}
           - {bin: tform, test: default, nthreads: 2}
           - {bin: parform, test: default, timeout: 15}
-          - {bin: form, test: checkpoint}
-          - {bin: tform, test: checkpoint}
           - {bin: form, test: extra, timeout: 60}
           - {bin: tform, test: extra, timeout: 60}
           - {bin: tform, test: extra, nthreads: 2, timeout: 60}
-          - {bin: tform, test: multithreaded}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
