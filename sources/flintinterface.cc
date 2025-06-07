@@ -196,7 +196,7 @@ WORD* flint::divmod_poly(PHEAD const WORD *a, const WORD *b, const bool return_r
 
 	#[ flint::factorize_mpoly :
 */
-WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_arghead,
+WORD* flint::factorize_mpoly(PHEAD const WORD *argin, WORD *argout, const bool with_arghead,
 	const bool is_fun_arg, const var_map_t &var_map) {
 
 	flint::mpoly_ctx ctx(var_map.size());
@@ -344,7 +344,7 @@ WORD* flint::factorize_mpoly(PHEAD WORD *argin, WORD *argout, const bool with_ar
 	#] flint::factorize_mpoly :
 	#[ flint::factorize_poly :
 */
-WORD* flint::factorize_poly(PHEAD WORD *argin, WORD *argout, const bool with_arghead,
+WORD* flint::factorize_poly(PHEAD const WORD *argin, WORD *argout, const bool with_arghead,
 	const bool is_fun_arg, const var_map_t &var_map) {
 
 	flint::poly arg, den;
@@ -670,7 +670,6 @@ uint64_t flint::from_argument_poly(fmpz_poly_t poly, fmpz_poly_t denpoly, const 
 			if ( *t < 0 ) {
 				neg_exponent = MaX(neg_exponent, (uint64_t)(-(*t)) );
 			}
-			t++;
 		}
 
 		// Now check for a denominator in the coefficient:
@@ -1336,7 +1335,8 @@ WORD* flint::mul_poly(PHEAD const WORD *a, const WORD *b, const var_map_t &var_m
 	#[ flint::ratfun_add_mpoly :
 */
 // Add the multi-variate FORM rational polynomials at t1 and t2. The result is written at out.
-void flint::ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t &var_map) {
+void flint::ratfun_add_mpoly(PHEAD const WORD *t1, const WORD *t2, WORD *out,
+	const var_map_t &var_map) {
 
 	flint::mpoly_ctx ctx(var_map.size());
 	flint::mpoly gcd(ctx.d), num1(ctx.d), den1(ctx.d), num2(ctx.d), den2(ctx.d);
@@ -1386,7 +1386,8 @@ void flint::ratfun_add_mpoly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_
 	#[ flint::ratfun_add_poly :
 */
 // Add the uni-variate FORM rational polynomials at t1 and t2. The result is written at out.
-void flint::ratfun_add_poly(PHEAD WORD *t1, WORD *t2, WORD *out, const var_map_t &var_map) {
+void flint::ratfun_add_poly(PHEAD const WORD *t1, const WORD *t2, WORD *out,
+	const var_map_t &var_map) {
 
 	flint::poly gcd, num1, den1, num2, den2;
 
@@ -1862,8 +1863,8 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 		flint::util::simplify_fmpz(coeff.d, den.d, gcd.d);
 
 		uint32_t num_symbols = 0;
-		for ( size_t i = 0; i < var_map.size(); i++ ) {
-			if ( exponents[i] != 0 ) { num_symbols += 1; }
+		for ( size_t j = 0; j < var_map.size(); j++ ) {
+			if ( exponents[j] != 0 ) { num_symbols += 1; }
 		}
 
 		// Convert the coefficient, write in temporary space
@@ -1896,27 +1897,27 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 			IFW(symbol_size = out++); ws++;
 			IFW(*symbol_size = 2);
 
-			for ( size_t i = 0; i < var_map.size(); i++ ) {
-				if ( exponents[i] != 0 ) {
-					IFW(*out++ = var_map_inv[i]); ws++;
-					IFW(*out++ = exponents[i]); ws++;
+			for ( size_t j = 0; j < var_map.size(); j++ ) {
+				if ( exponents[j] != 0 ) {
+					IFW(*out++ = var_map_inv[j]); ws++;
+					IFW(*out++ = exponents[j]); ws++;
 					IFW(*symbol_size += 2);
 				}
 			}
 		}
 
 		// Copy numerator
-		for ( WORD i = 0; i < ABS(num_size); i++ ) {
-			IFW(*out++ = tmp_coeff[i]); ws++;
+		for ( WORD j = 0; j < ABS(num_size); j++ ) {
+			IFW(*out++ = tmp_coeff[j]); ws++;
 		}
-		for ( WORD i = ABS(num_size); i < ABS(coeff_size); i++ ) {
+		for ( WORD j = ABS(num_size); j < ABS(coeff_size); j++ ) {
 			IFW(*out++ = 0); ws++;
 		}
 		// Copy denominator
-		for ( WORD i = 0; i < ABS(den_size); i++ ) {
-			IFW(*out++ = tmp_den[i]); ws++;
+		for ( WORD j = 0; j < ABS(den_size); j++ ) {
+			IFW(*out++ = tmp_den[j]); ws++;
 		}
-		for ( WORD i = ABS(den_size); i < ABS(coeff_size); i++ ) {
+		for ( WORD j = ABS(den_size); j < ABS(coeff_size); j++ ) {
 			IFW(*out++ = 0); ws++;
 		}
 
@@ -2099,17 +2100,17 @@ uint64_t flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead,
 			}
 
 			// Copy numerator
-			for ( WORD i = 0; i < ABS(num_size); i++ ) {
-				IFW(*out++ = tmp_coeff[i]); ws++;
+			for ( WORD j = 0; j < ABS(num_size); j++ ) {
+				IFW(*out++ = tmp_coeff[j]); ws++;
 			}
-			for ( WORD i = ABS(num_size); i < ABS(coeff_size); i++ ) {
+			for ( WORD j = ABS(num_size); j < ABS(coeff_size); j++ ) {
 				IFW(*out++ = 0); ws++;
 			}
 			// Copy denominator
-			for ( WORD i = 0; i < ABS(den_size); i++ ) {
-				IFW(*out++ = tmp_den[i]); ws++;
+			for ( WORD j = 0; j < ABS(den_size); j++ ) {
+				IFW(*out++ = tmp_den[j]); ws++;
 			}
-			for ( WORD i = ABS(den_size); i < ABS(coeff_size); i++ ) {
+			for ( WORD j = ABS(den_size); j < ABS(coeff_size); j++ ) {
 				IFW(*out++ = 0); ws++;
 			}
 

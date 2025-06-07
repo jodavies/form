@@ -45,14 +45,16 @@ namespace flint {
 			fmpz_t d;
 			fmpz() { fmpz_init(d); }
 			~fmpz() { fmpz_clear(d); }
-			void print(string text) { cout << text; fmpz_print(d); cout << endl; }
+			void print(const string& text) { cout << text; fmpz_print(d); cout << endl; }
 	};
 	class poly {
 		public:
 			fmpz_poly_t d;
 			poly() { fmpz_poly_init(d); }
 			~poly() { fmpz_poly_clear(d); }
-			void print(string text) { cout << text; fmpz_poly_print_pretty(d, "x"); cout << endl; }
+			void print(const string& text) {
+				cout << text; fmpz_poly_print_pretty(d, "x"); cout << endl;
+			}
 	};
 	class poly_factor {
 		public:
@@ -65,9 +67,9 @@ namespace flint {
 			fmpz_mpoly_ctx_struct *ctx; // We need to keep a copy of the context pointer for clearing.
 		public:
 			fmpz_mpoly_t d;
-			mpoly(fmpz_mpoly_ctx_struct *ctx_in) { ctx = ctx_in; fmpz_mpoly_init(d, ctx); }
+			explicit mpoly(fmpz_mpoly_ctx_struct *ctx_in) : ctx(ctx_in) { fmpz_mpoly_init(d, ctx); }
 			~mpoly() { fmpz_mpoly_clear(d, ctx); }
-			void print(string text) {
+			void print(const string& text) {
 				cout << text;
 				fmpz_mpoly_print_pretty(d, 0, ctx);
 				cout << endl;
@@ -78,8 +80,7 @@ namespace flint {
 			fmpz_mpoly_ctx_struct *ctx; // We need to keep a copy of the context pointer for clearing.
 		public:
 			fmpz_mpoly_factor_t d;
-			mpoly_factor(fmpz_mpoly_ctx_struct *ctx_in) {
-				ctx = ctx_in;
+			explicit mpoly_factor(fmpz_mpoly_ctx_struct *ctx_in) : ctx(ctx_in) {
 				fmpz_mpoly_factor_init(d, ctx);
 			}
 			~mpoly_factor() { fmpz_mpoly_factor_clear(d, ctx); }
@@ -87,7 +88,7 @@ namespace flint {
 	class mpoly_ctx {
 		public:
 			fmpz_mpoly_ctx_t d;
-			mpoly_ctx(int64_t nvars) { fmpz_mpoly_ctx_init(d, nvars, ORD_LEX); }
+			explicit mpoly_ctx(int64_t nvars) { fmpz_mpoly_ctx_init(d, nvars, ORD_LEX); }
 			~mpoly_ctx() { fmpz_mpoly_ctx_clear(d); }
 	};
 
@@ -97,8 +98,8 @@ namespace flint {
 	WORD* divmod_mpoly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);
 	WORD* divmod_poly(PHEAD const WORD *, const WORD *, const bool, const WORD, const var_map_t &);
 
-	WORD* factorize_mpoly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
-	WORD* factorize_poly(PHEAD WORD *, WORD *, const bool, const bool, const var_map_t &);
+	WORD* factorize_mpoly(PHEAD const WORD *, WORD *, const bool, const bool, const var_map_t &);
+	WORD* factorize_poly(PHEAD const WORD *, WORD *, const bool, const bool, const var_map_t &);
 
 	void form_sort(PHEAD WORD *);
 
@@ -119,8 +120,8 @@ namespace flint {
 	WORD* mul_mpoly(PHEAD const WORD *, const WORD *, const var_map_t &);
 	WORD* mul_poly(PHEAD const WORD *, const WORD *, const var_map_t &);
 
-	void ratfun_add_mpoly(PHEAD WORD *, WORD *, WORD *, const var_map_t &);
-	void ratfun_add_poly(PHEAD WORD *, WORD *, WORD *, const var_map_t &);
+	void ratfun_add_mpoly(PHEAD const WORD *, const WORD *, WORD *, const var_map_t &);
+	void ratfun_add_poly(PHEAD const WORD *, const WORD *, WORD *, const var_map_t &);
 
 	void ratfun_normalize_mpoly(PHEAD WORD *, const var_map_t &);
 	void ratfun_normalize_poly(PHEAD WORD *, const var_map_t &);
