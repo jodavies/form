@@ -9,13 +9,9 @@ extern "C" {
 }
 
 
+#include <flint/flint.h>
+#include <flint/gr.h>
 #include <flint/fmpz.h>
-#include <flint/fmpz_mod.h>
-#include <flint/fmpz_mod_mat.h>
-#include <flint/fmpz_mod_poly.h>
-#include <flint/nmod.h>
-#include <flint/nmod_mat.h>
-#include <flint/nmod_poly.h>
 #include <flint/fmpz_mpoly.h>
 #include <flint/fmpz_mpoly_factor.h>
 #include <flint/fmpz_poly.h>
