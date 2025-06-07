@@ -82,7 +82,7 @@ ModuleOption inparallel;
 .sort
 #message `op':  poly runtime: `TIMER_'
 
-UnHide;
+Hide;
 #do i = `imin',`imax'
 #do j = `jmin',`jmax'
 #do k = `kmin',`kmax'
@@ -95,6 +95,7 @@ UnHide;
 #enddo
 #enddo
 #enddo
+ModuleOption inparallel;
 .sort
 
 #do i = `imin',`imax'
@@ -162,7 +163,7 @@ ModuleOption inparallel;
 .sort
 #message `op':  poly runtime: `TIMER_'
 
-UnHide;
+Hide;
 #do i = `imin',`imax'
 #do j = `jmin',`jmax'
 #if `j' >= `i'
@@ -170,6 +171,7 @@ UnHide;
 #endif
 #enddo
 #enddo
+ModuleOption inparallel;
 .sort
 
 #do i = `imin',`imax'
@@ -222,7 +224,7 @@ ModuleOption inparallel;
 .sort
 #message `op':  poly runtime: `TIMER_'
 
-UnHide;
+Hide;
 #do i = `imin',`imax'
 #do j = `jmin',`jmax'
 #if `j' >= `i'
@@ -230,6 +232,7 @@ UnHide;
 #endif
 #enddo
 #enddo
+ModuleOption inparallel;
 .sort
 
 #do i = `imin',`imax'
@@ -286,7 +289,7 @@ ModuleOption inparallel;
 .sort
 #message `op':  poly runtime: `TIMER_'
 
-UnHide;
+Hide;
 #do i = `imin',`imax'
 #do j = `jmin',`jmax'
 #do k = `kmin',`kmax'
@@ -296,6 +299,7 @@ UnHide;
 #enddo
 #enddo
 #enddo
+ModuleOption inparallel;
 .sort
 
 #do i = `imin',`imax'
@@ -400,7 +404,7 @@ ModuleOption inparallel;
 #message prf `op':  poly runtime: `TIMER_'
 
 PolyRatFun;
-UnHide;
+Hide;
 #do i = `imin',`imax'
 #do j = `jmin',`jmax'
 #do k = `kmin',`kmax'
@@ -417,6 +421,7 @@ UnHide;
 #enddo
 #enddo
 #enddo
+ModuleOption inparallel;
 .sort
 
 #do i = `imin',`imax'
@@ -484,12 +489,13 @@ ModuleOption inparallel;
 .sort
 #message inverse: poly runtime: `TIMER_'
 
-UnHide;
+Hide;
 #do x3 = `x3min',`x3max'
 #do x1 = `x1min',`x1max'
 	Local diffinvp`x3'p`x1' = flintinvp`x3'p`x1' - polyinvp`x3'p`x1';
 #enddo
 #enddo
+ModuleOption inparallel;
 .sort
 
 #do x3 = `x3min',`x3max'
