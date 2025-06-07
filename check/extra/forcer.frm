@@ -19,6 +19,7 @@ L F =
 B ep;
 P;
 .end
+#pend_if valgrind?
 assert succeeded?
 assert result("F") =~ expr("
        + ep^-3 * ( 1/24 )

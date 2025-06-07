@@ -161,6 +161,5 @@ Local GG5 = - GG5
 #enddo
 
 .end
-#pend_if valgrind? && ncpu < 4
 assert succeeded?
 *--#] color_tloop :
