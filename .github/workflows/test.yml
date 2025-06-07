@@ -97,37 +97,40 @@ jobs:
   # thoroughly by using Valgrind on Linux. To maximize the use of concurrent
   # jobs, we divide the tests into smaller parts.
   valgrind-check:
-    name: Valgrind check for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }} (${{ matrix.group }})
+    name: Valgrind check (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }} (${{ matrix.group }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {bin: vorm, group: 1/5}
-          - {bin: vorm, group: 2/5}
-          - {bin: vorm, group: 3/5}
-          - {bin: vorm, group: 4/5}
-          - {bin: vorm, group: 5/5}
-          - {bin: tvorm, group: 1/10}
-          - {bin: tvorm, group: 2/10}
-          - {bin: tvorm, group: 3/10}
-          - {bin: tvorm, group: 4/10}
-          - {bin: tvorm, group: 5/10}
-          - {bin: tvorm, group: 6/10}
-          - {bin: tvorm, group: 7/10}
-          - {bin: tvorm, group: 8/10}
-          - {bin: tvorm, group: 9/10}
-          - {bin: tvorm, group: 10/10}
-          - {bin: tvorm, nthreads: 2, group: 1/10}
-          - {bin: tvorm, nthreads: 2, group: 2/10}
-          - {bin: tvorm, nthreads: 2, group: 3/10}
-          - {bin: tvorm, nthreads: 2, group: 4/10}
-          - {bin: tvorm, nthreads: 2, group: 5/10}
-          - {bin: tvorm, nthreads: 2, group: 6/10}
-          - {bin: tvorm, nthreads: 2, group: 7/10}
-          - {bin: tvorm, nthreads: 2, group: 8/10}
-          - {bin: tvorm, nthreads: 2, group: 9/10}
-          - {bin: tvorm, nthreads: 2, group: 10/10}
+          - {bin: vorm,  test: default, group: 1/5}
+          - {bin: vorm,  test: default, group: 2/5}
+          - {bin: vorm,  test: default, group: 3/5}
+          - {bin: vorm,  test: default, group: 4/5}
+          - {bin: vorm,  test: default, group: 5/5}
+          - {bin: tvorm, test: default, group: 1/10}
+          - {bin: tvorm, test: default, group: 2/10}
+          - {bin: tvorm, test: default, group: 3/10}
+          - {bin: tvorm, test: default, group: 4/10}
+          - {bin: tvorm, test: default, group: 5/10}
+          - {bin: tvorm, test: default, group: 6/10}
+          - {bin: tvorm, test: default, group: 7/10}
+          - {bin: tvorm, test: default, group: 8/10}
+          - {bin: tvorm, test: default, group: 9/10}
+          - {bin: tvorm, test: default, group: 10/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 1/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 2/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 3/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 4/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 5/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 6/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 7/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 8/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 9/10}
+          - {bin: tvorm, test: default, nthreads: 2, group: 10/10}
+          - {bin: vorm,  test: extra,   group: 1/1}
+          - {bin: tvorm, test: extra,   group: 1/1}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 1/1}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -159,8 +162,34 @@ jobs:
       - name: Build
         run: make -C sources -j 4 ${{ matrix.bin }}
 
+      - name: Cache library
+        id: cache-formlib
+        if: contains(fromJson('["extra"]'), matrix.test)
+        uses: actions/cache@v4
+        with:
+          path: formlib
+          key: formlib-${{ matrix.test }}
+
+      - name: Install library if necessary
+        if: steps.cache-formlib.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p formlib
+          case ${{ matrix.test }} in
+            extra)
+              # forcer library for the forcer test in extra
+              wget https://github.com/benruijl/forcer/archive/v1.0.0.tar.gz -O - | tar -x --gzip
+              mv forcer-1.0.0/forcer.h formlib
+              mv forcer-1.0.0/forcer formlib
+              rm -rf forcer-1.0.0
+              # color library for the color test in extra
+              wget https://www.nikhef.nl/~form/maindir/packages/color/color.h -P formlib
+              ;;
+          esac
+
       - name: Test
-        run: ./check/check.rb valgrind ./sources/${{ matrix.bin }} --stat -g ${{ matrix.group }} --retries 5 ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }}
+        run: ./check/check.rb valgrind ./sources/${{ matrix.bin }} --stat -g ${{ matrix.group }} --retries 5 ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }} ${{ matrix.test != 'default' && format('-C {0}', matrix.test) || '' }}
+        env:
+          FORMPATH: ${{ github.workspace }}/formlib
 
   # Generate LCOV coverage data to be posted to coveralls.io. Note that
   # we measure code coverage only for tests checked with Valgrind.
