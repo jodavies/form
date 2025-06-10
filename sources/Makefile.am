@@ -87,6 +87,7 @@ endif
 if WITHFLINT
 SRCBASE += \
 	flintinterface.cc \
+	flintinterface.h \
 	flintwrap.cc
 endif
 

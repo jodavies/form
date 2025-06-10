@@ -10,7 +10,9 @@ extern "C" {
 
 
 #include <flint/flint.h>
+#if __FLINT_RELEASE >= 30000
 #include <flint/gr.h>
+#endif
 #include <flint/fmpz.h>
 #include <flint/fmpz_mpoly.h>
 #include <flint/fmpz_mpoly_factor.h>
