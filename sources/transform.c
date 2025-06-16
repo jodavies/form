@@ -3556,20 +3556,25 @@ int FindRange(PHEAD WORD *args, WORD *arg1, WORD *arg2, WORD totarg)
 				n[i] -= MAXPOSITIVE4; /* Now we have the number of the dollar variable   */
 			}
 			n[i] = DolToNumber(BHEAD n[i]);
-			if ( AN.ErrorInDollar ) goto Error;
+			if ( AN.ErrorInDollar ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Illegal $ value in range while executing transform statement.");
+				MUNLOCK(ErrorMessageLock);
+				return(-1);
+			}
 			if ( fromlast ) n[i] = totarg-n[i];
 		}
 		else if ( n[i] >= MAXPOSITIVE4 ) { n[i] = totarg-(n[i]-MAXPOSITIVE4); }
-		if ( n[i] <= 0 ) goto Error;
+		if ( n[i] <= 0 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("Illegal non-positive value in range (%d) while executing transform statement.", i+1);
+			MUNLOCK(ErrorMessageLock);
+			return(-1);
+		}
 	}
 	*arg1 = n[0];
 	*arg2 = n[1];
 	return(0);
-Error:
-	MLOCK(ErrorMessageLock);
-	MesPrint("Illegal $ value in range while executing transform statement.");
-	MUNLOCK(ErrorMessageLock);
-	return(-1);
 }
 
 /*
