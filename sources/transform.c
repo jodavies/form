@@ -2703,6 +2703,8 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	/* ignore functions with no arguments */
+	if ( totarg == 0 ) return(0);
 	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 /*
 	We need to:
@@ -2791,6 +2793,8 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 	}
 	t = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( t < tstop ) { totarg++; NEXTARG(t); }
+	/* ignore functions with no arguments */
+	if ( totarg == 0 ) return(0);
 	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 	if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
 	if ( arg1 > totarg ) return(0);
