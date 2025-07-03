@@ -74,8 +74,8 @@ jobs:
           # Unfortunately, "allow-failure" is not available on GitHub Actions
           # (https://github.com/actions/toolkit/issues/399).
           # We have to use "continue-on-error", instead.
-          - {os: windows-2019, shell: msys2, bin: form}
-          - {os: windows-2019, shell: msys2, bin: tform}
+          - {os: windows-2022, shell: msys2, bin: form}
+          - {os: windows-2022, shell: msys2, bin: tform}
     steps:
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
@@ -421,7 +421,7 @@ jobs:
           make_tar_gz arm64-linux '*-ubuntu-24.04-arm/*form'
           make_tar_gz x86_64-osx '*-macos-13/*form'
           make_tar_gz arm64-osx '*-macos-14/*form'
-          make_zip x86_64-windows '*-windows-2019/*form.exe'
+          make_zip x86_64-windows '*-windows-2022/*form.exe'
 
       - name: Summarize files for distribution
         run: |
