@@ -3794,6 +3794,32 @@ assert stdout =~ exact_pattern(<<'EOF')
    {}: -10 -20 30
 EOF
 *--#] Issue599 : 
+*--#[ Issue615 :
+#-
+Off stats;
+
+Index i1,i2,i3,i4;
+CFunction f;
+Set sumind: i2,i3;
+
+Local test1 = f(i1,i2,i3,i4)^2;
+Local test2 = f(i1,i2,i3,i4)^2;
+
+Repeat;
+	If (Match(f(?a,i1?sumind$sum,?b))) Sum $sum;
+EndRepeat;
+InExpression test2;
+	Repeat;
+		If (Match(f(?a,i1?!dummyindices_$sum,?b))) Sum $sum;
+	EndRepeat;
+EndInExpression;
+
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("f(i1,N1_?,N2_?,i4)^2")
+assert result("test2") =~ expr("f(N1_?,N2_?,N3_?,N4_?)^2")
+*--#] Issue615 :
 *--#[ Issue633 :
 s x,y,z;
 c f;
