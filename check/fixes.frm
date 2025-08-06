@@ -3857,6 +3857,7 @@ InExpression test2;
 	EndRepeat;
 EndInExpression;
 
+ModuleOption,local $sum;
 Print;
 .end
 assert succeeded?
@@ -4013,8 +4014,8 @@ id x?$a = x;
 #require threaded?
 assert warning?("This module is forced to run in sequential mode due to $-variable: $a")
 *--#] PullReq649_4 :
-* don't veto parallel execution if there is a matching moduleoption statement
 *--#[ PullReq649_5 :
+* don't veto parallel execution if there is a matching moduleoption statement
 Local expr = 1;
 .sort
 $a = 1;
