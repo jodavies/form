@@ -72,7 +72,13 @@ extern LONG nummallocs;
 extern LONG numfrees;
 #endif
 
-LONG numcompares;
+//#define COUNTCOMPARES
+#ifdef COUNTCOMPARES
+	// This needs to be large enough for the number of threads.
+	// It is hardcoded here, but 1024 should be enough.
+	// Enabling this has a performance impact.
+	LONG numcompares[1024];
+#endif
 
 /*
   	#] Includes : 
@@ -659,7 +665,13 @@ WORD NewSort(PHEAD0)
 	}
 	if ( AR.sLevel == 0 ) {
 
-		numcompares = 0;
+#ifdef COUNTCOMPARES
+#ifdef WITHPTHREADS
+		numcompares[AT.identity] = 0;
+#else
+		numcompares[0] = 0;
+#endif
+#endif
 
 		AN.FunSorts[0] = AT.S0;
 		if ( AR.PolyFun == 0 ) { AT.S0->PolyFlag = 0; }
@@ -1267,11 +1279,19 @@ RetRetval:
 			newout = 0;
 		}
 	}
-/*
+
+#ifdef COUNTCOMPARES
 	if ( AR.sLevel < 0 ) {
-		MesPrint(" number of calls to compare was %l",numcompares);
+#ifdef WITHPTHREADS
+		MLOCK(ErrorMessageLock);
+		MesPrint(">>>number of calls to Compare: %l (tid %d)", numcompares[AT.identity], AT.identity);
+		MUNLOCK(ErrorMessageLock);
+#else
+		MesPrint(">>>number of calls to Compare: %l", numcompares[0]);
+#endif
 	}
-*/
+#endif
+
 	return(retval);
 WorkSpaceError:
 	MLOCK(ErrorMessageLock);
@@ -2627,9 +2647,15 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 	WORD prevorder;
 	WORD count = -1, localPoly, polyhit = -1;
 
+#ifdef COUNTCOMPARES
 	if ( AR.sLevel == 0 ) {
-		numcompares++;
+#ifdef WITHPTHREADS
+		numcompares[AT.identity]++;
+#else
+		numcompares[0]++;
+#endif
 	}
+#endif
 
 	if ( S->PolyFlag ) {
 /*
