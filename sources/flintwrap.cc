@@ -30,6 +30,7 @@ void flint_final_cleanup_master(void) {
 WORD* flint_div(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 	// Extract expressions
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	const bool with_arghead = false;
@@ -91,6 +92,7 @@ WORD* flint_factorize_dollar(PHEAD WORD *argin) {
 WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 	// Extract expressions
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	const bool with_arghead = false;
@@ -111,6 +113,7 @@ WORD* flint_gcd(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 WORD* flint_inverse(PHEAD WORD *a, WORD *b) {
 	// Extract expressions
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	const flint::var_map_t var_map = flint::get_variables(e, false, false);
@@ -131,6 +134,7 @@ WORD* flint_inverse(PHEAD WORD *a, WORD *b) {
 WORD* flint_mul(PHEAD WORD *a, WORD *b) {
 	// Extract expressions
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	const flint::var_map_t var_map = flint::get_variables(e, false, false);
@@ -159,6 +163,7 @@ WORD* flint_ratfun_add(PHEAD WORD *t1, WORD *t2) {
 
 	// Extract expressions: the num and den of both prf
 	vector<WORD *> e;
+	e.reserve(4);
 	for (WORD *t=t1+FUNHEAD; t<t1+t1[1];) {
 		e.push_back(t);
 		NEXTARG(t);
@@ -224,6 +229,7 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 	// Extract all variables in the polyfuns
 	// Collect pointers to each relevant argument
 	vector<WORD *> e;
+	e.reserve(4); // There could be more than 4 args in principle, but 4 is probably common.
 	for (WORD *t=term+1; t<tstop; t+=t[1]) {
 		if (*t == AR.PolyFun) {
 			for (WORD *t2 = t+FUNHEAD; t2<t+t[1];) {
@@ -259,6 +265,7 @@ int flint_ratfun_normalize(PHEAD WORD *term) {
 WORD* flint_rem(PHEAD WORD *a, WORD *b, const WORD must_fit_term) {
 	// Extract expressions
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	const bool with_arghead = false;
