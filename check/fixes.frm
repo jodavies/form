@@ -3943,6 +3943,23 @@ Evaluate 1;
 #pend_if wordsize == 2
 assert compile_error?("should be a built in function that can be evaluated numerically.")
 *--#] Issue664 :
+*--#[ Issue668_1 :
+* Check error message for invalid setup parameter:
+#:x
+#message test
+.end
+assert runtime_error?("Setups in .frm file: Keyword not recognized: x")
+*--#] Issue668_1 :
+*--#[ Issue668_2 :
+* Check error message for invalid setup parameter:
+* In this case, an unexpected end-of-file as in the original report.
+#system printf "#:x">temp.frm
+#system `FORM' temp.frm
+.end
+#pend_if mpi?
+#require linux?
+assert runtime_error?("Setups in .frm file: Keyword not recognized: x")
+*--#] Issue668_2 : 
 *--#[ Issue695_1 :
 #StartFloat 20
 CFunction f;
