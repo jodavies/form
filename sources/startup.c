@@ -1660,6 +1660,156 @@ ALLPRIVATES *ABdummy[10];
 
 int main(int argc, char **argv)
 {
+	// tmp, struct work
+printf("struct %s size %ld align %ld\n", "POSITION                  ", sizeof(POSITION                  ), alignof(POSITION));
+printf("struct %s size %ld align %ld\n", "STOREHEADER               ", sizeof(STOREHEADER               ), alignof(STOREHEADER));
+printf("struct %s size %ld align %ld\n", "INDEXENTRY                ", sizeof(INDEXENTRY                ), alignof(INDEXENTRY));
+printf("struct %s size %ld align %ld\n", "FILEINDEX                 ", sizeof(FILEINDEX                 ), alignof(FILEINDEX));
+printf("struct %s size %ld align %ld\n", "FILEDATA                  ", sizeof(FILEDATA                  ), alignof(FILEDATA));
+printf("struct %s size %ld align %ld\n", "VARRENUM                  ", sizeof(VARRENUM                  ), alignof(VARRENUM));
+printf("struct %s size %ld align %ld\n", "RENUMBER                  ", sizeof(RENUMBER                  ), alignof(RENUMBER));
+printf("struct %s size %ld align %ld\n", "LIST                      ", sizeof(LIST                      ), alignof(LIST));
+printf("struct %s size %ld align %ld\n", "KEYWORD                   ", sizeof(KEYWORD                   ), alignof(KEYWORD));
+printf("struct %s size %ld align %ld\n", "KEYWORDV                  ", sizeof(KEYWORDV                  ), alignof(KEYWORDV));
+printf("struct %s size %ld align %ld\n", "NAMENODE                  ", sizeof(NAMENODE                  ), alignof(NAMENODE));
+printf("struct %s size %ld align %ld\n", "NAMETREE                  ", sizeof(NAMETREE                  ), alignof(NAMETREE));
+printf("struct %s size %ld align %ld\n", "COMPTREE                  ", sizeof(COMPTREE                  ), alignof(COMPTREE));
+printf("struct %s size %ld align %ld\n", "MINMAX                    ", sizeof(MINMAX                    ), alignof(MINMAX));
+printf("struct %s size %ld align %ld\n", "BRACKETINDEX              ", sizeof(BRACKETINDEX              ), alignof(BRACKETINDEX));
+printf("struct %s size %ld align %ld\n", "BRACKETINFO               ", sizeof(BRACKETINFO               ), alignof(BRACKETINFO));
+printf("struct %s size %ld align %ld\n", "TABLES                    ", sizeof(TABLES                    ), alignof(TABLES));
+printf("struct %s size %ld align %ld\n", "EXPRESSIONS               ", sizeof(EXPRESSIONS               ), alignof(EXPRESSIONS));
+printf("struct %s size %ld align %ld\n", "SYMBOLS                   ", sizeof(SYMBOLS                   ), alignof(SYMBOLS));
+printf("struct %s size %ld align %ld\n", "INDICES                   ", sizeof(INDICES                   ), alignof(INDICES));
+printf("struct %s size %ld align %ld\n", "VECTORS                   ", sizeof(VECTORS                   ), alignof(VECTORS));
+printf("struct %s size %ld align %ld\n", "FUNCTIONS                 ", sizeof(FUNCTIONS                 ), alignof(FUNCTIONS));
+printf("struct %s size %ld align %ld\n", "SETS                      ", sizeof(SETS                      ), alignof(SETS));
+printf("struct %s size %ld align %ld\n", "DUBIOUSV                  ", sizeof(DUBIOUSV                  ), alignof(DUBIOUSV));
+printf("struct %s size %ld align %ld\n", "FACDOLLAR                 ", sizeof(FACDOLLAR                 ), alignof(FACDOLLAR));
+printf("struct %s size %ld align %ld\n", "DOLLARS                   ", sizeof(DOLLARS                   ), alignof(DOLLARS));
+printf("struct %s size %ld align %ld\n", "MODOPTDOLLAR              ", sizeof(MODOPTDOLLAR              ), alignof(MODOPTDOLLAR));
+printf("struct %s size %ld align %ld\n", "FIXEDSET                  ", sizeof(FIXEDSET                  ), alignof(FIXEDSET));
+printf("struct %s size %ld align %ld\n", "TABLEBASESUBINDEX         ", sizeof(TABLEBASESUBINDEX         ), alignof(TABLEBASESUBINDEX));
+printf("struct %s size %ld align %ld\n", "TABLEBASE                 ", sizeof(TABLEBASE                 ), alignof(TABLEBASE));
+printf("struct %s size %ld align %ld\n", "FUN_INFO                  ", sizeof(FUN_INFO                  ), alignof(FUN_INFO));
+printf("struct %s size %ld align %ld\n", "PARTICLE                  ", sizeof(PARTICLE                  ), alignof(PARTICLE));
+printf("struct %s size %ld align %ld\n", "VERTEX                    ", sizeof(VERTEX                    ), alignof(VERTEX));
+printf("struct %s size %ld align %ld\n", "MODEL                     ", sizeof(MODEL                     ), alignof(MODEL));
+printf("struct %s size %ld align %ld\n", "NAMESPACE                 ", sizeof(NAMESPACE                 ), alignof(NAMESPACE));
+printf("struct %s size %ld align %ld\n", "FILEHANDLE                ", sizeof(FILEHANDLE                ), alignof(FILEHANDLE));
+printf("struct %s size %ld align %ld\n", "STREAM                    ", sizeof(STREAM                    ), alignof(STREAM));
+printf("struct %s size %ld align %ld\n", "SPECTATOR                 ", sizeof(SPECTATOR                 ), alignof(SPECTATOR));
+printf("struct %s size %ld align %ld\n", "TRACES                    ", sizeof(TRACES                    ), alignof(TRACES));
+printf("struct %s size %ld align %ld\n", "TRACEN                    ", sizeof(TRACEN                    ), alignof(TRACEN));
+printf("struct %s size %ld align %ld\n", "PREVAR                    ", sizeof(PREVAR                    ), alignof(PREVAR));
+printf("struct %s size %ld align %ld\n", "INSIDEINFO                ", sizeof(INSIDEINFO                ), alignof(INSIDEINFO));
+printf("struct %s size %ld align %ld\n", "PRELOAD                   ", sizeof(PRELOAD                   ), alignof(PRELOAD));
+printf("struct %s size %ld align %ld\n", "PROCEDURE                 ", sizeof(PROCEDURE                 ), alignof(PROCEDURE));
+printf("struct %s size %ld align %ld\n", "DOLOOP                    ", sizeof(DOLOOP                    ), alignof(DOLOOP));
+printf("struct %s size %ld align %ld\n", "HANDLERS                  ", sizeof(HANDLERS                  ), alignof(HANDLERS));
+printf("struct %s size %ld align %ld\n", "CBUF                      ", sizeof(CBUF                      ), alignof(CBUF));
+printf("struct %s size %ld align %ld\n", "CHANNEL                   ", sizeof(CHANNEL                   ), alignof(CHANNEL));
+printf("struct %s size %ld align %ld\n", "SETUPPARAMETERS           ", sizeof(SETUPPARAMETERS           ), alignof(SETUPPARAMETERS));
+printf("struct %s size %ld align %ld\n", "NESTING                   ", sizeof(NESTING                   ), alignof(NESTING));
+printf("struct %s size %ld align %ld\n", "STORECACHE                ", sizeof(STORECACHE                ), alignof(STORECACHE));
+printf("struct %s size %ld align %ld\n", "PERM                      ", sizeof(PERM                      ), alignof(PERM));
+printf("struct %s size %ld align %ld\n", "PERMP                     ", sizeof(PERMP                     ), alignof(PERMP));
+printf("struct %s size %ld align %ld\n", "DISTRIBUTE                ", sizeof(DISTRIBUTE                ), alignof(DISTRIBUTE));
+printf("struct %s size %ld align %ld\n", "PARTI                     ", sizeof(PARTI                     ), alignof(PARTI));
+printf("struct %s size %ld align %ld\n", "SORTING                   ", sizeof(SORTING                   ), alignof(SORTING));
+#ifdef WITHPTHREADS
+printf("struct %s size %ld align %ld\n", "SORTBLOCK                 ", sizeof(SORTBLOCK                 ), alignof(SORTBLOCK));
+#endif
+//printf("struct %s size %ld align %ld\n", "DEBUGSTR                  ", sizeof(DEBUGSTR                  ), alignof(DEBUGSTR));
+#ifdef WITHPTHREADS
+printf("struct %s size %ld align %ld\n", "THREADBUCKET              ", sizeof(THREADBUCKET              ), alignof(THREADBUCKET));
+#endif
+printf("struct %s size %ld align %ld\n", "POLYMOD                   ", sizeof(POLYMOD                   ), alignof(POLYMOD));
+printf("struct %s size %ld align %ld\n", "SHvariables               ", sizeof(SHvariables               ), alignof(SHvariables));
+printf("struct %s size %ld align %ld\n", "COST                      ", sizeof(COST                      ), alignof(COST));
+printf("struct %s size %ld align %ld\n", "MODNUM                    ", sizeof(MODNUM                    ), alignof(MODNUM));
+printf("struct %s size %ld align %ld\n", "OPTIMIZE                  ", sizeof(OPTIMIZE                  ), alignof(OPTIMIZE));
+printf("struct %s size %ld align %ld\n", "OPTIMIZERESULT            ", sizeof(OPTIMIZERESULT            ), alignof(OPTIMIZERESULT));
+printf("struct %s size %ld align %ld\n", "DICTIONARY_ELEMENT        ", sizeof(DICTIONARY_ELEMENT        ), alignof(DICTIONARY_ELEMENT));
+printf("struct %s size %ld align %ld\n", "DICTIONARY                ", sizeof(DICTIONARY                ), alignof(DICTIONARY));
+printf("struct %s size %ld align %ld\n", "SWITCHTABLE               ", sizeof(SWITCHTABLE               ), alignof(SWITCHTABLE));
+printf("struct %s size %ld align %ld\n", "SWITCH                    ", sizeof(SWITCH                    ), alignof(SWITCH));
+printf("struct %s size %ld align %ld\n", "TERMINFO                  ", sizeof(TERMINFO                  ), alignof(TERMINFO));
+printf("struct %s size %ld align %ld\n", "ALLGLOBALS                ", sizeof(ALLGLOBALS                ), alignof(ALLGLOBALS));
+#ifdef WITHPTHREADS
+printf("struct %s size %ld align %ld\n", "ALLPRIVATES               ", sizeof(ALLPRIVATES               ), alignof(ALLPRIVATES));
+#endif
+printf("struct %s size %ld align %ld\n", "ALLGLOBALS                ", sizeof(ALLGLOBALS                ), alignof(ALLGLOBALS));
+printf("struct %s size %ld align %ld\n", "FIXEDGLOBALS              ", sizeof(FIXEDGLOBALS              ), alignof(FIXEDGLOBALS));
+printf("struct %s size %ld align %ld\n", "struct PoSiTiOn           ", sizeof(struct PoSiTiOn           ), alignof(struct PoSiTiOn));
+printf("struct %s size %ld align %ld\n", "struct InDeXeNtRy         ", sizeof(struct InDeXeNtRy         ), alignof(struct InDeXeNtRy));
+printf("struct %s size %ld align %ld\n", "struct FiLeInDeX          ", sizeof(struct FiLeInDeX          ), alignof(struct FiLeInDeX));
+printf("struct %s size %ld align %ld\n", "struct FiLeDaTa           ", sizeof(struct FiLeDaTa           ), alignof(struct FiLeDaTa));
+printf("struct %s size %ld align %ld\n", "struct VaRrEnUm           ", sizeof(struct VaRrEnUm           ), alignof(struct VaRrEnUm));
+printf("struct %s size %ld align %ld\n", "struct ReNuMbEr           ", sizeof(struct ReNuMbEr           ), alignof(struct ReNuMbEr));
+printf("struct %s size %ld align %ld\n", "struct NaMeNode           ", sizeof(struct NaMeNode           ), alignof(struct NaMeNode));
+printf("struct %s size %ld align %ld\n", "struct NaMeTree           ", sizeof(struct NaMeTree           ), alignof(struct NaMeTree));
+printf("struct %s size %ld align %ld\n", "struct tree               ", sizeof(struct tree               ), alignof(struct tree));
+printf("struct %s size %ld align %ld\n", "struct MiNmAx             ", sizeof(struct MiNmAx             ), alignof(struct MiNmAx));
+printf("struct %s size %ld align %ld\n", "struct BrAcKeTiNdEx       ", sizeof(struct BrAcKeTiNdEx       ), alignof(struct BrAcKeTiNdEx));
+printf("struct %s size %ld align %ld\n", "struct BrAcKeTiNfO        ", sizeof(struct BrAcKeTiNfO        ), alignof(struct BrAcKeTiNfO));
+printf("struct %s size %ld align %ld\n", "struct TaBlEs             ", sizeof(struct TaBlEs             ), alignof(struct TaBlEs));
+printf("struct %s size %ld align %ld\n", "struct ExPrEsSiOn         ", sizeof(struct ExPrEsSiOn         ), alignof(struct ExPrEsSiOn));
+printf("struct %s size %ld align %ld\n", "struct SyMbOl             ", sizeof(struct SyMbOl             ), alignof(struct SyMbOl));
+printf("struct %s size %ld align %ld\n", "struct InDeX              ", sizeof(struct InDeX              ), alignof(struct InDeX));
+printf("struct %s size %ld align %ld\n", "struct VeCtOr             ", sizeof(struct VeCtOr             ), alignof(struct VeCtOr));
+printf("struct %s size %ld align %ld\n", "struct FuNcTiOn           ", sizeof(struct FuNcTiOn           ), alignof(struct FuNcTiOn));
+printf("struct %s size %ld align %ld\n", "struct SeTs               ", sizeof(struct SeTs               ), alignof(struct SeTs));
+printf("struct %s size %ld align %ld\n", "struct DuBiOuS            ", sizeof(struct DuBiOuS            ), alignof(struct DuBiOuS));
+printf("struct %s size %ld align %ld\n", "struct FaCdOlLaR          ", sizeof(struct FaCdOlLaR          ), alignof(struct FaCdOlLaR));
+printf("struct %s size %ld align %ld\n", "struct DoLlArS            ", sizeof(struct DoLlArS            ), alignof(struct DoLlArS));
+printf("struct %s size %ld align %ld\n", "struct MoDoPtDoLlArS      ", sizeof(struct MoDoPtDoLlArS      ), alignof(struct MoDoPtDoLlArS));
+printf("struct %s size %ld align %ld\n", "struct fixedset           ", sizeof(struct fixedset           ), alignof(struct fixedset));
+printf("struct %s size %ld align %ld\n", "struct TaBlEbAsEsUbInDeX  ", sizeof(struct TaBlEbAsEsUbInDeX  ), alignof(struct TaBlEbAsEsUbInDeX));
+printf("struct %s size %ld align %ld\n", "struct TaBlEbAsE          ", sizeof(struct TaBlEbAsE          ), alignof(struct TaBlEbAsE));
+printf("struct %s size %ld align %ld\n", "struct PaRtIcLe           ", sizeof(struct PaRtIcLe           ), alignof(struct PaRtIcLe));
+printf("struct %s size %ld align %ld\n", "struct VeRtEx             ", sizeof(struct VeRtEx             ), alignof(struct VeRtEx));
+printf("struct %s size %ld align %ld\n", "struct MoDeL              ", sizeof(struct MoDeL              ), alignof(struct MoDeL));
+printf("struct %s size %ld align %ld\n", "struct NaMeSpAcE          ", sizeof(struct NaMeSpAcE          ), alignof(struct NaMeSpAcE));
+printf("struct %s size %ld align %ld\n", "struct FiLe               ", sizeof(struct FiLe               ), alignof(struct FiLe));
+printf("struct %s size %ld align %ld\n", "struct StreaM             ", sizeof(struct StreaM             ), alignof(struct StreaM));
+printf("struct %s size %ld align %ld\n", "struct SpecTatoR          ", sizeof(struct SpecTatoR          ), alignof(struct SpecTatoR));
+printf("struct %s size %ld align %ld\n", "struct TrAcEs             ", sizeof(struct TrAcEs             ), alignof(struct TrAcEs));
+printf("struct %s size %ld align %ld\n", "struct TrAcEn             ", sizeof(struct TrAcEn             ), alignof(struct TrAcEn));
+printf("struct %s size %ld align %ld\n", "struct pReVaR             ", sizeof(struct pReVaR             ), alignof(struct pReVaR));
+printf("struct %s size %ld align %ld\n", "struct DoLoOp             ", sizeof(struct DoLoOp             ), alignof(struct DoLoOp));
+printf("struct %s size %ld align %ld\n", "struct CbUf               ", sizeof(struct CbUf               ), alignof(struct CbUf));
+printf("struct %s size %ld align %ld\n", "struct ChAnNeL            ", sizeof(struct ChAnNeL            ), alignof(struct ChAnNeL));
+printf("struct %s size %ld align %ld\n", "struct NeStInG            ", sizeof(struct NeStInG            ), alignof(struct NeStInG));
+printf("struct %s size %ld align %ld\n", "struct StOrEcAcHe         ", sizeof(struct StOrEcAcHe         ), alignof(struct StOrEcAcHe));
+printf("struct %s size %ld align %ld\n", "struct PeRmUtE            ", sizeof(struct PeRmUtE            ), alignof(struct PeRmUtE));
+printf("struct %s size %ld align %ld\n", "struct PeRmUtEp           ", sizeof(struct PeRmUtEp           ), alignof(struct PeRmUtEp));
+printf("struct %s size %ld align %ld\n", "struct DiStRiBuTe         ", sizeof(struct DiStRiBuTe         ), alignof(struct DiStRiBuTe));
+printf("struct %s size %ld align %ld\n", "struct PaRtI              ", sizeof(struct PaRtI              ), alignof(struct PaRtI));
+printf("struct %s size %ld align %ld\n", "struct sOrT               ", sizeof(struct sOrT               ), alignof(struct sOrT));
+#ifdef WITHPTHREADS
+printf("struct %s size %ld align %ld\n", "struct SoRtBlOcK          ", sizeof(struct SoRtBlOcK          ), alignof(struct SoRtBlOcK));
+#endif
+//printf("struct %s size %ld align %ld\n", "struct DeBuGgInG          ", sizeof(struct DeBuGgInG          ), alignof(struct DeBuGgInG));
+#ifdef WITHPTHREADS
+printf("struct %s size %ld align %ld\n", "struct ThReAdBuCkEt       ", sizeof(struct ThReAdBuCkEt       ), alignof(struct ThReAdBuCkEt));
+#endif
+printf("struct %s size %ld align %ld\n", "struct M_const            ", sizeof(struct M_const            ), alignof(struct M_const));
+printf("struct %s size %ld align %ld\n", "struct P_const            ", sizeof(struct P_const            ), alignof(struct P_const));
+printf("struct %s size %ld align %ld\n", "struct C_const            ", sizeof(struct C_const            ), alignof(struct C_const));
+printf("struct %s size %ld align %ld\n", "struct S_const            ", sizeof(struct S_const            ), alignof(struct S_const));
+printf("struct %s size %ld align %ld\n", "struct R_const            ", sizeof(struct R_const            ), alignof(struct R_const));
+printf("struct %s size %ld align %ld\n", "struct T_const            ", sizeof(struct T_const            ), alignof(struct T_const));
+printf("struct %s size %ld align %ld\n", "struct N_const            ", sizeof(struct N_const            ), alignof(struct N_const));
+printf("struct %s size %ld align %ld\n", "struct O_const            ", sizeof(struct O_const            ), alignof(struct O_const));
+printf("struct %s size %ld align %ld\n", "struct X_const            ", sizeof(struct X_const            ), alignof(struct X_const));
+printf("struct %s size %ld align %ld\n", "struct AllGlobals         ", sizeof(struct AllGlobals         ), alignof(struct AllGlobals));
+#ifdef WITHPTHREADS
+printf("struct %s size %ld align %ld\n", "struct AllPrivates        ", sizeof(struct AllPrivates        ), alignof(struct AllPrivates));
+#endif
+printf("struct %s size %ld align %ld\n", "struct FixedGlobals       ", sizeof(struct FixedGlobals       ), alignof(struct FixedGlobals));
+
+
 	int retval;
 	bzero((void *)(&A),sizeof(A)); /* make sure A is initialized at zero */
 	iniTools();
