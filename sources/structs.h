@@ -48,6 +48,9 @@
 #include <wchar.h>  /* off_t */
 #endif
 
+// For "alignas" before C23
+#include <stdalign.h>
+
 /*
   	#[ sav&store :
 */
@@ -98,6 +101,7 @@ STATIC_ASSERT(sizeof(STOREHEADER) == 512);
  *  It represents one expression in the file.
  */
 typedef struct InDeXeNtRy {
+	alignas(POSITION)
 	POSITION	position;		/**< Position of the expression itself */
 	POSITION	length;			/**< Length of the expression itself */
 	POSITION	variables;		/**< Position of the list with variables */
@@ -149,6 +153,7 @@ STATIC_ASSERT(sizeof(FILEINDEX) == 512);
  */
 
 typedef struct FiLeDaTa {
+	alignas(POSITION)
 	FILEINDEX Index;
 	POSITION Fill;
 	POSITION Position;
@@ -176,6 +181,7 @@ typedef struct VaRrEnUm {
  */
 
 typedef struct ReNuMbEr {
+	alignas(POSITION)
 	POSITION   startposition;
 	/* First stage renumbering */
 	VARRENUM   symb;          /**< Symbols */
@@ -203,6 +209,7 @@ typedef struct ReNuMbEr {
  */
 
 typedef struct {
+	alignas(void*)
 	void *lijst;       /**< [D] Holds space for "maxnum" elements of size "size" each */
 	char *message;     /**< Text for Malloc1 when allocating lijst. Set to constant string. */
 	int num;           /**< Number of elements in lijst. */
@@ -245,6 +252,7 @@ typedef struct {
  */
 
 typedef struct NaMeNode {
+	alignas(LONG)
 	LONG name;      /**< Offset into NAMETREE::namebuffer. */
 	WORD parent;    /**< =-1 if no parent. */
 	WORD left;      /**< =-1 if no child. */
@@ -263,6 +271,7 @@ typedef struct NaMeNode {
  */
 
 typedef struct NaMeTree {
+	alignas(void*)
 	NAMENODE *namenode;      /**< [D] Vector of #NAMENODE's. Number of elements is #nodesize.
 	                              =0 if no memory has been allocated. */
 	UBYTE    *namebuffer;    /**< [D] Buffer that holds all the name strings referred to by the
@@ -315,6 +324,7 @@ typedef struct MiNmAx {
  */
  
 typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
+	alignas(POSITION)
 	POSITION start;				/* Place where bracket starts - start of expr */
 	POSITION next;				/* Place of next indexed bracket in expr */
 	LONG bracket;				/* Offset of position in bracketbuffer */
@@ -327,6 +337,7 @@ typedef struct BrAcKeTiNdEx {	/* For indexing brackets in local expressions */
  */
 
 typedef struct BrAcKeTiNfO {
+	alignas(void*)
 	BRACKETINDEX *indexbuffer; /**< [D] */
 	WORD  *bracketbuffer;      /**< [D] */
 	LONG  bracketbuffersize;
@@ -348,6 +359,7 @@ typedef struct BrAcKeTiNfO {
  */
 
 typedef struct TaBlEs {
+	alignas(void*)
 	WORD    *tablepointers; /**< [D] Start in tablepointers table. */
 #ifdef WITHPTHREADS
 	WORD    **prototype;    /**< [D] The wildcard prototyping for arguments */
@@ -389,6 +401,7 @@ typedef struct TaBlEs {
  */
 
 typedef struct ExPrEsSiOn {
+	alignas(POSITION)
 	POSITION	onfile;
 	POSITION	prototype;
     POSITION    size;
@@ -426,6 +439,7 @@ typedef struct ExPrEsSiOn {
  */
 
 typedef struct SyMbOl {			/* Don't change unless altering .sav too */
+	alignas(LONG)
 	LONG	name;				/* Location in names buffer */
 	WORD	minpower;			/* Minimum power admissible */
 	WORD	maxpower;			/* Maximum power admissible */
@@ -443,6 +457,7 @@ typedef struct SyMbOl {			/* Don't change unless altering .sav too */
  */
 
 typedef struct InDeX {			/* Don't change unless altering .sav too */
+	alignas(LONG)
 	LONG	name;				/* Location in names buffer */
 	WORD	type;				/* Regular or dummy */
 	WORD	dimension;			/* Value of d_(n,n) or -number of symbol */
@@ -459,6 +474,7 @@ typedef struct InDeX {			/* Don't change unless altering .sav too */
  */
 
 typedef struct VeCtOr {			/* Don't change unless altering .sav too */
+	alignas(LONG)
 	LONG	name;				/* Location in names buffer */
 	WORD	complex;			/* Properties under complex conjugation */
 	WORD	number;				/* Number when stored in file */
@@ -475,6 +491,7 @@ typedef struct VeCtOr {			/* Don't change unless altering .sav too */
  */
 
 typedef struct FuNcTiOn {  /* Don't change unless altering .sav too */
+	alignas(void*)
 	TABLES  tabl;          /**< Used if redefined as table. != 0 if function is a table */
 	LONG    symminfo;      /**< Info regarding symm properties offset in buffer */
 	LONG    name;          /**< Location in namebuffer of #NAMETREE */
@@ -497,6 +514,7 @@ typedef struct FuNcTiOn {  /* Don't change unless altering .sav too */
  */
 
 typedef struct SeTs {
+	alignas(LONG)
 	LONG	name;				/* Location in names buffer */
 	WORD	type;				/* Symbol, vector, index or function */
 	WORD	first;				/* First element in setstore */
@@ -513,6 +531,7 @@ typedef struct SeTs {
  */
 
 typedef struct DuBiOuS {		/* Undeclared objects. Just for compiler. */
+	alignas(LONG)
 	LONG	name;				/* Location in names buffer */
 	WORD	node;
 	WORD	dummy;
@@ -520,6 +539,7 @@ typedef struct DuBiOuS {		/* Undeclared objects. Just for compiler. */
 } *DUBIOUSV;
  
 typedef struct FaCdOlLaR {
+	alignas(void*)
 	WORD	*where;				/* A pointer(!) to the content */
 	LONG	size;
 	WORD	type;				/* Type can be DOLNUMBER or DOLTERMS */
@@ -528,6 +548,7 @@ typedef struct FaCdOlLaR {
 } FACDOLLAR;
 
 typedef struct DoLlArS {
+	alignas(void*)
 	WORD	*where;				/* A pointer(!) to the object */
 	FACDOLLAR *factors;			/* an array of factors. nfactors elements */
 #ifdef WITHPTHREADS
@@ -555,7 +576,10 @@ typedef struct DoLlArS {
 
 typedef struct MoDoPtDoLlArS {
 #ifdef WITHPTHREADS
+	alignas(void*)
 	DOLLARS	dstruct;	/* If local dollar: list of DOLLARS for each thread */
+#else
+	alignas(WORD)
 #endif
 	WORD	number;
 	WORD	type;
@@ -580,6 +604,7 @@ typedef struct fixedset {
  */
 
 typedef struct TaBlEbAsEsUbInDeX {
+	alignas(POSITION)
 	POSITION where;
 	LONG size;
 	PADPOSITION(0,1,0,0,0);
@@ -590,6 +615,7 @@ typedef struct TaBlEbAsEsUbInDeX {
  */
 
 typedef struct TaBlEbAsE {
+	alignas(POSITION)
 	POSITION fillpoint;
 	POSITION current;
 	UBYTE *name;
@@ -606,6 +632,7 @@ typedef struct TaBlEbAsE {
  */
 
 typedef struct {
+	alignas(void*)
 	WORD *location;
 	int numargs;
 	int numfunnies;
@@ -680,6 +707,7 @@ typedef struct NaMeSpAcE {
  */
 
 typedef struct FiLe {
+	alignas(POSITION)
 	POSITION POposition;    	/* File position */
     POSITION filesize;          /* Because SEEK_END is unsafe on IBM */
     WORD *PObuffer;             /* Address of the intermediate buffer */
@@ -734,6 +762,7 @@ typedef struct FiLe {
  */
  
 typedef struct StreaM {
+	alignas(POSITION)
 	off_t fileposition;
 	off_t linenumber;
 	off_t prevline;
@@ -763,6 +792,7 @@ typedef struct StreaM {
 } STREAM;
 
 typedef struct SpecTatoR {
+	alignas(POSITION)
 	POSITION position;   /* The place where we will be writing */
 	POSITION readpos;    /* The place from which we read */
 	FILEHANDLE *fh;
@@ -787,6 +817,7 @@ typedef struct SpecTatoR {
  */
 
 typedef struct TrAcEs {			/* For computing 4 dimensional traces */
+	alignas(void*)
 	WORD		*accu;		/* NUMBER * 2 */
 	WORD		*accup;
 	WORD		*termp;
@@ -820,6 +851,7 @@ typedef struct TrAcEs {			/* For computing 4 dimensional traces */
  */
 
 typedef struct TrAcEn {			/* For computing n dimensional traces */
+	alignas(void*)
 	WORD		*accu;		/* NUMBER */
 	WORD		*accup;
 	WORD		*termp;
@@ -839,6 +871,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
  */
  
 typedef struct pReVaR {
+	alignas(void*)
 	UBYTE *name;		/**< allocated */
 	UBYTE *value;		/**< points into memory of name */
 	UBYTE *argnames;	/**< names of arguments, zero separated. points into memory of name */
@@ -852,6 +885,7 @@ typedef struct pReVaR {
  */
 
 typedef struct {
+	alignas(void*)
 	WORD *buffer;
 	int oldcompiletype;
 	int oldparallelflag;
@@ -871,6 +905,7 @@ typedef struct {
  */
 
 typedef struct {
+	alignas(void*)
 	UBYTE	*buffer;
     LONG	size;
 	PADPOINTER(1,0,0,0);
@@ -881,6 +916,7 @@ typedef struct {
  */
 
 typedef struct {
+	alignas(void*)
 	PRELOAD p;
 	UBYTE	*name;
 	int		loadmode;
@@ -895,6 +931,7 @@ typedef struct {
  */
 
 typedef struct DoLoOp {
+	alignas(void*)
 	PRELOAD p;          /**< size, name and buffer */
 	UBYTE *name;        /**< pointer into PRELOAD buffer */
 	UBYTE *vars;        /* for {} or name of expression */
@@ -1021,6 +1058,7 @@ typedef struct CbUf {
  */
 
 typedef struct ChAnNeL {
+	alignas(void*)
     char *name;          /**< [D] Name of the channel */
     int handle;          /**< File handle */
     PADPOINTER(0,1,0,0);
@@ -1039,6 +1077,9 @@ typedef struct {
     UBYTE *parameter;
     int type;
     int flags;
+    // This ordering is assumed by initializer lists in many places. In this
+    // case the struct should anyway not have additional padding between the
+    // two int and the LONG members.
     LONG value;
 } SETUPPARAMETERS;
 
@@ -1063,6 +1104,7 @@ typedef struct NeStInG {
  */
 
 typedef struct StOrEcAcHe {
+	alignas(POSITION)
     POSITION position;
     POSITION toppos;
     struct StOrEcAcHe *next;
@@ -1076,6 +1118,7 @@ typedef struct StOrEcAcHe {
  */
 
 typedef struct PeRmUtE {
+	alignas(void*)
     WORD *objects;
     WORD sign;
     WORD n;
@@ -1088,6 +1131,7 @@ typedef struct PeRmUtE {
  */
 
 typedef struct PeRmUtEp {
+	alignas(void*)
     WORD **objects;
     WORD sign;
     WORD n;
@@ -1101,6 +1145,7 @@ typedef struct PeRmUtEp {
  */
 
 typedef struct DiStRiBuTe {
+	alignas(void*)
     WORD *obj1;
     WORD *obj2;
     WORD *out;
@@ -1118,6 +1163,7 @@ typedef struct DiStRiBuTe {
  */
 
 typedef struct PaRtI {
+	alignas(void*)
 	WORD *psize;  /* the sizes of the partitions */
 	WORD *args;   /* the offsets of the arguments to be partitioned */
 	WORD *nargs;  /* argument numbers (different number = different argument) */
@@ -1138,6 +1184,7 @@ typedef struct PaRtI {
  */
 
 typedef struct sOrT {
+	alignas(POSITION)
     FILEHANDLE file;            /* The own sort file */
     POSITION SizeInFile[3];     /* Sizes in the various files */
     WORD *lBuffer;              /* The large buffer */
@@ -1211,6 +1258,7 @@ typedef struct sOrT {
  */
 
 typedef struct SoRtBlOcK {
+	alignas(void*)
     pthread_mutex_t *MasterBlockLock;
     WORD    **MasterStart;
     WORD    **MasterFill;
@@ -1239,6 +1287,7 @@ typedef struct DeBuGgInG {
  */
 
 typedef struct ThReAdBuCkEt {
+	alignas(void*)
     POSITION *deferbuffer;      /* For Keep Brackets: remember position */
     WORD *threadbuffer;         /* Here are the (primary) terms */
     WORD *compressbuffer;       /* For keep brackets we need the compressbuffer */
@@ -1274,6 +1323,7 @@ typedef struct {
 } POLYMOD;
 
 typedef struct {
+	alignas(void*)
     WORD    *outterm;            /* Used in DoShuffle/Merge/FinishShuffle system */
     WORD    *outfun;
     WORD    *incoef;
@@ -1341,6 +1391,7 @@ typedef struct {
 } OPTIMIZE;
 
 typedef struct {
+	alignas(void*)
     WORD  *code;
     UBYTE *nameofexpr;  /* It is easier to remember an expression by name */
     LONG  codesize;     /* We need this for the checkpoints */
@@ -1422,6 +1473,7 @@ typedef struct {
  */
 
 struct M_const {
+	alignas(POSITION)
     POSITION zeropos;              /* (M) is zero */
     SORTING *S0;                   /**< [D] The main sort buffer */
     UWORD   *gcmod;                /**< Global setting of modulus. Uses AC.cmod's memory */
@@ -1626,6 +1678,7 @@ struct M_const {
  */
 
 struct P_const {
+	alignas(void*)
     LIST DollarList;               /* (R) Dollar variables. Contains pointers
                                        to contents of the variables.*/
     LIST PreVarList;               /* (R) List of preprocessor variables
@@ -1695,6 +1748,7 @@ struct P_const {
  */
 
 struct C_const {
+	alignas(POSITION)
     set_of_char separators;        /**< Separators in #call and #do */
 	POSITION StoreFileSize;        /* () Size of store file */
     NAMETREE *dollarnames;         /**< [D] Names of dollar variables */
@@ -1975,6 +2029,7 @@ struct C_const {
  */
 
 struct S_const {
+	alignas(POSITION)
 	POSITION MaxExprSize;          /* ( ) Maximum size of in/out/sort */
 #ifdef WITHPTHREADS
 	pthread_mutex_t	inputslock;
@@ -2027,6 +2082,7 @@ struct S_const {
  */
 
 struct R_const {
+	alignas(POSITION)
     FILEDATA    StoreData;         /* (O) */
     FILEHANDLE  Fscr[3];           /* (R) Dollars etc play with it too */
     FILEHANDLE  FoStage4[2];       /* (R) In Sort. Stage 4. */
@@ -2119,6 +2175,7 @@ struct R_const {
  */
 
 struct T_const {
+	alignas(void*)
 #ifdef WITHPTHREADS
     SORTBLOCK SB;
 #endif
@@ -2274,6 +2331,7 @@ struct T_const {
  */
 
 struct N_const {
+	alignas(POSITION)
     POSITION OldPosIn;             /* (R) Used in sort. */
     POSITION OldPosOut;            /* (R) Used in sort */
 	POSITION theposition;          /* () Used in index.c */
@@ -2451,6 +2509,7 @@ struct N_const {
  */
 
 struct O_const {
+	alignas(POSITION)
     FILEDATA    SaveData;          /* (O) */
     STOREHEADER SaveHeader;        /* ()  System Independent save-Files */
 	OPTIMIZERESULT OptimizeResult;
@@ -2557,6 +2616,7 @@ struct O_const {
  */
 
 struct X_const {
+	alignas(void*)
 	UBYTE *currentPrompt;
 	UBYTE *shellname;          /* if !=NULL (default is "/bin/sh -c"), start in 
 	                              the specified subshell*/
@@ -2590,6 +2650,7 @@ struct X_const {
  */
 
 typedef struct AllGlobals {
+	alignas(POSITION)
     struct M_const M;
     struct C_const Cc;
     struct S_const S;
@@ -2605,6 +2666,7 @@ typedef struct AllGlobals {
  */
 
 typedef struct AllPrivates {
+	alignas(POSITION)
     struct R_const R;
     struct N_const N;
     struct T_const T;
@@ -2618,6 +2680,7 @@ typedef struct AllPrivates {
  */
 
 typedef struct AllGlobals {
+	alignas(POSITION)
     struct M_const M;
     struct C_const Cc;
     struct S_const S;

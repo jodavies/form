@@ -320,8 +320,8 @@ template<typename T> struct calc {
  * disadvantages for them in practice (ancient compilers most likely can't
  * compile C99 and C++98+TR1 sources anyway).
  */
-#define PADDUMMY(type, size) \
-	UBYTE d_u_m_m_y[form_alignof(type) - ((size) & (form_alignof(type) - 1))]
+//#define PADDUMMY(type, size) UBYTE d_u_m_m_y[form_alignof(type) - ((size) & (form_alignof(type) - 1))]
+#define PADDUMMY(type, size)
 #define PADPOSITION(ptr_,long_,int_,word_,byte_) \
 	PADDUMMY(off_t, \
 		+ sizeof(int *) * (ptr_) \
