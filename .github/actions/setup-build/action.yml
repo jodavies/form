@@ -30,7 +30,7 @@ runs:
           build_flint=false
           automake=false diffutils=false gcc=true git=false ruby=true wget=false
           latex=false latex2html=false
-          formlib=false color=false forcer=false series=false
+          formlib=false color=false forcer=false mincer=false series=false
         # NOTE: Some features and OS image combinations are not implemented.
       shell: bash
       run: |
@@ -132,14 +132,16 @@ runs:
         if $feat_formlib; then
           feat_color=true
           feat_forcer=true
+          feat_mincer=true
           feat_series=true
         fi
 
-        if $feat_color || $feat_forcer || $feat_series; then
+        if $feat_color || $feat_forcer || $feat_mincer || $feat_series; then
           feat_formlib=true
           items=''
           $feat_color && items="$items-color-1.0.0"
           $feat_forcer && items="$items-forcer-1.0.0"
+          $feat_mincer && items="$items-mincer-1.0.0"
           $feat_series && items="$items-series-1.0.0"
           echo "formlib_key=formlib$items" >>"$GITHUB_OUTPUT"
           echo "formlib_restore_keys=formlib-" >>"$GITHUB_OUTPUT"
@@ -537,6 +539,16 @@ runs:
           mv forcer-1.0.0/forcer formlib/
           rm -rf forcer-1.0.0
           touch formlib/forcer-1.0.0
+        fi
+        if ${{ steps.setup.outputs.mincer }} && [ ! -f formlib/mincer-1.0.0 ]; then
+          rm -rf formlib/mince* formlib/treatqaqa.prc
+          wget https://github.com/form-dev/form-packages/archive/refs/tags/v1.0.0.tar.gz -O - | tar -x --gzip
+          mv form-packages-1.0.0/mincer/mincer2.h formlib/
+          mkdir form-packages-1.0.0/mincer/minceex
+          tar xf form-packages-1.0.0/mincer/mincerex.tgz -C form-packages-1.0.0/mincer/minceex
+          mv form-packages-1.0.0/mincer/minceex/{minceex.h,treatqaqa.prc} formlib/
+          rm -rf form-packages-1.0.0
+          touch formlib/mincer-1.0.0
         fi
         if ${{ steps.setup.outputs.series }} && [ ! -f formlib/series-1.0.0 ]; then
           rm -rf formlib/series*
