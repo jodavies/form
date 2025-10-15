@@ -222,7 +222,7 @@ void FunLevel(PHEAD WORD *term)
 					else {
 						if ( *t == -INDEX ) {
 							t++;
-							if ( *t >= AN.IndDum ) {
+							if ( *t > AN.IndDum ) {
 								if ( AN.NumFound >= AN.MaxRenumScratch ) AdjustRenumScratch(BHEAD0);
 								AN.NumFound++;
 								*AN.DumFound++ = *t;

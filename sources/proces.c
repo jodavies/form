@@ -3619,6 +3619,10 @@ SkipCount:	level++;
 						// If the term was modified by WildFill, set RepCount.
 						if ( term_changed ) *AN.RepPoint = 1;
 						AT.WorkPointer = ow;
+						// Most other calls to ReNumber reset AN.IndDum to AM.IndDum first. Here it is
+						// not done, but doing it is one way to fix Issue #710. The fix that is actually
+						// implemented is to change a comparison in FunLevel and then a reset of
+						// AN.IndDum appears unnecessary here. But maybe one day this comment is useful.
 						ReNumber(BHEAD term);
 						goto Renormalize;
 					}
