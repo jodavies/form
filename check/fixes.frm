@@ -4118,6 +4118,97 @@ Print;
 assert succeeded?
 assert result("F") =~ expr("f(a) + f(a)*float_(2,3,1,340282366920938463463374607431768211456)")
 *--#] Issue695_2 :
+*--#[ Issue710_1 :
+#-
+Off statistics;
+Index uu1;
+CFunction fun;
+Local expr = fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?);
+Bracket fun,e_;
+.sort
+Keep Brackets;
+Sum uu1;
+Print;
+.end
+assert succeeded?
+assert result("expr") =~ expr("fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?)")
+*--#] Issue710_1 :
+*--#[ Issue710_2 :
+#-
+Off statistics;
+CFunction fun;
+Local expr = fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?);
+Bracket fun,e_;
+.sort
+Keep Brackets;
+ReNumber;
+Print;
+.end
+assert succeeded?
+assert result("expr") =~ expr("fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?)")
+*--#] Issue710_2 :
+*--#[ Issue710_3 :
+#-
+Off statistics;
+CFunction fun;
+Local expr = fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?);
+Bracket fun,e_;
+.sort
+Keep Brackets;
+ReNumber,1;
+Print;
+.end
+assert succeeded?
+assert result("expr") =~ expr("fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?)")
+*--#] Issue710_3 :
+*--#[ Issue710_4 :
+#-
+Off statistics;
+Index i1,i2,i3,i4;
+CFunction fun;
+Local expr1 = fun(i1,i2)*fun(i3,i4)*e_(i1,i2,i3,i4);
+Local expr2 = fun(i2,i1)*fun(i4,i3)*e_(i1,i2,i3,i4);
+Local expr3 = fun(i2,i1)*fun(i3,i4)*e_(i1,i2,i3,i4);
+Bracket fun,e_;
+.sort
+Keep Brackets;
+Sum i1,...,i4;
+Print;
+.end
+assert succeeded?
+assert result("expr1") =~ expr("fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?)")
+assert result("expr2") =~ expr("fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?)")
+assert result("expr3") =~ expr("- fun(N1_?,N2_?)*fun(N3_?,N4_?)*e_(N1_?,N2_?,N3_?,N4_?)")
+*--#] Issue710_4 :
+*--#[ Issue710_4 :
+#-
+Off statistics;
+CFunction indhide;
+Index i1,i2,i3,i4;
+Vector v1,v2,v3,v4;
+Local expr = v1(i1)*v2(i2)*v3(i3)*v4(i4)*indhide(e_(i1,i2,i3,i4));
+Sum i1,i2,i3,i4;
+Print;
+.end
+assert succeeded?
+assert result("expr") =~ expr("indhide(e_(N1_?,N2_?,N3_?,N4_?))*v1(N1_?)*v2(N2_?)*v3(N3_?)*v4(N4_?)")
+*--#] Issue710_4 :
+*--#[ Issue710_5 :
+#-
+Off statistics;
+CFunction indhide;
+Index i1,i2,i3,i4;
+Vector v1,v2,v3,v4;
+Local expr = v1(i1)*v2(i2)*v3(i3)*v4(i4)*indhide(e_(i1,i2,i3,i4));
+Bracket v1,v2,v3,v4,indhide;
+.sort
+Keep Brackets;
+Sum i1,i2,i3,i4;
+Print;
+.end
+assert succeeded?
+assert result("expr") =~ expr("indhide(e_(N1_?,N2_?,N3_?,N4_?))*v1(N1_?)*v2(N2_?)*v3(N3_?)*v4(N4_?)")
+*--#] Issue710_5 :
 *--#[ PullReq535 :
 * This test requires more than the specified 50K workspace.
 #:maxtermsize 200
