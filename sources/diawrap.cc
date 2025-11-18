@@ -245,7 +245,7 @@ void ProcessDiagram(EGraph *eg, void *ti)
 //
 //	Now get the nodes
 //
-	if ( ( info->flags & NONODES ) == 0 ) {
+	if ( ( info->flags & WITHOUTNODES ) == 0 ) {
 	  for ( i = 0; i < eg->nNodes; i++ ) {
 //
 //		node_(number,coupling,particle_1(momentum_1),...,particle_n(momentum_n))
@@ -395,7 +395,7 @@ void ProcessDiagram(EGraph *eg, void *ti)
 			startfill[1] = fill-startfill;
 		}
 	}
-	if ( ( info->flags & WITHONEPI ) == WITHONEPI ) {
+	if ( ( info->flags & WITHONEPISETS ) == WITHONEPISETS ) {
 		for ( i = 0; i < eg->econn->nopic; i++ ) {
 			startfill = fill;
 			*fill++ = ONEPI;
@@ -451,8 +451,6 @@ void ProcessDiagram(EGraph *eg, void *ti)
 	if ( eg->fsign < 0 ) fill[-1] = -fill[-1];
 	*newterm = fill - newterm;
 	AT.WorkPointer = fill;
-
-//	MesPrint("<> %a",newterm[0],newterm);
 
 	Generator(BHEAD newterm,info->level);
 	AT.WorkPointer = oldworkpointer;
@@ -664,7 +662,7 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 //			startfill[1] = fill-startfill;
 //		}
 	}
-	if ( ( info->flags & WITHONEPI ) == WITHONEPI ) {
+	if ( ( info->flags & WITHONEPISETS ) == WITHONEPISETS ) {
 		for ( i = 0; i < eg->econn->nopic; i++ ) {
 			startfill = fill;
 			*fill++ = ONEPI;
@@ -718,8 +716,6 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 	*newterm = fill - newterm;
 	AT.WorkPointer = fill;
 
-//MesPrint("<> %a",*newterm,newterm);
-
 	Generator(BHEAD newterm,info->level);
 	AT.WorkPointer = oldworkpointer;
 	info->numtopo++;
@@ -727,6 +723,28 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 }
 
 //	#] ProcessTopology : 
+// #[ SetDualOpts : 
+void SetDualOpts(int *opt, const WORD num, const int key, const int dual,
+	const int val, const int dval, const int both) {
+
+	if ( ( num & key ) == key ) {
+		if ( ( num & dual ) == dual ) {
+			*opt = both;
+		}
+		else {
+			*opt = val;
+		}
+	}
+	else {
+		if ( ( num & dual ) == dual ) {
+			*opt = dval;
+		}
+		else {
+			*opt = both;
+		}
+	}
+}
+// #] SetDualOpts : 
 //	#[ GenDiagrams :
 
 int GenDiagrams(PHEAD WORD *term, WORD level)
@@ -780,27 +798,24 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 
 	opt->setOutAG(ProcessDiagram, &info);
 	opt->setOutMG(ProcessTopology, &info);
-//	opt->setEndMG(fendMG, &info);
 
-	opt->values[GRCC_OPT_1PI] = ( optionnumber & ONEPARTICLEIRREDUCIBLE ) == ONEPARTICLEIRREDUCIBLE;
-	opt->values[GRCC_OPT_NoTadpole] = ( optionnumber & NOTADPOLES ) == NOTADPOLES;
-//
-//	Next are snails:
-//
-	opt->values[GRCC_OPT_No1PtBlock] = ( optionnumber & NOTADPOLES ) == NOTADPOLES;
-//
-	if ( ( optionnumber & WITHINSERTIONS ) == WITHINSERTIONS ) {
-		opt->values[GRCC_OPT_No2PtL1PI] = True;
-		opt->values[GRCC_OPT_NoAdj2PtV] = True;
-		opt->values[GRCC_OPT_No2PtL1PI] = True;
-	}
-	else {
-		opt->values[GRCC_OPT_NoAdj2PtV] = True;
-	}
 	opt->values[GRCC_OPT_SymmInitial] = ( optionnumber & WITHSYMMETRIZE ) == WITHSYMMETRIZE;
-	opt->values[GRCC_OPT_SymmFinal] = ( optionnumber & WITHSYMMETRIZE ) == WITHSYMMETRIZE;
-
+	// TODO decide what to do here
+//	opt->values[GRCC_OPT_SymmFinal] = ( optionnumber & WITHSYMMETRIZE ) == WITHSYMMETRIZE;
 //	opt->values[GRCC_OPT_Block] = ( optionnumber & WITHBLOCKS ) == WITHBLOCKS;
+	// Now the "qgraf-compatible filtering options":
+	int qgopt[GRCC_QGRAF_OPT_Size];
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_ONEPI], optionnumber, ONEPARTI, ONEPARTR, 1, -1, 0);
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_ONSHELL], optionnumber, ONSHELL, OFFSHELL, 1, -1, 0);
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_NOSIGMA], optionnumber, NOSIGMA, SIGMA, 1, -1, 0);
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_NOSNAIL], optionnumber, NOSNAIL, SNAIL, 1, -1, 0);
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_NOTADPOLE], optionnumber, NOTADPOLE, TADPOLE , 1, -1, 0);
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_SIMPLE], optionnumber, SIMPLE, NOTSIMPLE, 1, -1, 0);
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_BIPART], optionnumber, BIPART, NONBIPART, 1, -1, 0);
+	SetDualOpts(&qgopt[GRCC_QGRAF_OPT_CYCLI], optionnumber, CYCLI, CYCLR, 1, -1, 0);
+	qgopt[GRCC_QGRAF_OPT_FLOOP] = ( optionnumber & FLOOP ) == FLOOP;
+	// Now set the options internally:
+	opt->setQGrafOpt(qgopt);
 
 	opt->setOutputF(False,"");
 	opt->setOutputP(False,"");
@@ -809,19 +824,18 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 //	opt->values[GRCC_OPT_Step]       = GRCC_AGraph;
 
 //	Load the various arrays.
-
-    ninitl = Sets[inset].last - Sets[inset].first;
-    for ( i = 0; i < ninitl; i++ ) {
-        x = SetElements[Sets[inset].first+i];
-        initlPart[i] = ConvertParticle(model,x);
+	ninitl = Sets[inset].last - Sets[inset].first;
+	for ( i = 0; i < ninitl; i++ ) {
+		x = SetElements[Sets[inset].first+i];
+		initlPart[i] = ConvertParticle(model,x);
 		info.legcouple[i] = m->vertices[numParticle(m,x)]->couplings;
-    }
-    nfinal = Sets[outset].last - Sets[outset].first;
-    for ( i = 0; i < nfinal; i++ ) {
-        x = SetElements[Sets[outset].first+i];
-        finalPart[i] = ConvertParticle(model,x);
+	}
+	nfinal = Sets[outset].last - Sets[outset].first;
+	for ( i = 0; i < nfinal; i++ ) {
+		x = SetElements[Sets[outset].first+i];
+		finalPart[i] = ConvertParticle(model,x);
 		info.legcouple[i+ninitl] = m->vertices[numParticle(m,x)]->couplings;
-    }
+	}
 	info.numextern = ninitl + nfinal;
 	for ( i = 2; i <= MAXLEGS; i++ ) {
 		if ( m->legcouple[i] == 1 ) {
@@ -1000,21 +1014,21 @@ int GenTopologies(PHEAD WORD *term, WORD level)
 
 	info.flags |= TOPOLOGIESONLY;  // this is the topologies_ function after all.
 	if ( t1 < tstop && t1[0] == -SNUMBER ) {
-		if ( ( t1[1] &   NONODES ) ==   NONODES ) info.flags |=   NONODES;
+		if ( ( t1[1] &   WITHOUTNODES ) ==   WITHOUTNODES ) info.flags |=   WITHOUTNODES;
 		if ( ( t1[1] & WITHEDGES ) == WITHEDGES ) info.flags |= WITHEDGES;
 		if ( ( t1[1] & WITHBLOCKS ) == WITHBLOCKS ) info.flags |= WITHBLOCKS;
-		if ( ( t1[1] & WITHONEPI ) == WITHONEPI ) info.flags |= WITHONEPI;
-		opt->values[GRCC_OPT_1PI] = ( t1[1] & ONEPARTICLEIRREDUCIBLE ) == ONEPARTICLEIRREDUCIBLE;
-//		opt->values[GRCC_OPT_NoTadpole] = ( t1[1] & NOTADPOLES ) == NOTADPOLES;
-		opt->values[GRCC_OPT_NoTadpole] = ( t1[1] & NOSNAILS ) == NOSNAILS;
-		opt->values[GRCC_OPT_No1PtBlock] = ( t1[1] & NOTADPOLES ) == NOTADPOLES;
-		opt->values[GRCC_OPT_NoExtSelf] = ( t1[1] & NOEXTSELF ) == NOEXTSELF;
+		if ( ( t1[1] & WITHONEPISETS ) == WITHONEPISETS ) info.flags |= WITHONEPISETS;
+		opt->values[GRCC_OPT_1PI] = ( t1[1] & ONEPARTI ) == ONEPARTI;
+//		opt->values[GRCC_OPT_NoTadpole] = ( t1[1] & NOTADPOLE ) == NOTADPOLE;
+		opt->values[GRCC_OPT_NoTadpole] = ( t1[1] & NOSNAIL ) == NOSNAIL;
+		opt->values[GRCC_OPT_No1PtBlock] = ( t1[1] & NOTADPOLE ) == NOTADPOLE;
+//		opt->values[GRCC_OPT_NoExtSelf] = ( t1[1] & NOEXTSELF ) == NOEXTSELF;
 
-		if ( ( t1[1] & WITHINSERTIONS ) == WITHINSERTIONS ) {
-			opt->values[GRCC_OPT_No2PtL1PI] = True;
-			opt->values[GRCC_OPT_NoAdj2PtV] = True;
-			opt->values[GRCC_OPT_No2PtL1PI] = True;
-		}
+//		if ( ( t1[1] & WITHINSERTIONS ) == WITHINSERTIONS ) {
+//			opt->values[GRCC_OPT_No2PtL1PI] = True;
+//			opt->values[GRCC_OPT_NoAdj2PtV] = True;
+//			opt->values[GRCC_OPT_No2PtL1PI] = True;
+//		}
 		opt->values[GRCC_OPT_SymmInitial] = ( t1[1] & WITHSYMMETRIZE ) == WITHSYMMETRIZE;
 	}
 
