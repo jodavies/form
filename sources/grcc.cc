@@ -5154,7 +5154,7 @@ Bool MGraph::isOptM(void)
     selfloop  = (mconn->nselfloops > 0);
     multiedge = (mconn->nmultiedges > 0);
     tadblock  = (mconn->na1blocks > 0);
-    block     = (mconn->neblocks == 1);
+    block     = (mconn->neblocks <= 1);
     extself   = (mconn->ne1bridges > 0);
 
     if (opt->values[GRCC_OPT_1PI] > 0) {
