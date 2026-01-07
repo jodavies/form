@@ -342,6 +342,10 @@ int CoVertex(UBYTE *s)
 					if ( *s == '-' ) sign = -sign;
 					s++;
 				}
+				if ( sign == -1 ) {
+					v->error = 1;
+					MesPrint("&Invalid negative power of coupling constant.");
+				}
 				while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
 				v->couplings[v->ncouplings++] = x;
 			}
