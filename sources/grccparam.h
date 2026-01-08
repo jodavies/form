@@ -31,10 +31,12 @@
 #define GRCC_Stderr          stderr
 */
 #define GRCC_Stderr          stdout
-/*
-#define GRCC_ABORT()         exit(1)
-*/
-#define GRCC_ABORT()         abort()
+
+#ifndef NOFORM
+    #define GRCC_ABORT()      Terminate(-1);
+#else
+    #define GRCC_ABORT()      exit(1)
+#endif
 
 /*---------------------------------------------------------------
  * Constants
