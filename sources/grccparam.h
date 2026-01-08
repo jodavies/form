@@ -26,10 +26,8 @@
 
 #define GRCC_FRACERROR       (1.0e-10)
 
-/* error message */
-/*
-#define GRCC_Stderr          stderr
-*/
+/* Standard and error message destination */
+#define GRCC_Stdout          stdout
 #define GRCC_Stderr          stdout
 
 #ifndef NOFORM
