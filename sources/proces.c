@@ -1220,8 +1220,10 @@ Important: we may not have enough spots here
 					|| ( Sets[t1[3]].type == ANYTYPE && ( Sets[t1[3]].first == Sets[t1[3]].last ) ) ) &&
 				  t1[4] == -SETSET && ( Sets[t1[5]].type == CFUNCTION
 					|| ( Sets[t1[5]].type == ANYTYPE && ( Sets[t1[5]].first == Sets[t1[5]].last ) ) ) &&
-				  t1[6] == -SETSET && Sets[t1[7]].type == CVECTOR &&
-				  t1[8] == -SETSET && Sets[t1[9]].type == CVECTOR &&
+				  t1[6] == -SETSET && ( Sets[t1[7]].type == CVECTOR
+					|| ( Sets[t1[7]].type == ANYTYPE && ( Sets[t1[7]].first == Sets[t1[7]].last ) ) ) &&
+				  t1[8] == -SETSET && ( Sets[t1[9]].type == CVECTOR
+					|| ( Sets[t1[9]].type == ANYTYPE && ( Sets[t1[9]].first == Sets[t1[9]].last ) ) ) &&
 				  t1+12 <= t2 ) {
 /*
 					Test that the sets of particles correspond to particles
