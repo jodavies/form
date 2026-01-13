@@ -237,7 +237,7 @@ void ProcessDiagram(EGraph *eg, void *ti)
 	int i, j, intr;
 	Model *model = (Model *)info->currentModel;
 	MODEL *m = (MODEL *)info->currentMODEL;
-	int numlegs, vect, edge;
+	int numlegs, vect, edge, maxmom = 0;
 
 	newterm = term + *term;
 	for ( i = 1; i < info->diaoffset; i++ ) newterm[i] = term[i];
@@ -301,6 +301,8 @@ void ProcessDiagram(EGraph *eg, void *ti)
 			}
 			else { // Look up in set of internal momenta set
 				*fill++ = SetElements[Sets[info->internalset].first+(vect-eg->nExtern)];
+				// determine the number of momenta required from internalset:
+				maxmom = MaX(maxmom, vect-eg->nExtern);
 			}
 			*fill++ = 1; *fill++ = 1; *fill++ = 3;
 		}
@@ -335,6 +337,7 @@ void ProcessDiagram(EGraph *eg, void *ti)
 			}
 			else { // Look up in set of internal momenta set
 				*fill++ = SetElements[Sets[info->internalset].first+(i-eg->nExtern)];
+				maxmom = MaX(maxmom, i-eg->nExtern);
 			}
 			*fill++ = 1; *fill++ = 1; *fill++ = 3;
 //
@@ -385,6 +388,7 @@ void ProcessDiagram(EGraph *eg, void *ti)
 					}
 					else { // Look up in set of internal momenta set
 						*fill++ = SetElements[Sets[info->internalset].first+(vect-info->numextern)];
+						maxmom = MaX(maxmom, vect-info->numextern);
 					}
 				}
 				funfill[1] = fill-funfill;
@@ -443,6 +447,15 @@ void ProcessDiagram(EGraph *eg, void *ti)
 	}
 	if ( eg->extperm != 1 ) {
 		*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->extperm; *fill++ = 1;
+	}
+//
+//	verify internalset has sufficient momenta:
+//
+	if ( maxmom >= Sets[info->internalset].last - Sets[info->internalset].first ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("&Insufficient internal momenta in diagrams_");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
 	}
 //
 //	finish it off
@@ -518,7 +531,7 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 	Model *model = (Model *)info->currentModel;
 	MODEL *m = (MODEL *)info->currentMODEL;
 	int i, j;
-	int numlegs, vect, edge;
+	int numlegs, vect, edge, maxmom = 0;
 
 	newterm = term + *term;
 	for ( i = 1; i < info->diaoffset; i++ ) newterm[i] = term[i];
@@ -568,6 +581,8 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 			}
 			else { // Look up in set of internal momenta set
 				*fill++ = SetElements[Sets[info->internalset].first+(vect-info->numextern)];
+				// determine the number of momenta required from internalset:
+				maxmom = MaX(maxmom, vect-info->numextern);
 			}
 		}
 		startfill[1] = fill-startfill;
@@ -590,6 +605,7 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 			}
 			else { // Look up in set of internal momenta set
 				*fill++ = SetElements[Sets[info->internalset].first+(i-eg->nExtern)];
+				maxmom = MaX(maxmom, i-eg->nExtern);
 			}
 //
 			*fill++ = -SNUMBER; *fill++ = n1+1; // number of the node from
@@ -642,6 +658,7 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 					}
 					else { // Look up in set of internal momenta set
 						*fill++ = SetElements[Sets[info->internalset].first+(vect-info->numextern)];
+						maxmom = MaX(maxmom, vect-info->numextern);
 					}
 				}
 				funfill[1] = fill-funfill;
@@ -702,6 +719,15 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 		*fill++ = 6; *fill++ = (WORD)(info->numtopo >> BITSINWORD);
 		*fill++ = (WORD)(info->numtopo & WORDMASK);
 		*fill++ = 0; *fill++ = 1; *fill++ = 5;
+	}
+//
+//	verify internalset has sufficient momenta:
+//
+	if ( maxmom >= Sets[info->internalset].last - Sets[info->internalset].first ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("&Insufficient internal momenta in diagrams_");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
 	}
 //
 //	finish it off
@@ -838,6 +864,13 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 		info.legcouple[i+ninitl] = m->vertices[numParticle(m,x)]->couplings;
 	}
 	info.numextern = ninitl + nfinal;
+	// Check that we have sufficient external momenta in the set:
+	if ( info.numextern > Sets[info.externalset].last - Sets[info.externalset].first ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("&Insufficient external momenta in diagrams_");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 	for ( i = 2; i <= MAXLEGS; i++ ) {
 		if ( m->legcouple[i] == 1 ) {
 			for ( j = 0; j < info.numextern; j++ ) {
