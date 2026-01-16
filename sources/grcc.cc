@@ -7174,7 +7174,24 @@ Bool EGraph::optQGrafM(Options *opt)
                     extk = 1;
                 }
                 if ( momj == momk) {
-                    if (nExtern == 2) {
+                    // Determine if the matching edges are joined by a 2-pt vertex.
+                    // In that case, we don't discard the graph for GRCC_QGRAF_OPT_NOSIGMA.
+                    int commonNode = -1;
+                    if      (econn->cedges[j].nodes[0] == econn->cedges[k].nodes[0])
+                        commonNode = econn->cedges[j].nodes[0];
+                    else if (econn->cedges[j].nodes[0] == econn->cedges[k].nodes[1])
+                        commonNode = econn->cedges[j].nodes[0];
+                    else if (econn->cedges[j].nodes[1] == econn->cedges[k].nodes[0])
+                        commonNode = econn->cedges[j].nodes[1];
+                    else if (econn->cedges[j].nodes[1] == econn->cedges[k].nodes[1])
+                        commonNode = econn->cedges[j].nodes[1];
+                    if (commonNode != -1) {
+                        // Verify this node has degree 2:
+                        if (nodes[commonNode]->deg != 2) {
+                            grcc_fprintf(GRCC_Stderr, "Unexpected deg!=2 vertex");
+                            GRCC_ABORT();
+                        }
+                    } else if (nExtern == 2) {
                         if (extj + extk != 2) {
                             ok = False;
                         }
