@@ -894,13 +894,6 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 		info.legcouple[i+ninitl] = m->vertices[numParticle(m,x)]->couplings;
 	}
 	info.numextern = ninitl + nfinal;
-	// Check that we have sufficient external momenta in the set:
-	if ( info.numextern > Sets[info.externalset].last - Sets[info.externalset].first ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint("&Insufficient external momenta in diagrams_");
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
-	}
 	for ( i = 2; i <= MAXLEGS; i++ ) {
 		if ( m->legcouple[i] == 1 ) {
 			for ( j = 0; j < info.numextern; j++ ) {
@@ -908,6 +901,35 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 			}
 		}
 	}
+
+	// Check that we have sufficient external momenta in the set:
+	if ( info.numextern > Sets[info.externalset].last - Sets[info.externalset].first ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("&Insufficient external momenta in diagrams_");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+
+	// Check that none of the supplied momenta are negative:
+	for ( i = 0; i < Sets[info.externalset].last - Sets[info.externalset].first; i++ ) {
+		if ( SetElements[Sets[info.externalset].first + i] < AM.OffsetVector ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("&Invalid negative external momentum in diagrams_: -%s",
+				VARNAME(vectors,SetElements[Sets[info.externalset].first + i]+WILDMASK-AM.OffsetVector));
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+	}
+	for ( i = 0; i < Sets[info.internalset].last - Sets[info.internalset].first; i++ ) {
+		if ( SetElements[Sets[info.internalset].first + i] < AM.OffsetVector ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("&Invalid negative internal momentum in diagrams_: -%s",
+				VARNAME(vectors,SetElements[Sets[info.internalset].first + i]+WILDMASK-AM.OffsetVector));
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+	}
+
 Go_on:;
 //
 //	Now we have to sort out the coupling constants.
