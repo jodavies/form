@@ -36,6 +36,7 @@ extern "C" {
 
 #include "grccparam.h"
 #include "grcc.h"
+#include <map>
  
 #define MAXPOINTS 120
 
@@ -815,6 +816,7 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 	int i, j, cpl[GRCC_MAXNCPLG];
 	int ninitl, initlPart[GRCC_MAXLEGS], nfinal, finalPart[GRCC_MAXLEGS];
 	for ( i = 0; i < GRCC_MAXNCPLG; i++ ) cpl[i] = 0;
+	std::map<int,int> momlist;
 //
 //	Here we create an object of type Option and load it up.
 //	Next we run the diagram generation on it.
@@ -910,21 +912,39 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 		Terminate(-1);
 	}
 
-	// Check that none of the supplied momenta are negative:
+	// Check that none of the supplied momenta are negative or repeated:
 	for ( i = 0; i < Sets[info.externalset].last - Sets[info.externalset].first; i++ ) {
-		if ( SetElements[Sets[info.externalset].first + i] < AM.OffsetVector ) {
+		const int momcode = SetElements[Sets[info.externalset].first + i];
+		if ( momcode < AM.OffsetVector ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("&Invalid negative external momentum in diagrams_: -%s",
-				VARNAME(vectors,SetElements[Sets[info.externalset].first + i]+WILDMASK-AM.OffsetVector));
+				VARNAME(vectors, momcode+WILDMASK-AM.OffsetVector));
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		momlist[momcode]++;
+		if ( momlist[momcode] != 1 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("&Invalid repeated momentum in diagrams_: %s",
+				VARNAME(vectors, momcode-AM.OffsetVector));
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
 	for ( i = 0; i < Sets[info.internalset].last - Sets[info.internalset].first; i++ ) {
-		if ( SetElements[Sets[info.internalset].first + i] < AM.OffsetVector ) {
+		const int momcode = SetElements[Sets[info.internalset].first + i];
+		if ( momcode < AM.OffsetVector ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("&Invalid negative internal momentum in diagrams_: -%s",
-				VARNAME(vectors,SetElements[Sets[info.internalset].first + i]+WILDMASK-AM.OffsetVector));
+				VARNAME(vectors, momcode+WILDMASK-AM.OffsetVector));
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		momlist[momcode]++;
+		if ( momlist[momcode] != 1 ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("&Invalid repeated momentum in diagrams_: %s",
+				VARNAME(vectors, momcode-AM.OffsetVector));
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}

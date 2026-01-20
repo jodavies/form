@@ -3123,3 +3123,25 @@ Local test = diagrams_(PHI3,{phi},{phi},{q1,q2},{-p1,p2},1,0);
 #pend_if mpi?
 assert runtime_error?('Invalid negative internal momentum in diagrams_: -p1')
 *--#] diagrams_err_6 :
+*--#[ diagrams_err_7 :
+Vector q1,q2,p1,p2;
+Model PHI3;
+	Particle phi,1;
+	Vertex phi,phi,phi:g;
+EndModel;
+Local test = diagrams_(PHI3,{phi},{phi},{q1,q1},{p1,p2},1,0);
+.end
+#pend_if mpi?
+assert runtime_error?('Invalid repeated momentum in diagrams_: q1')
+*--#] diagrams_err_7 :
+*--#[ diagrams_err_8 :
+Vector q1,q2,p1,p2;
+Model PHI3;
+	Particle phi,1;
+	Vertex phi,phi,phi:g;
+EndModel;
+Local test = diagrams_(PHI3,{phi},{phi},{q1,q2},{q1,p2},1,0);
+.end
+#pend_if mpi?
+assert runtime_error?('Invalid repeated momentum in diagrams_: q1')
+*--#] diagrams_err_8 :
