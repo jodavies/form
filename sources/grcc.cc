@@ -10590,7 +10590,7 @@ static void grcc_fprintf(FILE* out, const char* fmt, ...)
     char *buffer = new char[len+1];
     vsnprintf(buffer, len+1, fmt, args_copy);
     MLOCK(ErrorMessageLock);
-    MesPrint("%s", buffer);
+    MesPrint("%s%", buffer);
     MUNLOCK(ErrorMessageLock);
     delete[] buffer;
     va_end(args_copy);
