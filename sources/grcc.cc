@@ -2324,6 +2324,7 @@ void Model::addInteraction(IInput *iinp)
             grcc_fprintf(GRCC_Stderr, "*** illegal coupling const : ");
             grcc_fprintf(GRCC_Stderr, "nlegs - 2 + 2*loop: 2*loop = %d\n", lp2);
         }
+        erEnd("illegal value of c-constants");
     }
     lp = lp2/2;
 

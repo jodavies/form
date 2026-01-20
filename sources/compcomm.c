@@ -142,6 +142,7 @@ static KEYWORDV onoffoptions[] = {
 	,{"flint",			&(AC.FlintPolyFlag), 1, 0}
 	,{"humanstats",	&(AC.HumanStatsFlag), 1, 0}
 	,{"humanstatistics",	&(AC.HumanStatsFlag), 1, 0}
+	,{"grccverbose", &(AC.GrccVerbose), 1, 0}
 };
 
 static WORD one = 1;

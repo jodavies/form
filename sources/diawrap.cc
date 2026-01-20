@@ -809,7 +809,7 @@ int GenDiagrams(PHEAD WORD *term, WORD level)
 	Options *opt;
 	Process *proc;
 	int pid = 1, x;
-	int babble = 0;    // Later we may set this at the FORM code level
+	int babble = AC.GrccVerbose ? 2 : 0;
 	TERMINFO info;
 	WORD inset,outset,*coupl,setnum,optionnumber = 0;
 	int i, j, cpl[GRCC_MAXNCPLG];

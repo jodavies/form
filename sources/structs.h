@@ -1825,6 +1825,7 @@ struct C_const {
     int     PrintBacktraceFlag;    /* Print backtrace on terminate? */
     int    FlintPolyFlag;          /* Use Flint for polynomial arithmetic */
     int     HumanStatsFlag;        /* Print human-readable stats in the stats print? */
+    int     GrccVerbose;           /* Enable extra print statements in grcc? */
 	int     doloopstacksize;
 	int     dolooplevel;
     int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
