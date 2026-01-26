@@ -17,13 +17,16 @@ m4_define([FORM_VERSION], m4_esyscmd_s([
 			# As a fallback, try for form3.h.
 			major_version=`grep MAJORVERSION sources/form3.h | sed -e 's/ *#define  *MAJORVERSION *//'`
 			minor_version=`grep MINORVERSION sources/form3.h | sed -e 's/ *#define  *MINORVERSION *//'`
-			if test "x$major_version" != x && test "x$minor_version" != x; then
+			patch_version=`grep PATCHVERSION sources/form3.h | sed -e 's/ *#define  *PATCHVERSION *//'`
+			if test "x$major_version" != x && test "x$minor_version" != x && test "x$patch_version" != x; then
 				# Make the version files.
-				echo "$major_version.$minor_version" >.version
+				echo "$major_version.$minor_version.$patch_version" >.version
 				echo "#define REPO_MAJOR_VERSION $major_version"  >sources/version.h.in
 				echo "#define REPO_MINOR_VERSION $minor_version" >>sources/version.h.in
+				echo "#define REPO_PATCH_VERSION $patch_version" >>sources/version.h.in
 				echo '\\def\\repomajorversion'"{$major_version}"  >doc/manual/version.tex.in
 				echo '\\def\\repominorversion'"{$minor_version}" >>doc/manual/version.tex.in
+				echo '\\def\\repopatchversion'"{$patch_version}" >>doc/manual/version.tex.in
 				cp doc/manual/version.tex.in doc/devref/version.tex.in
 				touch doc/doxygen/version.sh.in
 			fi

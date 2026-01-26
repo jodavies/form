@@ -46,15 +46,16 @@
 
 #define MAJORVERSION 5
 #define MINORVERSION 0
+#define PATCHVERSION 0
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "8-nov-2022"
+#define PRODUCTIONDATE "27-jan-2026"
 #endif
 
-/*#undef BETAVERSION */
-#define BETAVERSION
+#undef BETAVERSION
+/*#define BETAVERSION*/
 
 #ifdef LINUX32
 #define UNIX
