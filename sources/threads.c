@@ -75,6 +75,10 @@ int PackFloat(WORD *,mpf_t);
 int UnpackFloat(mpf_t, WORD *);
 void RatToFloat(mpf_t result, UWORD *formrat, int ratsize);
 #endif
+
+// The number of ints in a cache line, used to insert some padding in the
+// arrays below to reduce false sharing between cores.
+#define CLINT (64/sizeof(int))
  
 static int numberofthreads;
 static int numberofworkers;
@@ -277,17 +281,17 @@ int StartAllThreads(int number)
 	mul = 1;
 #endif
  
-	listofavailables = (int *)Malloc1(sizeof(int)*(number+1),"listofavailables");
+	listofavailables = (int *)Malloc1(sizeof(int)*(number+1)*CLINT,"listofavailables");
 	threadpointers = (pthread_t *)Malloc1(sizeof(pthread_t)*number*mul,"threadpointers");
 	AB = (ALLPRIVATES **)Malloc1(sizeof(ALLPRIVATES *)*number*mul,"Private structs");
 
-	wakeup = (int *)Malloc1(sizeof(int)*number*mul,"wakeup");
+	wakeup = (int *)Malloc1(sizeof(int)*number*mul*CLINT,"wakeup");
 	wakeuplocks = (pthread_mutex_t *)Malloc1(sizeof(pthread_mutex_t)*number*mul,"wakeuplocks");
 	wakeupconditions = (pthread_cond_t *)Malloc1(sizeof(pthread_cond_t)*number*mul,"wakeupconditions");
 	wakeupconditionattributes = (pthread_condattr_t *)
 			Malloc1(sizeof(pthread_condattr_t)*number*mul,"wakeupconditionattributes");
 
-	wakeupmasterthread = (int *)Malloc1(sizeof(int)*number*mul,"wakeupmasterthread");
+	wakeupmasterthread = (int *)Malloc1(sizeof(int)*number*mul*CLINT,"wakeupmasterthread");
 	wakeupmasterthreadlocks = (pthread_mutex_t *)Malloc1(sizeof(pthread_mutex_t)*number*mul,"wakeupmasterthreadlocks");
 	wakeupmasterthreadconditions = (pthread_cond_t *)Malloc1(sizeof(pthread_cond_t)*number*mul,"wakeupmasterthread");
 
@@ -407,13 +411,13 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	ALLPRIVATES *B;
 	UBYTE *s;
 
-	wakeup[identity] = 0;
+	wakeup[identity*CLINT] = 0;
 	wakeuplocks[identity] = dummylock;
 	pthread_condattr_init(&(wakeupconditionattributes[identity]));
 	pthread_condattr_setpshared(&(wakeupconditionattributes[identity]),PTHREAD_PROCESS_PRIVATE);
 	wakeupconditions[identity] = dummywakeupcondition;
 	pthread_cond_init(&(wakeupconditions[identity]),&(wakeupconditionattributes[identity]));
-	wakeupmasterthread[identity] = 0;
+	wakeupmasterthread[identity*CLINT] = 0;
 	wakeupmasterthreadlocks[identity] = dummylock;
 	wakeupmasterthreadconditions[identity] = dummywakeupcondition;
 
@@ -2058,7 +2062,8 @@ void IAmAvailable(int identity)
 	int top;
 	LOCK(availabilitylock);
 	top = topofavailables;
-	listofavailables[topofavailables++] = identity;
+	listofavailables[topofavailables*CLINT] = identity;
+	topofavailables++;
 	if ( top == 0 ) {
 		UNLOCK(availabilitylock);
 		LOCK(wakeupmasterlock);
@@ -2087,7 +2092,10 @@ int GetAvailableThread(void)
 {
 	int retval = -1;
 	LOCK(availabilitylock);
-	if ( topofavailables > 0 ) retval = listofavailables[--topofavailables];
+	if ( topofavailables > 0 ) {
+		--topofavailables;
+		retval = listofavailables[topofavailables*CLINT];
+	}
 	UNLOCK(availabilitylock);
 	if ( retval >= 0 ) {
 /*
@@ -2117,7 +2125,8 @@ int ConditionalGetAvailableThread(void)
 	if ( topofavailables > 0 ) {
 		LOCK(availabilitylock);
 		if ( topofavailables > 0 ) {
-			retval = listofavailables[--topofavailables];
+			topofavailables--;
+			retval = listofavailables[topofavailables*CLINT];
 		}
 		UNLOCK(availabilitylock);
 		if ( retval >= 0 ) {
@@ -2150,12 +2159,12 @@ int GetThread(int identity)
 	int retval = -1, j;
 	LOCK(availabilitylock);
 	for ( j = 0; j < topofavailables; j++ ) {
-		if ( identity == listofavailables[j] ) break;
+		if ( identity == listofavailables[j*CLINT] ) break;
 	}
 	if ( j < topofavailables ) {
 		--topofavailables;
 		for ( ; j < topofavailables; j++ ) {
-			listofavailables[j] = listofavailables[j+1];
+			listofavailables[j*CLINT] = listofavailables[(j+1)*CLINT];
 		}
 		retval = identity;
 	}
@@ -2183,8 +2192,8 @@ int ThreadWait(int identity)
 	LOCK(availabilitylock);
 	top = topofavailables;
 	for ( j = topofavailables; j > 0; j-- )
-		listofavailables[j] = listofavailables[j-1];
-	listofavailables[0] = identity;
+		listofavailables[j*CLINT] = listofavailables[(j-1)*CLINT];
+	listofavailables[0*CLINT] = identity;
 	topofavailables++;
 	if ( top == 0 || topofavailables == numberofworkers ) {
 		UNLOCK(availabilitylock);
@@ -2196,11 +2205,11 @@ int ThreadWait(int identity)
 	else {
 		UNLOCK(availabilitylock);
 	}
-	while ( wakeup[identity] == 0 ) {
+	while ( wakeup[identity*CLINT] == 0 ) {
 		pthread_cond_wait(&(wakeupconditions[identity]),&(wakeuplocks[identity]));
 	}
-	retval = wakeup[identity];
-	wakeup[identity] = 0;
+	retval = wakeup[identity*CLINT];
+	wakeup[identity*CLINT] = 0;
 	UNLOCK(wakeuplocks[identity]);
 	return(retval);
 }
@@ -2236,11 +2245,11 @@ int SortBotWait(int identity)
 	else {
 		UNLOCK(availabilitylock);
 	}
-	while ( wakeup[identity] == 0 ) {
+	while ( wakeup[identity*CLINT] == 0 ) {
 		pthread_cond_wait(&(wakeupconditions[identity]),&(wakeuplocks[identity]));
 	}
-	retval = wakeup[identity];
-	wakeup[identity] = 0;
+	retval = wakeup[identity*CLINT];
+	wakeup[identity*CLINT] = 0;
 	UNLOCK(wakeuplocks[identity]);
 	return(retval);
 }
@@ -2316,12 +2325,12 @@ int MasterWaitThread(int identity)
 {
 	int retval;
 	LOCK(wakeupmasterthreadlocks[identity]);
-	while ( wakeupmasterthread[identity] == 0 ) {
+	while ( wakeupmasterthread[identity*CLINT] == 0 ) {
 		pthread_cond_wait(&(wakeupmasterthreadconditions[identity])
 				,&(wakeupmasterthreadlocks[identity]));
 	}
-	retval = wakeupmasterthread[identity];
-	wakeupmasterthread[identity] = 0;
+	retval = wakeupmasterthread[identity*CLINT];
+	wakeupmasterthread[identity*CLINT] = 0;
 	UNLOCK(wakeupmasterthreadlocks[identity]);
 	return(retval);
 }
@@ -2411,7 +2420,7 @@ void WakeupThread(int identity, int signalnumber)
 		Terminate(-1);
 	}
 	LOCK(wakeuplocks[identity]);
-	wakeup[identity] = signalnumber;
+	wakeup[identity*CLINT] = signalnumber;
 	pthread_cond_signal(&(wakeupconditions[identity]));
 	UNLOCK(wakeuplocks[identity]);
 }
@@ -2437,7 +2446,7 @@ void WakeupMasterFromThread(int identity, int signalnumber)
 		Terminate(-1);
 	}
 	LOCK(wakeupmasterthreadlocks[identity]);
-	wakeupmasterthread[identity] = signalnumber;
+	wakeupmasterthread[identity*CLINT] = signalnumber;
 	pthread_cond_signal(&(wakeupmasterthreadconditions[identity]));
 	UNLOCK(wakeupmasterthreadlocks[identity]);
 }
