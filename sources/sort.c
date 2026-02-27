@@ -108,6 +108,16 @@ void HumanString(char* string, float input, const char suffix[HUMANSUFFLEN][4]) 
 	}
 }
 
+WORD DigitsIn(LONG x) {
+	if ( x < 0 ) x = -x;
+	WORD dig = 1;
+	while ( x > 9 ) {
+		dig++;
+		x /= 10;
+	}
+	return dig;
+}
+
 /**
  *		Writes the statistics.
  *
@@ -127,11 +137,12 @@ void HumanString(char* string, float input, const char suffix[HUMANSUFFLEN][4]) 
 void WriteStats(POSITION *plspace, WORD par, WORD checkLogType)
 {
 	GETIDENTITY
-	LONG millitime, y = 0x7FFFFFFFL >> 1;
+	char buf[120];
+	LONG millitime;
 	WORD timepart;
 	SORTING *S;
-	POSITION pp;
 	int use_wtime;
+
 	if ( AT.SS == AT.S0 && AC.StatsFlag ) {
 #ifdef WITHPTHREADS
 		if ( AC.ThreadStats == 0 && identity > 0 ) return;
@@ -201,423 +212,109 @@ void WriteStats(POSITION *plspace, WORD par, WORD checkLogType)
 #elif defined(WITHMPI)
 		if ( use_wtime && PF.me != MASTER ) use_wtime = 0;
 #endif
+		char *wpref = use_wtime ? "W" : "";
+		char *wspac = use_wtime ? "" : " ";
 		millitime = use_wtime ? TimeWallClock(1) * 10 : TimeCPU(1);
 		timepart = (WORD)(millitime%1000);
 		millitime /= 1000;
 		timepart /= 10;
+
 		if ( AC.ShortStats ) {
 #if defined(WITHPTHREADS) || defined(WITHMPI)
 #ifdef WITHPTHREADS
-		  if ( identity > 0 ) {
+			if ( identity > 0 ) {
 #else
-		  if ( PF.me != MASTER ) {
-			const int identity = PF.me;
+			if ( PF.me != MASTER ) {
+				const int identity = PF.me;
 #endif
-			if ( par == STATSSPLITMERGE || par == STATSPOSTSORT ) {
-				SETBASEPOSITION(pp,y);
-				if ( ISLESSPOS(*plspace,pp) ) {
-					MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%10p %s %s",identity,
-					millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-/*
-					MesPrint("%d: %14s %17s %7l.%2is %8l>%10l%3s%10l:%10p",identity,
-					EXPRNAME(AR.CurExpr),AC.Commercial,millitime,timepart,
-					AN.ninterms,S->GenTerms,toterms[par],S->TermsLeft,plspace);
-*/
-				}
-				else {
-					y = 1000000000L;
-					SETBASEPOSITION(pp,y);
-					MULPOS(pp,100);
-					if ( ISLESSPOS(*plspace,pp) ) {
-						MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%11p %s %s",identity,
+				if ( par == STATSSPLITMERGE || par == STATSPOSTSORT ) {
+					snprintf(buf, sizeof(buf),
+						"%d: %7ld.%02us %8ld>%10ld%3s%10ld:%10ld %s %s",identity,
 						millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-					}
-					else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%12p %s %s",identity,
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%13p %s %s",identity,
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%14p %s %s",identity,
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%15p %s %s",identity,
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%16p %s %s",identity,
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%17p %s %s",identity,
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						} } } } }
-					}
+						S->TermsLeft,BASEPOSITION(*plspace),EXPRNAME(AR.CurExpr),
+						AC.Commercial);
+					MesPrint("%s", buf);
 				}
-			}
-			else if ( par == STATSMERGETOFILE ) {
-				SETBASEPOSITION(pp,y);
-				if ( ISLESSPOS(*plspace,pp) ) {
-					MesPrint("%d: %7l.%2is %10l:%10p",identity,millitime,timepart,
-					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
+				else if ( par == STATSMERGETOFILE ) {
+					snprintf(buf, sizeof(buf),
+						"%d: %7ld.%02us %10ld:%10ld",identity,millitime,timepart,
+						S->TermsLeft,BASEPOSITION(*plspace));
+					MesPrint("%s", buf);
 				}
-				else {
-					y = 1000000000L;
-					SETBASEPOSITION(pp,y);
-					MULPOS(pp,100);
-					if ( ISLESSPOS(*plspace,pp) ) {
-						MesPrint("%d: %7l.%2is %10l:%11p",identity,millitime,timepart,
-						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-					}
-					else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %10l:%12p",identity,millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %10l:%13p",identity,millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %10l:%14p",identity,millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %10l:%15p",identity,millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %10l:%16p",identity,millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%d: %7l.%2is %10l:%17p",identity,millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						} } } } }
-					}
-				}
-			} } else
-#endif
-			{
-			if ( par == STATSSPLITMERGE || par == STATSPOSTSORT ) {
-				SETBASEPOSITION(pp,y);
-				if ( ISLESSPOS(*plspace,pp) ) {
-					MesPrint("%7l.%2is %8l>%10l%3s%10l:%10p %s %s",
-					millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-/*
-					MesPrint("%14s %17s %7l.%2is %8l>%10l%3s%10l:%10p",
-					EXPRNAME(AR.CurExpr),AC.Commercial,millitime,timepart,
-					AN.ninterms,S->GenTerms,toterms[par],S->TermsLeft,plspace);
-*/
-				}
-				else {
-					y = 1000000000L;
-					SETBASEPOSITION(pp,y);
-					MULPOS(pp,100);
-					if ( ISLESSPOS(*plspace,pp) ) {
-						MesPrint("%7l.%2is %8l>%10l%3s%10l:%11p %s %s",
-						millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-					}
-					else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %8l>%10l%3s%10l:%12p %s %s",
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %8l>%10l%3s%10l:%13p %s %s",
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %8l>%10l%3s%10l:%14p %s %s",
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %8l>%10l%3s%10l:%15p %s %s",
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %8l>%10l%3s%10l:%16p %s %s",
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %8l>%10l%3s%10l:%17p %s %s",
-							millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						} } } } }
-					}
-				}
-			}
-			else if ( par == STATSMERGETOFILE ) {
-				SETBASEPOSITION(pp,y);
-				if ( ISLESSPOS(*plspace,pp) ) {
-					MesPrint("%7l.%2is %10l:%10p",millitime,timepart,
-					S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-				}
-				else {
-					y = 1000000000L;
-					SETBASEPOSITION(pp,y);
-					MULPOS(pp,100);
-					if ( ISLESSPOS(*plspace,pp) ) {
-						MesPrint("%7l.%2is %10l:%11p",millitime,timepart,
-						S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-					}
-					else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %10l:%12p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %10l:%13p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %10l:%14p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %10l:%15p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %10l:%16p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						else {
-						MULPOS(pp,10);
-						if ( ISLESSPOS(*plspace,pp) ) {
-							MesPrint("%7l.%2is %10l:%17p",millitime,timepart,
-							S->TermsLeft,plspace,EXPRNAME(AR.CurExpr),AC.Commercial);
-						}
-						} } } } }
-					}
-				}
-			}
-		} }
-		else {
-		if ( par == STATSMERGETOFILE ) {
-			if ( use_wtime ) {
-				MesPrint("WTime = %7l.%2i sec",millitime,timepart);
-			}
-			else {
-				MesPrint("Time = %7l.%2i sec",millitime,timepart);
-			}
-		}
-		else {
-#if ( BITSINLONG > 32 )
-			if ( S->GenTerms >= 10000000000L ) {
-				if ( use_wtime ) {
-					MesPrint("WTime = %7l.%2i sec   Generated terms = %16l%s",
-						millitime,timepart,S->GenTerms,humanGenTermsText);
-				}
-				else {
-					MesPrint("Time = %7l.%2i sec    Generated terms = %16l%s",
-						millitime,timepart,S->GenTerms,humanGenTermsText);
-				}
-			}
-			else {
-				if ( use_wtime ) {
-					MesPrint("WTime = %7l.%2i sec   Generated terms = %10l%s",
-						millitime,timepart,S->GenTerms,humanGenTermsText);
-				}
-				else {
-					MesPrint("Time = %7l.%2i sec    Generated terms = %10l%s",
-						millitime,timepart,S->GenTerms,humanGenTermsText);
-				}
-			}
-#else
-			if ( use_wtime ) {
-				MesPrint("WTime = %7l.%2i sec   Generated terms = %10l%s",
-					millitime,timepart,S->GenTerms,humanGenTermsText);
-			}
-			else {
-				MesPrint("Time = %7l.%2i sec    Generated terms = %10l%s",
-					millitime,timepart,S->GenTerms,humanGenTermsText);
-			}
-#endif
-		}
-#if ( BITSINLONG > 32 )
-		if ( par == STATSSPLITMERGE )
-			if ( S->TermsLeft >= 10000000000L ) {
-				MesPrint("%16s%8l Terms %s = %16l%s",EXPRNAME(AR.CurExpr),
-				AN.ninterms,FG.swmes[par],S->TermsLeft,humanTermsLeftText);
-			}
-			else {
-				MesPrint("%16s%8l Terms %s = %10l%s",EXPRNAME(AR.CurExpr),
-				AN.ninterms,FG.swmes[par],S->TermsLeft,humanTermsLeftText);
-			}
-		else {
-			if ( S->TermsLeft >= 10000000000L ) {
-#ifdef WITHPTHREADS
-				if ( identity > 0 && par == STATSPOSTSORT ) {
-					MesPrint("%16s         Terms in thread = %16l%s",
-					EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
-				}
-				else
-#elif defined(WITHMPI)
-				if ( PF.me != MASTER && par == STATSPOSTSORT ) {
-					MesPrint("%16s         Terms in process= %16l%s",
-					EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
-				}
-				else
-#endif
-				{
-					MesPrint("%16s         Terms %s = %16l%s",
-					EXPRNAME(AR.CurExpr),FG.swmes[par],S->TermsLeft,humanTermsLeftText);
-				}
-			}
-			else {
-#ifdef WITHPTHREADS
-				if ( identity > 0 && par == STATSPOSTSORT ) {
-					MesPrint("%16s         Terms in thread = %10l%s",
-					EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
-				}
-				else
-#elif defined(WITHMPI)
-				if ( PF.me != MASTER && par == STATSPOSTSORT ) {
-					MesPrint("%16s         Terms in process= %10l%s",
-					EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
-				}
-				else
-#endif
-				{
-					MesPrint("%16s         Terms %s = %10l%s",
-					EXPRNAME(AR.CurExpr),FG.swmes[par],S->TermsLeft,humanTermsLeftText);
-				}
-			}
-		}
-#else
-		if ( par == STATSSPLITMERGE )
-			MesPrint("%16s%8l Terms %s = %10l%s",EXPRNAME(AR.CurExpr),
-			AN.ninterms,FG.swmes[par],S->TermsLeft,humanTermsLeftText);
-		else {
-#ifdef WITHPTHREADS
-			if ( identity > 0 && par == STATSPOSTSORT ) {
-				MesPrint("%16s         Terms in thread = %10l%s",
-				EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
-			}
-			else
-#elif defined(WITHMPI)
-			if ( PF.me != MASTER && par == STATSPOSTSORT ) {
-				MesPrint("%16s         Terms in process= %10l%s",
-				EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
 			}
 			else
 #endif
 			{
-				MesPrint("%16s         Terms %s = %10l%s",
-				EXPRNAME(AR.CurExpr),FG.swmes[par],S->TermsLeft,humanTermsLeftText);
+				if ( par == STATSSPLITMERGE || par == STATSPOSTSORT ) {
+					snprintf(buf, sizeof(buf),
+						"%7ld.%02us %8ld>%10ld%3s%10ld:%10ld %s %s",
+						millitime,timepart,AN.ninterms,S->GenTerms,toterms[par],
+						S->TermsLeft,BASEPOSITION(*plspace),EXPRNAME(AR.CurExpr),
+						AC.Commercial);
+					MesPrint("%s", buf);
+				}
+				else if ( par == STATSMERGETOFILE ) {
+					snprintf(buf, sizeof(buf),
+						"%7ld.%02us %10ld:%10ld",millitime,timepart,
+						S->TermsLeft,BASEPOSITION(*plspace));
+					MesPrint("%s", buf);
+				}
 			}
-		}
-#endif
-		SETBASEPOSITION(pp,y);
-		if ( ISLESSPOS(*plspace,pp) ) {
-			MesPrint("%24s Bytes used      = %10p%s",AC.Commercial,plspace,humanBytesText);
 		}
 		else {
-			y = 1000000000L;
-			SETBASEPOSITION(pp,y);
-			MULPOS(pp,100);
-			if ( ISLESSPOS(*plspace,pp) ) {
-				MesPrint("%24s Bytes used      =%11p%s",AC.Commercial,plspace,humanBytesText);
+			if ( par == STATSMERGETOFILE ) {
+				snprintf(buf, sizeof(buf),
+					"%sTime = %7ld.%02u sec",wpref,millitime,timepart);
+				MesPrint("%s", buf);
 			}
 			else {
-				MULPOS(pp,10);
-				if ( ISLESSPOS(*plspace,pp) ) {
-				MesPrint("%24s Bytes used     =%12p%s",AC.Commercial,plspace,humanBytesText);
-				}
-				else {
-				MULPOS(pp,10);
-				if ( ISLESSPOS(*plspace,pp) ) {
-				MesPrint("%24s Bytes used    =%13p%s",AC.Commercial,plspace,humanBytesText);
-				}
-				else {
-				MULPOS(pp,10);
-				if ( ISLESSPOS(*plspace,pp) ) {
-				MesPrint("%24s Bytes used   =%14p%s",AC.Commercial,plspace,humanBytesText);
-				}
-				else {
-				MULPOS(pp,10);
-				if ( ISLESSPOS(*plspace,pp) ) {
-				MesPrint("%24s Bytes used  =%15p%s",AC.Commercial,plspace,humanBytesText);
-				}
-				else {
-				MULPOS(pp,10);
-				if ( ISLESSPOS(*plspace,pp) ) {
-				MesPrint("%24s Bytes used =%16p%s",AC.Commercial,plspace,humanBytesText);
-				}
-				else {
-				MULPOS(pp,10);
-				if ( ISLESSPOS(*plspace,pp) ) {
-				MesPrint("%24s Bytes used=%17p%s",AC.Commercial,plspace,humanBytesText);
-				}
-				} } } } }
+				snprintf(buf, sizeof(buf),
+					"%sTime = %7ld.%02u sec   %sGenerated terms = %10ld%s",
+					wpref,millitime,timepart,wspac,S->GenTerms,humanGenTermsText);
+				MesPrint("%s", buf);
 			}
-		} }
+
+			if ( par == STATSSPLITMERGE ) {
+				snprintf(buf, sizeof(buf),
+					"%16s%8ld Terms %s = %10ld%s",
+					EXPRNAME(AR.CurExpr),AN.ninterms,FG.swmes[par],S->TermsLeft,
+					humanTermsLeftText);
+				MesPrint("%s", buf);
+			}
+			else {
+#ifdef WITHPTHREADS
+				if ( identity > 0 && par == STATSPOSTSORT ) {
+					snprintf(buf, sizeof(buf),
+						"%16s         Terms in thread = %10ld%s",
+						EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
+					MesPrint("%s", buf);
+				}
+				else
+#elif defined(WITHMPI)
+				if ( PF.me != MASTER && par == STATSPOSTSORT ) {
+					snprintf(buf, sizeof(buf),
+						"%16s         Terms in process= %10ld%s",
+						EXPRNAME(AR.CurExpr),S->TermsLeft,humanTermsLeftText);
+					MesPrint("%s", buf);
+				}
+				else
+#endif
+				{
+					snprintf(buf, sizeof(buf),
+						"%16s         Terms %s = %10ld%s",
+						EXPRNAME(AR.CurExpr),FG.swmes[par],S->TermsLeft,
+						humanTermsLeftText);
+					MesPrint("%s", buf);
+				}
+			}
+
+			const WORD dig = DigitsIn(BASEPOSITION(*plspace));
+			snprintf(buf, sizeof(buf), "%24s Bytes used%*s=%11ld%s",
+				AC.Commercial,MiN(6,17-dig),"",BASEPOSITION(*plspace),
+				humanBytesText);
+			MesPrint("%s", buf);
+		}
+
 #ifdef WITHSTATS
 		MesPrint("Total number of writes: %l, reads: %l, seeks, %l"
 			,numwrites,numreads,numseeks);
