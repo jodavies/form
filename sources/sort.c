@@ -746,8 +746,8 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 {
   GETBIDENTITY
   SORTING *S = AT.SS;
-  WORD j, **ss, *to, *t;
-  LONG sSpace, over, tover, spare, retval = 0;
+  WORD j, **ss, *to, *t, *finalTerm = NULL;
+  LONG sSpace, over, tover, spare, retval = 0, finalTermInd;
   POSITION position, pp;
   off_t lSpace;
   FILEHANDLE *fout = 0, *oldoutfile = 0, *newout = 0;
@@ -786,7 +786,10 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"EndSort, before SplitMerge");
 #endif
-	S->sPointer[SplitMerge(BHEAD S->sPointer,S->sTerms)] = 0;
+	finalTermInd = SplitMerge(BHEAD S->sPointer,S->sTerms);
+	S->sPointer[finalTermInd] = 0;
+	// Keep the location of the final term of the small buffer
+	finalTermInd--;
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"Endsort,  after SplitMerge");
 #endif
@@ -796,6 +799,9 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 	if ( over >= 0 ) {
 		if ( S->lPatch > 0 || S->file.handle >= 0 ) {
 			ss[over] = 0;
+			finalTerm = TermMalloc("EndSort tmp");
+			WORD *src = ss[finalTermInd];
+			WCOPY(finalTerm, src, *(ss[finalTermInd]));
 			sSpace = ComPress(ss,&spare);
 			S->TermsLeft -= over - spare;
 			if ( par == 1 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
@@ -955,7 +961,13 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 		}
 		else {
 			S->Patches[S->lPatch++] = S->lFill;
-		    to = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
+			if ( finalTerm != NULL ) {
+				// Put a copy of the final small-buffer term at the start of the patch.
+				// We have stored a pre-Compress copy of the term for this.
+				WCOPY(S->Patches[S->lPatch-1], finalTerm, *finalTerm);
+				TermFree(finalTerm, "EndSort tmp");
+			}
+			to = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
 			if ( tover > 0 ) {
 				ss = S->sPointer;
 				while ( ( t = *ss++ ) != 0 ) {
@@ -1090,6 +1102,7 @@ TooLarge:
 		MUNLOCK(ErrorMessageLock);
 #endif
 		if ( S->lPatch <= 0 ) {
+MesPrint("here lPatch %d", S->lPatch);
 			StageSort(&(S->file));
 			position = S->fPatches[S->fPatchN];
 			ss = S->sPointer;
@@ -3775,6 +3788,10 @@ int MergePatches(WORD par)
 	POSITION position;
 	FILEHANDLE *fin, *fout;
 	int fhandle;
+	LONG length;
+	WORD headRun = 0;
+	WORD tailRun = 0;
+	int oldlPatch = S->lPatch;
 /*
 	UBYTE *s;
 */
@@ -3905,7 +3922,8 @@ ConMer:
 		S->Patches[S->lPatch] = S->lFill;
 		for ( i = 0; i < S->lPatch; i++ ) {
 			S->pStop[i] = S->Patches[i+1]-1;
-		    S->Patches[i] = (WORD *)(((UBYTE *)(S->Patches[i])) + AM.MaxTer);
+			// TODO Here we are skipping over the space at the patch start
+			S->Patches[i] = (WORD *)(((UBYTE *)(S->Patches[i])) + AM.MaxTer);
 		}
 	}
 	else {	/* Load the patches */
@@ -3954,7 +3972,6 @@ ConMer:
 	track of the compression.
 */
 	if ( S->lPatch == 1 ) {	/* Single patch --> direct copy. Very rare. */
-		LONG length;
 
 		if ( fout->handle < 0 ) if ( Sflush(fout) ) goto PatCall;
 		if ( par ) {		/* Memory to file */
@@ -4091,9 +4108,172 @@ ConMer:
 		}
 		goto EndOfAll;
 	}
+
 	else if ( S->lPatch > 0 ) {
 
-		/* More than one patch. Construct the tree. */
+		if ( par ) {
+			// For large buffer sorts (par 1 or 2) we make an optimization to reduce
+			// the number of comparisons. We sort the patches by their leading terms,
+			// and then use the stored copy of their final terms (in the spare MaxTer
+			// space at the patch beginning) to look for "non-overlapping" patches,
+			// which we can copy directly to the output.
+
+			WORD swapped = 0;
+			do { // TODO make this an n log n sort ? It is n^2.
+				swapped = 0;
+				for ( int ii = 1; ii < S->lPatch; ii++ ) {
+					WORD cmp = CompareTerms(BHEAD S->Patches[ii-1], S->Patches[ii], (WORD)0);
+
+					if ( cmp < 0 ) {
+						// The patches are out of order, swap them
+						WORD* tmp = S->Patches[ii-1];
+						S->Patches[ii-1] = S->Patches[ii];
+						S->Patches[ii] = tmp;
+						tmp = S->pStop[ii-1];
+						S->pStop[ii-1] = S->pStop[ii];
+						S->pStop[ii] = tmp;
+						swapped = 1;
+					}
+				}
+			} while ( swapped == 1 );
+
+			for ( int ii = 1; ii < S->lPatch; ii++ ) {
+//MesPrint("patch %d first: %a", ii-1, *(S->Patches[ii-1]), S->Patches[ii-1]);
+//MesPrint("patch %d last:  %a", ii-1, *((WORD *)(((UBYTE *)(S->Patches[ii-1])) - AM.MaxTer)), (WORD *)(((UBYTE *)(S->Patches[ii-1])) - AM.MaxTer));
+				WORD cmp = CompareTerms(BHEAD (WORD *)(((UBYTE *)(S->Patches[ii-1])) - AM.MaxTer),
+					S->Patches[ii], (WORD)0);
+				if ( cmp > 0 ) {
+					// Patch ii-1 and ii are in the correct order and don't overlap
+					headRun++;
+				}
+				else {
+					// We've reached the end of the non-overlapping run
+					break;
+				}
+			}
+//MesPrint("patch %d first: %a", S->lPatch-1, *(S->Patches[S->lPatch-1]), S->Patches[S->lPatch-1]);
+//MesPrint("patch %d last:  %a", S->lPatch-1, *((WORD *)(((UBYTE *)(S->Patches[S->lPatch-1])) - AM.MaxTer)), (WORD *)(((UBYTE *)(S->Patches[S->lPatch-1])) - AM.MaxTer));
+			// If we've reached the end of the patches, we can directly copy all of them.
+			// This is the optimal case.
+			if ( headRun + 1 == S->lPatch ) headRun++;
+
+			// This is the "copy a single patch" code from above, but we loop over the
+			// first headRun patches. TODO extract this into a function?
+			for ( int ii = 0; ii < headRun; ii++ ) {
+#ifdef WITHZLIB
+				m2 = m1 = S->Patches[ii];
+				while ( *m1 ) {
+					if ( *m1 < 0 ) { /* Need to uncompress */
+						i = -(*m1++); m2 += i; im = *m1+i+1;
+						while ( i > 0 ) { *m1-- = *m2--; i--; }
+						*m1 = im;
+					}
+#ifdef WITHPTHREADS
+					if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
+						im = PutToMaster(BHEAD m1);
+					}
+					else
+#endif
+					if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
+					ADDPOS(S->SizeInFile[par],im);
+					m2 = m1;
+					m1 += *m1;
+				}
+#else
+/* old code */
+				length = (LONG)(S->pStop[ii])-(LONG)(S->Patches[ii])+sizeof(WORD)*0;
+				// TODO we don't want this +1, it copies the final 0? ^
+				if ( WriteFile(fout->handle,(UBYTE *)(S->Patches[ii]),length) != length )
+					goto PatwCall;
+				ADDPOS(position,length);
+				ADDPOS(fout->POposition,length);
+				ADDPOS(fout->filesize,length);
+				ADDPOS(S->SizeInFile[par],length/sizeof(WORD));
+#endif
+			}
+
+			// Shift the remaining patches down, if any were copied above
+			if ( headRun )  {
+				MLOCK(ErrorMessageLock);
+				MesPrint("MergePatches headRun %d / %d", headRun, S->lPatch);
+				MUNLOCK(ErrorMessageLock);
+				for ( int ii = headRun; ii < S->lPatch; ii++ ) {
+					S->Patches[ii-headRun] = S->Patches[ii];
+					S->pStop[ii-headRun] = S->pStop[ii];
+				}
+				S->lPatch -= headRun;
+			}
+
+			// TODO sanity check, we should not have a single patch here
+			if ( S->lPatch == 1 ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Unexpected case in MergePatches 1");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+
+			// If we were lucky, the job is already done. Clean up. It is important
+			// to reinstate the old, non-zero value of S->lPatch, otherwise we will
+			// put out the Small Buffer for a second time, in EndSort! Subtle...
+			if ( S->lPatch == 0 ) {
+				S->lPatch = oldlPatch;
+//				MesPrint("MergePatches jump to cleanup");
+				goto EndOfMerge;
+			}
+
+			// Now we look for a similar non-overlapping run of patches, but from
+			// the tail end. The leading term of a "tail" patch must come after the
+			// last term of ALL earlier patches!
+			// TODO this is also n^2
+			for ( int ii = S->lPatch-1; ii > 0; ii-- ) {
+				WORD overlap = 0;
+				for ( int jj = ii-1; jj >= 0; jj-- ) {
+					WORD cmp = CompareTerms(BHEAD (WORD *)(((UBYTE *)(S->Patches[jj])) - AM.MaxTer),
+						S->Patches[ii], (WORD)0);
+					if ( cmp > 0 ) {
+						// Patch jj and ii are in the correct order, and don't overlap.
+					}
+					else {
+						// Patch jj and ii overlap
+						overlap = 1;
+						break;
+					}
+				}
+				if ( overlap == 0 ) {
+					// Patch ii comes after all earlier patches
+					tailRun++;
+				}
+				else {
+					// We've reached the end of the non-overlapping run
+					break;
+				}
+			}
+
+			// Now we hide the tailRun patches from the patch merging code below.
+			// Then we will will copy them out afterwards. S->lPatch can not become
+			// zero due to this, so we don't need to reinstate the old value.
+			if ( tailRun ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("MergePatches tailRun %d / %d", tailRun, S->lPatch);
+				MUNLOCK(ErrorMessageLock);
+				// Hide the run from the patch merging:
+				oldlPatch = S->lPatch;
+				S->lPatch -= tailRun;
+//				MesPrint("   properly merging %d patches", S->lPatch);
+			}
+
+			// TODO sanity check, we should not have a single patch here, or have
+			// copied all of the remaining ones
+			if ( S->lPatch < 2 ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Unexpected case in MergePatches 2");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+		}
+
+		// #[ Merge the patches
+		/* We have patches to merge. Construct the tree. */
 
 		lpat = 1;
 		do { lpat *= 2; } while ( lpat < S->lPatch );
@@ -4396,11 +4576,52 @@ NextTerm:
 		}
 		ADDPOS(S->SizeInFile[par],im);
 		goto NextTerm;
+		// #]
+
 	}
 	else {
 		goto NormalReturn;
 	}
+
 EndOfMerge:
+
+	// Here we copy the non-overlapping tail, if there is one.
+	if ( tailRun ) {
+		for ( int ii = S->lPatch; ii < oldlPatch; ii++ ) {
+#ifdef WITHZLIB
+			m2 = m1 = S->Patches[ii];
+			while ( *m1 ) {
+				if ( *m1 < 0 ) { /* Need to uncompress */
+					i = -(*m1++); m2 += i; im = *m1+i+1;
+					while ( i > 0 ) { *m1-- = *m2--; i--; }
+					*m1 = im;
+				}
+#ifdef WITHPTHREADS
+				if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
+					im = PutToMaster(BHEAD m1);
+				}
+				else
+#endif
+				if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
+				ADDPOS(S->SizeInFile[par],im);
+				m2 = m1;
+				m1 += *m1;
+			}
+#else
+/* old code */
+			length = (LONG)(S->pStop[ii])-(LONG)(S->Patches[ii])+sizeof(WORD)*0;
+			// TODO we don't want this +1, it copies the final 0? ^
+			if ( WriteFile(fout->handle,(UBYTE *)(S->Patches[ii]),length) != length )
+				goto PatwCall;
+			ADDPOS(position,length);
+			ADDPOS(fout->POposition,length);
+			ADDPOS(fout->filesize,length);
+			ADDPOS(S->SizeInFile[par],length/sizeof(WORD));
+#endif
+		}
+	}
+
+	// And finally comes the cleanup:
 #ifdef WITHPTHREADS
 		if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
 			PutToMaster(BHEAD 0);
@@ -4409,6 +4630,7 @@ EndOfMerge:
 #endif
 	if ( FlushOut(&position,fout,1) ) goto ReturnError;
 	ADDPOS(S->SizeInFile[par],1);
+
 EndOfAll:
 	if ( par == 1 ) {	/* Set the fpatch pointers */
 #ifdef WITHZLIB
@@ -4551,9 +4773,9 @@ int StoreTerm(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
-	WORD **ss, *lfill, j, *t;
+	WORD **ss, *lfill, j, *t, *finalTerm = NULL;
 	POSITION pp;
-	LONG lSpace, sSpace, RetCode, over, tover;
+	LONG lSpace, sSpace, RetCode, over, tover, finalTermInd;
 
 	if ( ( ( AP.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) && AR.sLevel == 0 ) {
 #ifdef WITHPTHREADS
@@ -4575,12 +4797,18 @@ int StoreTerm(PHEAD WORD *term)
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"Before SplitMerge");
 #endif
-		ss[SplitMerge(BHEAD ss,over)] = 0;
+		finalTermInd = SplitMerge(BHEAD ss,over);
+		ss[finalTermInd] = 0;
+		// Keep the location of the final term of the small buffer
+		finalTermInd--;
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"After SplitMerge");
 #endif
 		sSpace = 0;
 		if ( over > 0 ) {
+			finalTerm = TermMalloc("StoreTerm tmp");
+			WORD *src = ss[finalTermInd];
+			WCOPY(finalTerm, src, *(ss[finalTermInd]));
 			sSpace = ComPress(ss,&RetCode);
 			S->TermsLeft -= over - RetCode;
 		}
@@ -4617,8 +4845,15 @@ int StoreTerm(PHEAD WORD *term)
 			S->lPatch = 0;
 			S->lFill = S->lBuffer;
 		}
+
 		S->Patches[S->lPatch++] = S->lFill;
-	    lfill = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
+		if ( finalTerm != NULL ) {
+			// Put a copy of the final term at the start of the patch.
+			// We have stored a pre-Compress copy of the term for this.
+			WCOPY(S->Patches[S->lPatch-1], finalTerm, *finalTerm);
+			TermFree(finalTerm, "StoreTerm tmp");
+		}
+		lfill = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
 		if ( tover > 0 ) {
 			ss = S->sPointer;
 			while ( ( t = *ss++ ) != 0 ) {
