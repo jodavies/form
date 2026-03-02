@@ -4551,9 +4551,9 @@ int StoreTerm(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
-	WORD **ss, *lfill, j, *t;
+	WORD **ss, *lfill, j, *t, *finalTerm;
 	POSITION pp;
-	LONG lSpace, sSpace, RetCode, over, tover;
+	LONG lSpace, sSpace, RetCode, over, tover, finalTermInd;
 
 	if ( ( ( AP.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) && AR.sLevel == 0 ) {
 #ifdef WITHPTHREADS
@@ -4575,12 +4575,19 @@ int StoreTerm(PHEAD WORD *term)
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"Before SplitMerge");
 #endif
-		ss[SplitMerge(BHEAD ss,over)] = 0;
+		finalTermInd = SplitMerge(BHEAD ss,over);
+		ss[finalTermInd] = 0;
+		// Keep the location of the final term of the small buffer
+		finalTermInd--;
 #ifdef SPLITTIME
 		PrintTime((UBYTE *)"After SplitMerge");
 #endif
 		sSpace = 0;
+		finalTerm = TermMalloc("StoreTerm tmp");
+		*finalTerm = 0;
 		if ( over > 0 ) {
+			WORD *src = ss[finalTermInd];
+			WCOPY(finalTerm, src, *(ss[finalTermInd]));
 			sSpace = ComPress(ss,&RetCode);
 			S->TermsLeft -= over - RetCode;
 		}
@@ -4617,8 +4624,31 @@ int StoreTerm(PHEAD WORD *term)
 			S->lPatch = 0;
 			S->lFill = S->lBuffer;
 		}
-		S->Patches[S->lPatch++] = S->lFill;
-	    lfill = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
+
+		WORD cmp = -1;
+		if ( S->lPatch ) {
+			// Check the first term of the sorted small buffer against the final
+			// term of the stored large patch.
+			// A positive cmp means that S->Patches[S->lPatch-1] comes before *ss.
+			// We can extend the existing patch! We don't handle the equal case here.
+			cmp = CompareTerms(BHEAD S->Patches[S->lPatch-1], *ss, AR.sLevel);
+		}
+		if ( cmp <= 0 ) {
+			S->Patches[S->lPatch++] = S->lFill;
+		}
+		// Put a copy of the final term at the start of the patch. We have stored
+		// a pre-Compress copy of the term for this. In case cmp <= 0, this is
+		// updating the existing term.
+		WCOPY(S->Patches[S->lPatch-1], finalTerm, *finalTerm);
+		if ( cmp <= 0 ) {
+			lfill = (WORD *)(((UBYTE *)(S->lFill)) + AM.MaxTer);
+		}
+		else {
+			// The "-1" is due to the "*lfill++ = 0; S->lFill = lfill" below.
+			// S->lFill points to the next position after a trailing zero at the
+			// end of the patch!
+			lfill = S->lFill-1;
+		}
 		if ( tover > 0 ) {
 			ss = S->sPointer;
 			while ( ( t = *ss++ ) != 0 ) {
@@ -4634,6 +4664,7 @@ int StoreTerm(PHEAD WORD *term)
 		S->sTerms = 0;
 		S->PoinFill = S->sPointer;
 		*(S->PoinFill) = S->sFill = S->sBuffer;
+		TermFree(finalTerm, "StoreTerm tmp");
 	}
 	j = *term;
 	while ( --j >= 0 ) *S->sFill++ = *term++;
