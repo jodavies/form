@@ -1283,6 +1283,14 @@ extern WORD   *MakeDollarInteger(PHEAD WORD *,WORD **);
 extern WORD   *MakeDollarMod(PHEAD WORD *,WORD **);
 extern int    GetDolNum(PHEAD WORD *, WORD *);
 extern void   AddPotModdollar(WORD);
+// Returns 1 if the ModOptdollar type implies a thread-local copy when running
+// in TFORM (WITHPTHREADS), and 0 otherwise.
+static inline int DollarLocalCopy(WORD type) {
+	if ( type == MODLOCAL ) { return 1; }
+	if ( type == MODMIN   ) { return 1; }
+	if ( type == MODMAX   ) { return 1; }
+	return 0;
+}
  
 extern int    Optimize(WORD, int);
 extern int    ClearOptimize(void);

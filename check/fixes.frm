@@ -4658,6 +4658,40 @@ Symbol x;
 .end
 assert succeeded?
 *--#] PullReq691 :
+*--#[ PullReq807_1 :
+CF f;
+S x;
+L F = (<f(1)>+...+<f(10)>)^4;
+dropcoefficient;
+.sort
+#do i=1,10
+  if (match(f(`i')));
+    $x = `i';
+  endif;
+#enddo
+id f(x?) = x;
+ModuleOption maximum $x;
+.sort
+P;
+.sort
+#message $x: `$x'
+.end
+assert succeeded?
+assert result("F") =~ expr("752752")
+assert stdout =~ exact_pattern(<<'EOF')
+~~~$x: 10
+EOF
+*--#] PullReq807_1 :
+*--#[ PullReq807_2 :
+L F = 1;
+if (1) $x = 0;
+ModuleOption minimum $x;
+.sort
+P;  * AM.exitflag is corrupted
+.end
+assert succeeded?
+assert result("F") =~ expr("1")
+*--#] PullReq807_2 :
 *--#[ PullReq843_1 :
 #-
 
