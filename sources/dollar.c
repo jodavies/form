@@ -236,7 +236,7 @@ int AssignDollar(PHEAD WORD *term, WORD level)
 			Terminate(-1);
 		}
 		dtype = ModOptdollars[nummodopt].type;
-		if ( dtype == MODLOCAL ) {
+		if ( DollarLocalCopy(dtype) ) {
 			d = ModOptdollars[nummodopt].dstruct+AT.identity;
 		}
 	}
@@ -924,7 +924,7 @@ void WildDollars(PHEAD WORD *term)
 				}
 				if ( nummodopt < NumModOptdollars ) {
 					dtype = ModOptdollars[nummodopt].type;
-					if ( dtype == MODLOCAL ) {
+					if ( DollarLocalCopy(dtype) ) {
 						d = ModOptdollars[nummodopt].dstruct+AT.identity;
 					}
 					else {
@@ -1084,7 +1084,7 @@ WORD DolToTensor(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -1122,7 +1122,7 @@ WORD DolToTensor(PHEAD WORD numdollar)
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(retval);
 }
@@ -1145,7 +1145,7 @@ WORD DolToFunction(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -1179,7 +1179,7 @@ WORD DolToFunction(PHEAD WORD numdollar)
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(retval);
 }
@@ -1202,7 +1202,7 @@ WORD DolToVector(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -1243,7 +1243,7 @@ WORD DolToVector(PHEAD WORD numdollar)
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(retval);
 }
@@ -1265,7 +1265,7 @@ WORD DolToNumber(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 		}
@@ -1325,7 +1325,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -1356,7 +1356,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 		retval = -1;
 	}
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(retval);
 }
@@ -1379,7 +1379,7 @@ WORD DolToIndex(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -1432,7 +1432,7 @@ WORD DolToIndex(PHEAD WORD numdollar)
 		retval = 0;
 	}
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(retval);
 }
@@ -1461,7 +1461,7 @@ DOLLARS DolToTerms(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 		}
@@ -1608,7 +1608,7 @@ LONG DolToLong(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 		}
@@ -1759,11 +1759,10 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 			}
 			if ( nummodopt < NumModOptdollars ) {
 				dtype = ModOptdollars[nummodopt].type;
-				if ( dtype == MODLOCAL ) {
+				if ( DollarLocalCopy(dtype) ) {
 					d = ModOptdollars[nummodopt].dstruct+AT.identity;
 				}
 				else {
-/*					LOCK(d->pthreadslockwrite); */
 					LOCK(d->pthreadslockread);
 				}
 			}
@@ -1816,10 +1815,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 		Now we have a little cleaning up to do
 */
 #ifdef WITHPTHREADS
-		if ( dtype > 0 && dtype != MODLOCAL ) {
-/*			UNLOCK(d->pthreadslockwrite); */
-			UNLOCK(d->pthreadslockread);
-		}
+		if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 		if ( newd->factors ) M_free(newd->factors,"Dollar factors");
 		M_free(newd,"Copy of dollar variable");
@@ -1870,7 +1866,7 @@ LONG TermsInDollar(WORD num)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -1895,7 +1891,7 @@ LONG TermsInDollar(WORD num)
 	else if ( d->type == DOLZERO ) n = 0;
 	else n = 1;
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(n);
 }
@@ -1919,7 +1915,7 @@ LONG SizeOfDollar(WORD num)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -1947,7 +1943,7 @@ LONG SizeOfDollar(WORD num)
 	else if ( d->type == DOLZERO ) n = 0;
 	else n = 1;
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(n);
 }
@@ -2656,7 +2652,7 @@ WORD EvalDoLoopArg(PHEAD WORD *arg, WORD par)
 			}
 			if ( nummodopt < NumModOptdollars ) {
 				dtype = ModOptdollars[nummodopt].type;
-				if ( dtype == MODLOCAL ) {
+				if ( DollarLocalCopy(dtype) ) {
 					d = ModOptdollars[nummodopt].dstruct+AT.identity;
 				}
 			}
@@ -2784,7 +2780,7 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 			}
 			if ( nummodopt < NumModOptdollars ) {
 				dtype = ModOptdollars[nummodopt].type;
-				if ( dtype == MODLOCAL ) {
+				if ( DollarLocalCopy(dtype) ) {
 					d = ModOptdollars[nummodopt].dstruct+AT.identity;
 				}
 			}
@@ -2862,7 +2858,7 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 			}
 			if ( nummodopt < NumModOptdollars ) {
 				dtype = ModOptdollars[nummodopt].type;
-				if ( dtype == MODLOCAL ) {
+				if ( DollarLocalCopy(dtype) ) {
 					d = ModOptdollars[nummodopt].dstruct+AT.identity;
 				}
 			}
@@ -2970,7 +2966,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		}
 		if ( nummodopt < NumModOptdollars ) {
 			dtype = ModOptdollars[nummodopt].type;
-			if ( dtype == MODLOCAL ) {
+			if ( DollarLocalCopy(dtype) ) {
 				d = ModOptdollars[nummodopt].dstruct+AT.identity;
 			}
 			else {
@@ -2981,7 +2977,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 #endif
 	CleanDollarFactors(d);
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	if ( d->type != DOLTERMS ) {	/* only one term */
 		if ( d->type != DOLZERO ) d->nfactors = 1;
@@ -3231,13 +3227,13 @@ getout:
 		        Be careful: there should be more than one factor now.
 */
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { LOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { LOCK(d->pthreadslockread); }
 #endif
 	if ( nfactors ==  1 && extrafactor == 0 ) {	/* we can use the buf1 contents */
 		if ( factorsincontent == 0 ) {
 			d->nfactors = 1;
 #ifdef WITHPTHREADS
-			if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+			if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 /*
 			We used here (before 3-sep-2015) the original and did not make
@@ -3289,7 +3285,7 @@ getout2:			AR.SortType = oldsorttype;
 					M_free(d->factors,"factors in dollar");
 					d->factors = 0;
 #ifdef WITHPTHREADS
-					if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+					if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 					M_free(buf3,"DollarFactorize-4");
 					if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-4");
@@ -3533,7 +3529,7 @@ nextj:;
  		#] Step 8: 
 */
 #ifdef WITHPTHREADS
-	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+	if ( dtype > 0 && ! DollarLocalCopy(dtype) ) { UNLOCK(d->pthreadslockread); }
 #endif
 	return(0);
 }
@@ -3852,7 +3848,7 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 				}
 				if ( nummodopt < NumModOptdollars ) {
 					dtype = ModOptdollars[nummodopt].type;
-					if ( dtype == MODLOCAL ) {
+					if ( DollarLocalCopy(dtype) ) {
 						d = ModOptdollars[nummodopt].dstruct+AT.identity;
 					}
 					else {
@@ -3906,7 +3902,7 @@ int GetDolNum(PHEAD WORD *t, WORD *tstop)
 				}
 				if ( nummodopt < NumModOptdollars ) {
 					dtype = ModOptdollars[nummodopt].type;
-					if ( dtype == MODLOCAL ) {
+					if ( DollarLocalCopy(dtype) ) {
 						d = ModOptdollars[nummodopt].dstruct+AT.identity;
 					}
 					else {
@@ -3962,4 +3958,19 @@ void AddPotModdollar(WORD numdollar)
 
 /*
   	#] AddPotModdollar : 
+	#[ DollarLocalCopy : 
+*/
+
+/**
+ * Returns 1 if the ModOptdollar type implies a thread-local copy when running
+ * in TFORM (WITHPTHREADS), and 0 otherwise.
+ */
+int DollarLocalCopy(WORD type) {
+	if ( type == MODLOCAL ) { return 1; };
+	if ( type == MODMIN   ) { return 1; };
+	if ( type == MODMAX   ) { return 1; };
+	return 0;
+}
+/*
+	#] DollarLocalCopy : 
 */
