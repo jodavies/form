@@ -115,9 +115,31 @@ jobs:
           - {bin: tvorm, test: default, nthreads: 2, group: 8/10}
           - {bin: tvorm, test: default, nthreads: 2, group: 9/10}
           - {bin: tvorm, test: default, nthreads: 2, group: 10/10}
-          - {bin: vorm,  test: extra,   group: 1/1}
-          - {bin: tvorm, test: extra,   group: 1/1}
-          - {bin: tvorm, test: extra,   nthreads: 2, group: 1/1}
+          - {bin: vorm,  test: extra,   group: 1/5}
+          - {bin: vorm,  test: extra,   group: 2/5}
+          - {bin: vorm,  test: extra,   group: 3/5}
+          - {bin: vorm,  test: extra,   group: 4/5}
+          - {bin: vorm,  test: extra,   group: 5/5}
+          - {bin: tvorm, test: extra,   group: 1/10}
+          - {bin: tvorm, test: extra,   group: 2/10}
+          - {bin: tvorm, test: extra,   group: 3/10}
+          - {bin: tvorm, test: extra,   group: 4/10}
+          - {bin: tvorm, test: extra,   group: 5/10}
+          - {bin: tvorm, test: extra,   group: 6/10}
+          - {bin: tvorm, test: extra,   group: 7/10}
+          - {bin: tvorm, test: extra,   group: 8/10}
+          - {bin: tvorm, test: extra,   group: 9/10}
+          - {bin: tvorm, test: extra,   group: 10/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 1/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 2/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 3/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 4/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 5/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 6/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 7/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 8/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 9/10}
+          - {bin: tvorm, test: extra,   nthreads: 2, group: 10/10}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
