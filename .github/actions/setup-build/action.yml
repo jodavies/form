@@ -30,7 +30,7 @@ runs:
           build_flint=false
           automake=false diffutils=false gcc=true git=false ruby=true wget=false
           latex=false latex2html=false
-          formlib=false color=false forcer=false mincer=false series=false
+          formlib=false color=false forcer=false mincer=false series=false hyperform=false
         # NOTE: Some features and OS image combinations are not implemented.
       shell: bash
       run: |
@@ -134,15 +134,17 @@ runs:
           feat_forcer=true
           feat_mincer=true
           feat_series=true
+          feat_hyperform=true
         fi
 
-        if $feat_color || $feat_forcer || $feat_mincer || $feat_series; then
+        if $feat_color || $feat_forcer || $feat_mincer || $feat_series || $feat_hyperform; then
           feat_formlib=true
           items=''
           $feat_color && items="$items-color-1.0.0"
           $feat_forcer && items="$items-forcer-1.0.0"
           $feat_mincer && items="$items-mincer-1.0.0"
           $feat_series && items="$items-series-1.0.0"
+          $feat_hyperform && items="$items-hyperform-1.0.0"
           echo "formlib_key=formlib$items" >>"$GITHUB_OUTPUT"
           echo "formlib_restore_keys=formlib-" >>"$GITHUB_OUTPUT"
           echo "FORMPATH=${{ github.workspace }}/formlib" >>"$GITHUB_ENV"
@@ -552,6 +554,20 @@ runs:
           wget https://github.com/a-maier/series/releases/download/1.0.0/series.h -P formlib
           touch formlib/series-1.0.0
         fi
+        if ${{ steps.setup.outputs.hyperform }} && [ ! -f formlib/hyperform-1.0.0 ]; then
+          rm -f formlib/{declare-hyperform.h,hyperform.h,mzvlow.h}
+          wget https://github.com/adamkardos/HyperFORM/archive/refs/tags/v1.0.tar.gz -O - | tar -x --gzip
+          mv HyperFORM-1.0/src/{declare-hyperform.h,hyperform.h,mzvlow.h} formlib/
+          # this file needs to be copied to check/extra when running the tests
+          cat HyperFORM-1.0/check/*.frm | sed 's/\*{{{/*--#[/' | sed 's/\*}}}/*--#]/' > formlib/hyperform.frm
+          rm -rf formlib/hyperform-1.0.0
+          touch formlib/hyperform-1.0.0
+        fi
+
+    - name: Copy test files from cache
+      if: steps.setup.outputs.formlib == 'true'
+      shell: ${{ steps.setup.outputs.msys2 == 'true' && 'msys2 {0}' || 'bash' }}
+      run: cp formlib/hyperform.frm check/extra/
 
     # Fix dubious ownership in containers for Git operations.
     # See: https://github.com/actions/runner/issues/2033#issuecomment-1204205989
