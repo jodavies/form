@@ -2680,6 +2680,16 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 	GETSTOP(term2,stopper2);
 	t1 = term1 + 1;
 	t2 = term2 + 1;
+
+	// Try for a fast term-equality check using memcmp:
+	if ( (! S->PolyFlag) && ( (stopper1 - t1) == (stopper2 - t2) ) 
+#ifdef WITHFLOAT
+		&& AT.aux_ == 0
+#endif
+		) {
+		if ( memcmp(t1, t2, (stopper1-t1)*sizeof(WORD)) == 0 ) goto finalcomp;
+	}
+
 	while ( t1 < stopper1 && t2 < stopper2 ) {
 		if ( *t1 != *t2 ) {
 			if ( *t1 == HAAKJE ) return(PREV(-1));
@@ -3084,9 +3094,10 @@ NoPoly:
 			if ( t2 < stopper2 ) return(PREV(1));
 		}
 	}
+
+finalcomp:
 	if ( level == 3 ) return(CompCoef(term1,term2));
-	if ( level >= 1 )
-		return(CompCoef(term2,term1));
+	if ( level >= 1 ) return(CompCoef(term2,term1));
 	return(0);
 }
 
@@ -3113,10 +3124,16 @@ WORD CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 	WORD *t1, *t2, *tt1, *tt2;
 	int low, high;
 	DUMMYUSE(par);
-	if ( AR.SortType == SORTLOWFIRST ) { low = 1; high = -1; }
-	else { low = -1; high = 1; }
 	t1 = term1 + 1; tt1 = term1+*term1; tt1 -= ABS(tt1[-1]); t1 += 2;
 	t2 = term2 + 1; tt2 = term2+*term2; tt2 -= ABS(tt2[-1]); t2 += 2;
+
+	// Try for a fast term-equality check using memcmp:
+	if ( ( tt1 - t1 ) == ( tt2 - t2 ) ) {
+		if ( memcmp(t1, t2, (tt1-t1)*sizeof(WORD)) == 0 ) return 0;
+	}
+
+	if ( AR.SortType == SORTLOWFIRST ) { low = 1; high = -1; }
+	else { low = -1; high = 1; }
 	if ( AN.polysortflag > 0 ) {
 		sum1 = 0; sum2 = 0;
 		while ( t1 < tt1 ) { sum1 += t1[1]; t1 += 2; }
