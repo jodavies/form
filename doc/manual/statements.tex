@@ -3634,16 +3634,16 @@ Syntax & nunfactorize \verb:{:{\tt<}name of expression(s){\tt>}\verb:}:;
 \end{tabular} \vspace{4mm}
 
 \noindent When one uses an UnFactorize (see \ref{substaunfactorize}) 
-statement without arguments all expressions will be marked for being 
-unfactorized. If one would like to exclude a few expressions this can be 
+statement without arguments all expressions will be marked for 
+unfactorization.. If one would like to exclude a few expressions this can be 
 done with the NUnFactorize statement. There should be at least one expression 
-mentioned as in:
+mentioned, as in:
 \begin{verbatim}
    UnFactorize;
    NUnFactorize expr12,expr29;
 \end{verbatim}
 One can also use the UnFactorize statement with a number of expressions after 
-which the NUnFactorize statement can remove some from the list again as in:
+which the NUnFactorize statement can remove some from the list again, as in:
 \begin{verbatim}
    UnFactorize expr1,...,expr100;
    NUnFactorize expr12,expr29;
@@ -6408,12 +6408,12 @@ step there will be a sort operation. This means that when statistics are
 printed, there may be several statistics for this step.
 
 \noindent When the statement has arguments, these arguments should be names 
-of expressions. In that case the unfactorization is applied only to the 
+of expressions; in this case the unfactorization is applied only to the 
 expressions that are specified.
 
-\noindent If one likes to unfactorized all expressions except for a few 
-ones, one can use the unfactorize statement without arguments and then 
-exclude the few expressions that should not be treated with the 
+\noindent If one wants to unfactorize all expressions except for a few,
+one can use the unfactorize statement without arguments and then 
+exclude specific expressions which should not be treated with the 
 nunfactorize statement (see \ref{substanunfactorize}).
 \vspace{10mm} 
 
