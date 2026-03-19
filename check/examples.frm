@@ -956,6 +956,18 @@ assert result("F") =~ expr("
     assert succeeded?
     assert result("F") =~ expr("H(907202)")
 *--#] Sta_Transform_1 : 
+*--#[ Sta_TryReplace_1 : 
+Symbol x,y,z;
+Local test = x+z;
+* These will replace x by y but not z by y, because z
+* comes before y in the default sort ordering:
+TryReplace x,y;
+TryReplace z,y;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("z+y")
+*--#] Sta_TryReplace_1 : 
 *--#[ Sta_While_1 : 
 Symbol x,y,z;
 Local Fx = (1+x)^6;

@@ -6374,12 +6374,29 @@ Syntax & tryreplace \verb:{:{\tt<}name{\tt>} {\tt<}replacement{\tt>}\verb:}:;
 \\ See also & the replace\_ function (\ref{funreplace})
 \end{tabular} \vspace{4mm}
 
-\noindent The list\index{tryreplace} of potential replacements should be 
-similar to the arguments of the replace\_\index{replace\_} 
-function\index{function!replace\_} (see \ref{funreplace}). {\FORM} will 
-make a copy of the current term, try the replacement and if the replacement 
-results in a term which, by the internal ordering of {\FORM}, comes before 
-the current term, the current term is replaced by the new variety. 
+The tryreplace\index{tryreplace} statement takes a list of potential
+replacements with a syntax similar to the arguments of the
+replace\_\index{replace\_} function\index{function!replace\_} (see
+\ref{funreplace}). {\FORM} will make a copy of the current term and make the
+listed replacements. If the resulting term comes before the current term in
+the sort-ordering of {\FORM} (which depends, for example, on the declaration
+order of the objects in the term), the current term is replaced by the new
+term. Otherwise, the current term is unchanged. For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_TryReplace_1)
+\begin{verbatim}
+    Symbol x,y,z;
+    Local test = x+z;
+    * These will replace x by y but not z by y, because z
+    * comes before y in the default sort ordering:
+    TryReplace x,y;
+    TryReplace z,y;
+    Print;
+    .end
+
+   test =
+      z + y;
+\end{verbatim}
 \vspace{10mm}
 
 %--#] tryreplace : 
