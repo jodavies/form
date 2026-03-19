@@ -6502,37 +6502,60 @@ Syntax & while ( condition );
             if (\ref{substaif})
 \end{tabular} \vspace{4mm}
 
-\noindent This statement\index{while} starts the while 
+\noindent This statement\index{while} starts a while 
 environment\index{environment!while}. It should be paired with an 
 endwhile\index{endwhile} statement (see \ref{substaendwhile}) which 
 terminates the while environment. The statements between the while and the 
 endwhile statements will be executed as long as the condition is met. For 
-the description of the condition one should consult the if\index{if} 
+a description of the condition syntax one should consult the if\index{if} 
 statement (see \ref{substaif}). The while/endwhile combination is 
-equivalent to the construction
-\begin{verbatim}
-   repeat;
-      if ( condition );
+equivalent to a nested repeat and if environment.
+If only a single statement is inside the environment, one can also use
+{\tt while ( condition ) statement;}. For example:
 
-
-      endif;
-   endrepeat;
-\end{verbatim}
-If only a single statement is inside the environment one can also use
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_While_1)
 \begin{verbatim}
-   while ( condition ) statement;
+    Symbol x,y,z;
+    Local Fx = (1+x)^6;
+    Local Fy = (1+y)^6;
+    Local Fz = (1+z)^6;
+
+    While (Count(x,1) > 3);
+       Multiply 1/x;
+    EndWhile;
+
+    Repeat;
+       If (Count(y,1) > 3);
+          Multiply 1/y;
+       EndIf;
+    EndRepeat;
+
+    While (Count(z,1) > 3) Multiply 1/z;
+
+    Print;
+    .end
+
+   Fx =
+      1 + 6*x + 15*x^2 + 42*x^3;
+
+   Fy =
+      1 + 6*y + 15*y^2 + 42*y^3;
+
+   Fz =
+      1 + 6*z + 15*z^2 + 42*z^3;
 \end{verbatim}
+
 Of course one should try to avoid infinite\index{infinite loop} 
 loops\index{loops!infinite}. In order to maximize the speed of {\FORM} not 
 all internal stacks are protected and hence the result may be that {\FORM} 
-may crash. It is also possible that {\FORM} may detect a shortage of buffer 
+crashes. It is also possible that {\FORM} may detect a shortage of buffer 
 space and quit with an error message. \vspace{4mm}
 
 \noindent For each term for which execution reaches the endwhile statement, 
-control is brought back to the while statement. For each term that reaches 
-the while statement the condition is checked and if it is met, the 
-statements inside the environment are executed again on this term. If the 
-condition is not met, execution continues after the endwhile statement. 
+control jumps back to the while statement. The condition is checked, and if
+it is met the statements within the while environment are executed again on
+the term. Otherwise, execution continues after the endwhile statement.
 \vspace{10mm}
 
 %--#] while : 
