@@ -805,6 +805,45 @@ assert result("G") =~ expr("
     assert succeeded?
     assert result("F") =~ expr("x^2*acc(-y^3-10*y^2-2*y-5,y^2-1)")
 *--#] Sta_PolyRatFun_1 : 
+*--#[ Sta_PushPopHide_1 : 
+Local F1 = 1;
+.sort
+PushHide;
+Local F2 = 1;
+* This statement does not affect F1:
+Multiply 2;
+.sort
+PushHide;
+Local F3 = 1;
+* This statement does not affect F1,F2:
+Multiply 2;
+.sort
+PopHide;
+* This statement does not affect F1:
+Multiply 2;
+.sort
+PopHide;
+* This statement affects all expressions:
+Multiply 2;
+Print;
+.end
+assert succeeded?
+assert result("F1") =~ expr("2") 
+assert result("F2") =~ expr("8") 
+assert result("F3") =~ expr("8") 
+*--#] Sta_PushPopHide_1 :
+*--#[ Sta_PushPopHide_2 : 
+Local F1 = 1;
+.sort
+PushHide;
+Multiply 2;
+.sort
+PopHide;
+.sort
+PopHide;
+.end
+assert compile_error?("PopHide statement without corresponding PushHide statement")
+*--#] Sta_PushPopHide_2 :
 *--#[ Sta_Print_1 :
     Symbols a,b,c;
     Local F = 3*a+2*b;
