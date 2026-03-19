@@ -6435,19 +6435,19 @@ Syntax & unhide; \\
 \end{tabular} \vspace{4mm}
 
 \noindent In its\index{unhide} first variety this statement causes all 
-statements in the hide\index{hide} file\index{file!hide} to become 
+expressions in the hide\index{hide} file\index{file!hide} to become 
 active\index{active} expressions again. In its second variety only the 
 specified expressions are taken from the hide system and become active 
 again. An expression that is made active again can be manipulated again in 
 the module in which the unhide statement occurs. For more information one 
 should look at the hide statement in \ref{substahide}. \vspace{4mm}
 
-\noindent Note that if only a number of expressions is taken from the hide 
+\noindent Note that if only a number of expressions are taken from the hide 
 system, the hide file may be left with `holes', i.e.\ space between the 
-remaining expressions that contain no relevant information any longer. 
-{\FORM} contains no mechanism to use the space in these holes. Hence if 
-space is at a premium and many holes develop one should unhide all 
-expressions (this causes the hide system to be started from zero size 
+remaining expressions that no longer contain relevant information. 
+{\FORM} has no mechanism to use the space in these holes. Hence if 
+space is at a premium and many holes develop, one should unhide all 
+expressions (which causes the hide system to be started from zero size 
 again) and then send the relevant expressions back to the hide system. 
 \vspace{10mm}
 
