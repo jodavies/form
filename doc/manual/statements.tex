@@ -4345,7 +4345,23 @@ Syntax & pophide;
 
 \noindent Undoes\index{pophide} the action of the most recent 
 pushhide\index{pushhide} statement (see \ref{substapushhide}). If there is 
-no matching pushhide statement an error will result. \vspace{10mm}
+no matching pushhide statement an error will result:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_PushPopHide_2)
+\begin{verbatim}
+    Local F1 = 1;
+    .sort
+    PushHide;
+    Multiply 2;
+    .sort
+    PopHide;
+    .sort
+    PopHide;
+    .end
+pushpophide-2.frm Line 9 --> PopHide statement without corresponding PushHide s
+tatement
+\end{verbatim}
+\vspace{10mm}
 
 %--#] pophide : 
 %--#[ print :
@@ -4630,9 +4646,44 @@ Syntax & pushhide;
               pophide (\ref{substapophide})
 \end{tabular} \vspace{4mm}
 
-\noindent Hides\index{hide} all currently\index{pushhide} active 
+\noindent Hides\index{hide} all currently\index{pushhide}-active 
 expressions (see \ref{substahide}). The pophide\index{pophide} statement 
-(see \ref{substapophide}) can bring them back to active status again. 
+(see \ref{substapophide}) can be used to to un-hide the expressions hidden
+by the most recent pushhide statement. For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_PushPopHide_1)
+\begin{verbatim}
+    Local F1 = 1;
+    .sort
+    PushHide;
+    Local F2 = 1;
+    * This statement does not affect F1:
+    Multiply 2;
+    .sort
+    PushHide;
+    Local F3 = 1;
+    * This statement does not affect F1,F2:
+    Multiply 2;
+    .sort
+    PopHide;
+    * This statement does not affect F1:
+    Multiply 2;
+    .sort
+    PopHide;
+    * This statement affects all expressions:
+    Multiply 2;
+    Print;
+    .end
+
+   F1 =
+      2;
+
+   F2 =
+      8;
+
+   F3 =
+      8;
+\end{verbatim}
 \vspace{10mm}
 
 %--#] pushhide : 
