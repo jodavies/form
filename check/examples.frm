@@ -956,6 +956,31 @@ assert result("F") =~ expr("
     assert succeeded?
     assert result("F") =~ expr("H(907202)")
 *--#] Sta_Transform_1 : 
+*--#[ Sta_While_1 : 
+Symbol x,y,z;
+Local Fx = (1+x)^6;
+Local Fy = (1+y)^6;
+Local Fz = (1+z)^6;
+
+While (Count(x,1) > 3);
+   Multiply 1/x;
+EndWhile;
+
+Repeat;
+   If (Count(y,1) > 3);
+      Multiply 1/y;
+   EndIf;
+EndRepeat;
+
+While (Count(z,1) > 3) Multiply 1/z;
+
+Print;
+.end
+assert succeeded?
+assert result("Fx") =~ expr("1 + 6*x + 15*x^2 + 42*x^3");
+assert result("Fy") =~ expr("1 + 6*y + 15*y^2 + 42*y^3");
+assert result("Fz") =~ expr("1 + 6*z + 15*z^2 + 42*z^3");
+*--#] Sta_While_1 : 
 *--#[ Fun_distrib_1 :
     Symbols x1,...,x4;
     CFunctions f,f1,f2;
