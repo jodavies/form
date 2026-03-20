@@ -902,6 +902,25 @@ assert compile_error?("PopHide statement without corresponding PushHide statemen
 	assert result("F1") =~ expr("f(a,b,c,d)+f(a,c,b,d)+f(a,c,d,b)+f(c,a,b,d)+f(c,a,d,b)+f(c,d,a,b)")
 	assert result("F2") =~ expr("g(a,b,c,d)+g(a,c,b,d)+g(a,c,d,b)+g(c,a,b,d)+g(c,a,d,b)+g(c,d,a,b)")
 *--#] Sta_Shuffle_1 : 
+*--#[ Sta_Setexitflag_1 :
+CFunction f;
+Symbol x;
+Local test = <f(1)>+...+<f(6)>;
+Identify f(x?even_) = x;
+If (Match(f(x?)));
+   Print "Error: unreplaced f: %t";
+   SetExitFlag;
+EndIf;
+.sort
+Print;
+.end
+assert succeeded?
+assert stdout =~ exact_pattern("
+Error: unreplaced f:  + f(1)
+Error: unreplaced f:  + f(3)
+Error: unreplaced f:  + f(5)
+")
+*--#] Sta_Setexitflag_1 : 
 *--#[ Sta_Splitarg_1 :
 CFunction f;
 Symbol a,b,c,d;

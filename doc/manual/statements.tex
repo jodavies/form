@@ -5160,7 +5160,33 @@ Syntax & setexitflag;
 
 \noindent Causes\index{setexitflag} termination\index{termination} of the 
 program after execution\index{execution} of the current module has 
-finished. \vspace{10mm}
+finished. For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Setexitflag_1)
+\begin{verbatim}
+    CFunction f;
+    Symbol x;
+    Local test = <f(1)>+...+<f(6)>;
+    Identify f(x?even_) = x;
+    If (Match(f(x?)));
+       Print "Error: unreplaced f: %t";
+       SetExitFlag;
+    EndIf;
+    .sort
+Error: unreplaced f:  + f(1)
+Error: unreplaced f:  + f(3)
+Error: unreplaced f:  + f(5)
+    Print;
+    .end
+\end{verbatim}
+Here, suppose we would like to replace all cfunctions f with some pre-computed
+results. It might be useful to terminate the program if any f remains
+unreplaced, and print a list of all of them. If the exit statement
+(see \ref{substaexit}) were used instead, only the first remaining f is printed
+and the program would terminate immediately. The setexitflag statement is more
+useful in such a scenario.
+
+\vspace{10mm}
 
 %--#] setexitflag : 
 %--#[ shuffle :
