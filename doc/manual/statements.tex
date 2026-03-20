@@ -5869,18 +5869,39 @@ Syntax & term;
 \\ See also & endterm (\ref{substaendterm}), sort (\ref{substasort})
 \end{tabular} \vspace{4mm}
 
-\noindent Begins the term\index{term} environment\index{environment!term}. 
-This environment is terminated with the endterm\index{endterm} statement 
-(see \ref{substaendterm}). The action is that temporarily the current term 
-is seen as a little expression by itself. The statements inside the 
-environment are applied to it and one can even sort the results with the 
-sort\index{sort} statement (see \ref{substasort}) which should not be 
-confused with the .sort\index{.sort} instruction that terminates a module. 
-Inside the term environment one can have only executable statements and 
-possibly term-wise print statements (see \ref{substaprint}). When the end 
-of the term environment is reached, the results are sorted (as would be 
-done with an expression at the end of a module) and execution continues 
-with the resulting terms. This environment can be nested\index{nested}. 
+\noindent This statement begins a term\index{term} environment
+\index{environment!term}, which is terminated with the endterm\index{endterm}
+statement (see \ref{substaendterm}). It causes the current term to be processed
+as if it were a small expression; the statements inside the environment are
+applied to it and one can sort the results with the sort\index{sort}
+statement (see \ref{substasort}) (not to be confused with the .sort
+\index{.sort} instruction, which terminates a module).
+Inside the term environment, one may only use executable statements or
+term-wise print statements (see \ref{substaprint}). When the end of the
+term environment is reached, the resulting terms are sorted and then the
+module execution proceeds with the resulting terms. This environment can
+be nested\index{nested}. For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Term_1)
+\begin{verbatim}
+    CFunction f;
+    Symbol x;
+    Local test = f(10);
+    Term;
+       Repeat Identify f(x?{>1}) = f(x-1) + f(x-2);
+    EndTerm;
+    Print;
+    .end
+
+Time =       0.00 sec    Generated terms =          2
+            test         Terms in output =          2
+                         Bytes used      =         64
+
+   test =
+      34*f(0) + 55*f(1);
+\end{verbatim}
+Here, one can see in the sorting statistics that only 2 terms are generated
+at the lowest level, rather than the full $34+55=89$.
 \vspace{10mm}
 
 %--#] term : 
