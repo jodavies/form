@@ -1191,6 +1191,18 @@ Print;
 	  EOF
 	)
 *--#] Sta_Stuffle_1 : 
+*--#[ Sta_Term_1 :
+CFunction f;
+Symbol x;
+Local test = f(10);
+Term;
+	Repeat Identify f(x?{>1}) = f(x-1) + f(x-2);
+EndTerm;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("34*f(0) + 55*f(1)")
+*--#] Sta_Term_1 : 
 *--#[ Sta_ToTensor_1 :
 *NOTE: "functions" option is needed.
 Vector p,p1,p2;
