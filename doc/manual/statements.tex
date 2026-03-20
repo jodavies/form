@@ -841,8 +841,11 @@ See also & functions (\ref{substafunctions}), tensors
 \end{tabular} \vspace{4mm}
 
 \noindent This statement declares commuting\index{commuting} 
-tensors\index{tensor!commuting}. It is equal to the tensor statement (see 
+tensors\index{tensor!commuting}. It is equivalent to the tensor statement (see 
 \ref{substatensors}) which has the commuting property as its default. 
+
+\noindent The options that exist for properties of tensors are the same as 
+those for functions (see \ref{substafunctions}).
 \vspace{10mm}
 
 %--#] ctensors : 
@@ -3613,9 +3616,9 @@ See also & functions (\ref{substafunctions}), tensors
 \end{tabular} \vspace{4mm}
 
 \noindent This statement\index{ntensor} declares 
-noncommuting\index{noncommuting} tensors\index{tensor!noncommuting}. For 
-the rest it is equal to the tensor\index{tensor} statement (see 
-\ref{substatensors}) which has the commuting property as its default.
+noncommuting\index{noncommuting} tensors\index{tensor!noncommuting}.
+Note that it is not equivalent to the tensors statement (see \ref{substatensors})
+which has the commuting property as its default.
 
 \noindent The options that exist for properties of tensors are the same as 
 those for functions (see \ref{substafunctions}). \vspace{10mm}
@@ -5853,6 +5856,9 @@ index. Tensors come in two varieties: commuting\index{commuting} and
 noncommuting\index{noncommuting}. The tensor statement declares a tensor to 
 be commuting. In order to declare a tensor to be noncommuting one should 
 use the ntensor\index{ntensor} statement (see \ref{substantensors}).
+Thus `tensor' is equivalent to `ctensor'; note that this differs from the
+convention of functions, where `function' is equivalent to `nfunction'
+and not to `cfunction'.
 
 \noindent The options that exist for properties of tensors are the same as 
 those for functions (see \ref{substafunctions}). \vspace{10mm}
