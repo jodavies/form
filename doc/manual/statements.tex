@@ -5487,27 +5487,82 @@ Syntax & sum {\tt<}list of indices{\tt>};
 \\ See also & renumber (\ref{substarenumber})
 \end{tabular}\vspace{4mm}
 
-\noindent The given indices will be summed\index{sum} over. There are two 
-varieties. In the first the index is followed by a sequence of nonnegative 
-short integers. In that case the summation means that for each of the 
-integers a new instance of the term is created in which the index is 
-replaced by that integer. In the second variety the index is either the 
-last object in the statement or followed by another index. In that case the 
+\noindent The specified list of indices will be summed\index{sum} over. There are two 
+varieties: in the first, an index should be followed by a sequence of non-negative 
+short integers. In this case, the summation means that for each of the 
+integers, a new instance of the term is created in which the index is 
+replaced by that integer. For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Sum_1)
+\begin{verbatim}
+    CFunction f;
+    Index mu,nu;
+    Local test1 = f(mu,mu);
+    Local test2 = f(mu,nu);
+    Local test3 = f(mu,nu)*f(mu,nu);
+    Sum mu,0,1,2, nu,0,1,2;
+    Print;
+    .end
+
+   test1 =
+      f(0,0) + f(1,1) + f(2,2);
+
+   test2 =
+      f(0,0) + f(0,1) + f(0,2) + f(1,0) + f(1,1) + f(1,2) + f(2,0) + f(2,1)
+      + f(2,2);
+
+   test3 =
+      f(0,0)^2 + f(0,1)^2 + f(0,2)^2 + f(1,0)^2 + f(1,1)^2 + f(1,2)^2
+      + f(2,0)^2 + f(2,1)^2 + f(2,2)^2;
+\end{verbatim}
+
+In the second variety the index should be either the 
+last object in the statement or followed by another index. In this case the 
 index is replaced by an internal dummy\index{dummy} 
 index\index{index!dummy} of the type \verb:N1_?: (or with another number 
-instead of the 1). Such indices have the current
+instead of `1'). Such indices have the current
 default\index{default dimension} dimension\index{dimension!default} and can 
-be renamed at will by \FORM\ to bring terms into standard notation. For 
+be renamed at will by \FORM\ in order to bring terms into standard notation. For 
 example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Sum_2)
 \begin{verbatim}
-   f(N2_?,N1_?)*g(N2_?,N1_?)
+    CFunction f,g;
+    Index mu,nu;
+    Local test1 = f(mu,nu)*g(mu,nu);
+    Local test2 = f(N2_?,N1_?)*g(N2_?,N1_?);
+    Sum mu,nu;
+    Print;
+    .end
+
+   test1 =
+      f(N1_?,N2_?)*g(N1_?,N2_?);
+
+   test2 =
+      f(N1_?,N2_?)*g(N1_?,N2_?);
 \end{verbatim}
-will be changed into
+Note that in the `test2' expression here, \FORM\ has re-arranged the dummy
+indices into the canonical form.
+
+The two types of sum statement may be mixed, as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Sum_3)
 \begin{verbatim}
-   f(N1_?,N2_?)*g(N1_?,N2_?).
+    CFunction f,g;
+    Index mu,nu;
+    Local test = f(mu,nu)*g(mu,nu);
+    Sum mu, nu,0,1,2;
+    Print;
+    .end
+
+  test =
+     f(N1_?,0)*g(N1_?,0) + f(N1_?,1)*g(N1_?,1) + f(N1_?,2)*g(N1_?,2);
 \end{verbatim}
+
 The user can use these dummy indices in the left hand side of 
-id\index{id} statements.
+identify\index{id}\index{identify} statements, but should recognise that they
+do not represent wildcards for the pattern matcher. Attempting to use them as
+wildcards as in `{\tt N1\_??}' is also not valid.
 \vspace{10mm}
 
 %--#] sum : 

@@ -928,6 +928,42 @@ assert compile_error?("PopHide statement without corresponding PushHide statemen
 	  EOF
 	)
 *--#] Sta_Stuffle_1 : 
+*--#[ Sta_Sum_1 :
+CFunction f;
+Index mu,nu;
+Local test1 = f(mu,mu);
+Local test2 = f(mu,nu);
+Local test3 = f(mu,nu)*f(mu,nu);
+Sum mu,0,1,2, nu,0,1,2;
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("f(0,0) + f(1,1) + f(2,2)")
+assert result("test2") =~ expr("f(0,0) + f(0,1) + f(0,2) + f(1,0) + f(1,1) + f(1,2) + f(2,0) + f(2,1) + f(2,2)")
+assert result("test3") =~ expr("f(0,0)^2 + f(0,1)^2 + f(0,2)^2 + f(1,0)^2 + f(1,1)^2 + f(1,2)^2 + f(2,0)^2 + f(2,1)^2 + f(2,2)^2")
+*--#] Sta_Sum_1 : 
+*--#[ Sta_Sum_2 :
+CFunction f,g;
+Index mu,nu;
+Local test1 = f(mu,nu)*g(mu,nu);
+Local test2 = f(N2_?,N1_?)*g(N2_?,N1_?);
+Sum mu,nu;
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("f(N1_?,N2_?)*g(N1_?,N2_?)")
+assert result("test2") =~ expr("f(N1_?,N2_?)*g(N1_?,N2_?)")
+*--#] Sta_Sum_2 : 
+*--#[ Sta_Sum_3 :
+CFunction f,g;
+Index mu,nu;
+Local test = f(mu,nu)*g(mu,nu);
+Sum mu, nu,0,1,2;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("f(N1_?,0)*g(N1_?,0) + f(N1_?,1)*g(N1_?,1) + f(N1_?,2)*g(N1_?,2)")
+*--#] Sta_Sum_3 : 
 *--#[ Sta_Term_1 :
 CFunction f;
 Symbol x;
