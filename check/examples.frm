@@ -930,19 +930,31 @@ assert compile_error?("PopHide statement without corresponding PushHide statemen
 *--#] Sta_Stuffle_1 : 
 *--#[ Sta_ToTensor_1 :
 *NOTE: "functions" option is needed.
-V p,p1,p2;
-F f;
-I mu;
-T tt,t;
-L F = p.p1^2*f(p,p1)*p(mu)*tt(p1,p,p2,p);
-totensor functions,p,t;
-P;
+Vector p,p1,p2;
+Function f;
+Index mu;
+Tensor tt,t;
+Local F = p.p1^2*f(p,p1)*p(mu)*tt(p1,p,p2,p);
+ToTensor functions, p,t;
+Print;
 .end
 assert succeeded?
 assert result("F") =~ expr("
   f(N1_?,p1)*tt(p1,N2_?,p2,N3_?)*t(p1,p1,mu,N1_?,N2_?,N3_?)
 ")
 *--#] Sta_ToTensor_1 : 
+*--#[ Sta_ToVector_1 :
+Tensor t1,t2;
+Vector v1,v2;
+Index mu1,mu2,mu3;
+Local test = t1(mu1,mu2,mu3) + t2(mu1,mu2,mu3);
+ToVector t1,v1;
+ToVector v2,t2;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("v1(mu1)*v1(mu2)*v1(mu3) + v2(mu1)*v2(mu2)*v2(mu3)")
+*--#] Sta_ToVector_1 : 
 *--#[ Sta_Transform_1 :
     Symbol x,x1,x2;
     CF  H,H1;
