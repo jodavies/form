@@ -902,6 +902,58 @@ assert compile_error?("PopHide statement without corresponding PushHide statemen
 	assert result("F1") =~ expr("f(a,b,c,d)+f(a,c,b,d)+f(a,c,d,b)+f(c,a,b,d)+f(c,a,d,b)+f(c,d,a,b)")
 	assert result("F2") =~ expr("g(a,b,c,d)+g(a,c,b,d)+g(a,c,d,b)+g(c,a,b,d)+g(c,a,d,b)+g(c,d,a,b)")
 *--#] Sta_Shuffle_1 : 
+*--#[ Sta_Splitarg_1 :
+CFunction f;
+Symbol a,b,c,d;
+Local test = f(a+b-5*c*d);
+SplitArg f;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("f( - 5*c*d,b,a)")
+*--#] Sta_Splitarg_1 : 
+*--#[ Sta_Splitarg_2 :
+CFunction f,g,h;
+Symbol x,y;
+Local test = f(2 + 3*x + 4*x^2) + g(2 + 3*x + 4*x^2) + h(x + x*y + x^2*y);
+SplitArg (x) f;
+SplitArg (x^2) g;
+SplitArg (x*y) h;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("f(2 + 4*x^2,3*x) + g(2 + 3*x,4*x^2) + h(x + x^2*y,x*y)")
+*--#] Sta_Splitarg_2 : 
+*--#[ Sta_Splitarg_3 :
+CFunction f;
+Symbol x,y;
+Local test = f(2 + 3*x + 4*x^2 + 5*x*y + 6*y);
+SplitArg ((x)) f;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("f(2 + 6*y,3*x,5*x*y,4*x^2)")
+*--#] Sta_Splitarg_3 : 
+*--#[ Sta_Splitfirstarg_1 :
+CFunction f;
+Symbol x;
+Local test = f(1 + x + x^2 + x^3);
+SplitFirstArg f;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("f(x + x^2 + x^3,1)")
+*--#] Sta_Splitfirstarg_1 : 
+*--#[ Sta_Splitlastarg_1 :
+CFunction f;
+Symbol x;
+Local test = f(1 + x + x^2 + x^3);
+SplitLastArg f;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("f(1 + x + x^2,x^3)")
+*--#] Sta_Splitlastarg_1 : 
 *--#[ Sta_Stuffle_1 :
     CF  S,R;
     Symbols N,n;

@@ -5292,35 +5292,71 @@ Syntax & splitarg options \verb:{:{\tt<}name of function/set{\tt>}
              factarg (\ref{substafactarg})
 \end{tabular}\vspace{4mm}
 
-\noindent Takes\index{splitarg} the indicated argument\index{argument} of a 
+\noindent Takes\index{splitarg} the indicated arguments\index{argument} of a 
 function and if such an argument is a subexpression that consists on more 
-than one term, all terms become single arguments of the function as in
+than one term, each term becomes a separate argument of the function. For
+example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Splitarg_1)
 \begin{verbatim}
-   f(a+b-5*c*d) --> f(a,b,-5*c*d)
-\end{verbatim}
-The way arguments are indicated is rather similar to the way this is done 
-in the argument\index{argument statement} statement (see 
-\ref{substaargument}). One can however indicate only a single group of 
-functions in one statement. Additionally there are other options. All 
-options are in the order that they should be specified:
+    CFunction f;
+    Symbol a,b,c,d;
+    Local test = f(a + b - 5*c*d);
+    SplitArg f;
+    Print;
+    .end
 
+   test =
+      f( - 5*c*d,b,a);
+\end{verbatim}
+The format for the argument specifications is similar to the argument statement
+\index{argument} (see \ref{substaargument}), except here only one function or
+set of functions may be given. The splitarg action is only applied to the
+specified arguments of the given functions. If no (sets of) functions or no
+arguments are specified, the action is applied to all functions (including
+built-in functions) or all arguments.
+
+\noindent In addition, the following options modify the behaviour of splitarg:
+
+\vspace{3mm}
 \leftvitem{5cm}{(term)}
 \rightvitem{11cm}{Only terms that are a numerical multiple of the given 
-term are split off. The terms that are split off will trail the remainder.}
+term are split off. The terms that are split off will trail the remainder.
+For example:}
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Splitarg_2)
+\begin{verbatim}
+    CFunction f,g;
+    Symbol x;
+    Local test = f(2 + 3*x + 4*x^2) + g(2 + 3*x + 4*x^2) + h(x + x*y + x^2*y);
+    SplitArg (x) f;
+    SplitArg (x^2) g;
+    SplitArg (x*y) h;
+    Print;
+    .end
 
+   test =
+      f(2 + 4*x^2,3*x) + g(2 + 3*x,4*x^2) + h(x + x^2*y,x*y);
+\end{verbatim}
+
+\vspace{3mm}
 \leftvitem{5cm}{((term))}
 \rightvitem{11cm}{Only terms that contain the given term will be split off. 
-The terms that are split off will trail the remainder.}
+The terms that are split off will trail the remainder. For example:}
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Splitarg_3)
+\begin{verbatim}
+    CFunction f;
+    Symbol x,y;
+    Local test = f(2 + 3*x + 4*x^2 + 5*x*y + 6*y);
+    SplitArg ((x)) f;
+    Print;
+    .end
 
-\noindent The statement is terminated with a sequence of functions or 
-sets\index{set} of functions. The splitting action will apply only to the 
-specified functions or to members of the set(s). If no functions or sets of 
-functions are specified all functions will be treated, including the built 
-in functions.
- 
-\noindent The argument specifications consist of a list of numbers, 
-indicating the arguments that should be treated. If no arguments are 
-specified, all arguments will be treated. \vspace{10mm}
+  test =
+     f(2 + 6*y,3*x,5*x*y,4*x^2);
+\end{verbatim}
+\vspace{10mm}
 
 %--#] splitarg : 
 %--#[ splitfirstarg :
@@ -5336,20 +5372,26 @@ Syntax & splitfirstarg \verb:{:{\tt<}name of function/set{\tt>}
              splitlastarg (\ref{substasplitlastarg})
 \end{tabular}\vspace{4mm}
 
-\noindent A little\index{splitfirstarg} bit like the 
+\noindent Similar to \index{splitfirstarg} the 
 SplitArg\index{splitarg} statement (see \ref{substasplitarg}). Splits the 
-given argument(s) into its first term and a remainder. Then replaces the 
-argument by the remainder\index{remainder}, followed by the first term.
+given argument(s) into their first term and a remainder. The arguments are
+replaced by the remainder\index{remainder}, followed by the first term. The
+argument specifications are as for SplitArg. For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Splitfirstarg_1)
+\begin{verbatim}
+    CFunction f;
+    Symbol x;
+    Local test = f(1 + x + x^2 + x^3);
+    SplitFirstArg f;
+    Print;
+    .end
 
-\noindent The statement is terminated with a sequence of functions or sets 
-of functions. The splitting action will apply only to the specified 
-functions or to members of the set(s). If no functions or sets\index{set} 
-of functions are specified all functions will be treated, including the 
-built in functions.
- 
-\noindent The argument specifications consist of a list of numbers, 
-indicating the arguments that should be treated. If no arguments are 
-specified all arguments will be treated. \vspace{10mm}
+  test =
+     f(x + x^2 + x^3,1);
+\end{verbatim}
+
+\vspace{10mm}
 
 %--#] splitfirstarg : 
 %--#[ splitlastarg :
@@ -5365,20 +5407,26 @@ Syntax & splitlastarg \verb:{:{\tt<}name of function/set{\tt>}
              splitfirstarg (\ref{substasplitfirstarg})
 \end{tabular}\vspace{4mm}
 
-\noindent A little\index{splitlastarg} bit like the 
+\noindent Similar to \index{splitlastarg} the
 SplitArg\index{splitarg} statement (see \ref{substasplitarg}). Splits the 
-given argument(s) into its last term and a remainder. Then replaces the 
-argument by the remainder, followed by the last term.
+given argument(s) into their last term and a remainder. The arguments are
+replaced by the remainder\index{remainder}, followed by the last term. The
+argument specifications are as for SplitArg. For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Splitlastarg_1)
+\begin{verbatim}
+    CFunction f;
+    Symbol x;
+    Local test = f(1 + x + x^2 + x^3);
+    SplitLastArg f;
+    Print;
+    .end
 
-\noindent The statement is terminated with a sequence of functions or sets 
-of functions. The splitting action will apply only to the specified 
-functions or to members of the set(s). If no functions or sets\index{set} 
-of functions are specified all functions will be treated, including the 
-built in functions.
+  test =
+     f(1 + x + x^2,x^3);
+\end{verbatim}
  
-\noindent The argument specifications consist of a list of numbers, 
-indicating the arguments that should be treated. If no arguments are 
-specified all arguments will be treated. \vspace{10mm}
+\vspace{10mm}
 
 %--#] splitlastarg : 
 %--#[ strictrounding :
