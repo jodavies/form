@@ -6006,44 +6006,49 @@ Syntax & totensor [nosquare] [functions] [!{\tt<}vector or set{\tt>}] {\tt<}vect
 \end{tabular} \vspace{4mm}
 
 \noindent Looks for multiple\index{totensor} occurrences of the given 
-vector, either inside dotproducts, contracted with a tensor, as argument of 
-a function or as a loose vector with an index. In all occurrences in 
-which the vector has been contracted a dummy index is introduced to make 
-the contraction apparent. Then all these vectors with their indices are 
-replaced by the specified tensor with all the indices of these vectors. To 
-make this clearer:
+vector, either inside dotproducts, contracted with a tensor, as an argument of 
+a function or as a loose vector with an index. In each occurrence in 
+which the vector has been contracted, a dummy index is introduced to make 
+the contraction apparent. Then all of these vectors and their indices are 
+replaced by the specified tensor with all the indices, as in: 
 \begin{eqnarray}
     p^{\mu_1}p^{\mu_2}p^{\mu_3} & \rightarrow & t^{\mu_1\mu_2\mu_3} \nonumber
 \end{eqnarray}
-and hence
+For example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
 % WELL! (Sta_ToTensor_1)
-% TODO: the functions option needed?
 \begin{verbatim}
-   p.p1^2*f(p,p1)*p(mu)*tt(p1,p,p2,p)
+    Vector p,p1,p2;
+    Function f;
+    Index mu;
+    Tensor tt,t;
+    Local F = p.p1^2 * f(p,p1) * p(mu) * tt(p1,p,p2,p);
+    ToTensor functions, p,t;
+    Print;
+    .end
+
+  F =
+     f(N1_?,p1)*tt(p1,N2_?,p2,N3_?)*t(p1,p1,mu,N1_?,N2_?,N3_?);
 \end{verbatim}
-gives after \verb:totensor p,t;:
-\begin{verbatim}
-   f(N1_?,p1)*tt(p1,N2_?,p2,N3_?)*t(p1,p1,mu,N1_?,N2_?,N3_?)
-\end{verbatim}\vspace{4mm}
+\vspace{4mm}
 
 \noindent The options are
 
 \leftvitem{3.5cm}{nosquare\index{totensor!nosquare}}
-\rightvitem{13cm}{Dotproducts with twice the specified vector (square of 
-the vector) are not taken into account.}
+\rightvitem{13cm}{Dotproducts with twice the specified vector (the square of 
+the vector) are not considered.}
 
 \leftvitem{3.5cm}{functions\index{totensor!functions}}
 \rightvitem{13cm}{Vectors that are arguments of regular functions will also 
-be considered. By default this is not done.}
+be considered. By default, these are not considered.}
 
 \leftvitem{3.5cm}{!vector\index{totensor!"!vector}}
 \rightvitem{13cm}{Dotproducts involving the specified vector are not 
-treated.}
+considered.}
 
 \leftvitem{3.5cm}{!set\index{totensor!"!set}}
 \rightvitem{13cm}{The set should be a set of vectors. All dotproducts 
-involving a vector of the set are not treated.}\vspace{10mm}
+involving a vector in the set are not considered.}\vspace{10mm}
 
 %--#] totensor : 
 %--#[ tovector :
@@ -6063,7 +6068,24 @@ statement. The tensor is replaced by a product of the given vectors, each
 with one of the indices of the tensor as in:
 \begin{eqnarray}
     t^{\mu_1\mu_2\mu_3} & \rightarrow & p^{\mu_1}p^{\mu_2}p^{\mu_3} \nonumber
-\end{eqnarray}\vspace{10mm}
+\end{eqnarray}
+For example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_ToVector_1)
+\begin{verbatim}
+    Tensor t1,t2;
+    Vector v1,v2;
+    Index mu1,mu2,mu3;
+    Local test = t1(mu1,mu2,mu3) + t2(mu1,mu2,mu3);
+    ToVector t1,v1;
+    ToVector v2,t2;
+    Print;
+    .end
+
+   test =
+      v1(mu1)*v1(mu2)*v1(mu3) + v2(mu1)*v2(mu2)*v2(mu3);
+\end{verbatim}
+\vspace{10mm}
 
 %--#] tovector : 
 %--#[ trace4 :
