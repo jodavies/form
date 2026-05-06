@@ -30,7 +30,7 @@ runs:
           build_flint=false
           automake=false diffutils=false gcc=true git=false ruby=true wget=false
           latex=false latex2html=false
-          formlib=false color=false forcer=false mincer=false series=false hyperform=false
+          formlib=false color=false forcer=false mincer=false series=false hyperform=false fmft=false
         # NOTE: Some features and OS image combinations are not implemented.
       shell: bash
       run: |
@@ -135,9 +135,10 @@ runs:
           feat_mincer=true
           feat_series=true
           feat_hyperform=true
+          feat_fmft=true
         fi
 
-        if $feat_color || $feat_forcer || $feat_mincer || $feat_series || $feat_hyperform; then
+        if $feat_color || $feat_forcer || $feat_mincer || $feat_series || $feat_hyperform || $feat_fmft; then
           feat_formlib=true
           items=''
           $feat_color && items="$items-color-1.0.0"
@@ -145,6 +146,7 @@ runs:
           $feat_mincer && items="$items-mincer-1.0.0"
           $feat_series && items="$items-series-1.0.0"
           $feat_hyperform && items="$items-hyperform-1.0.0"
+          $feat_fmft && items="$items-fmft-1.0.0"
           echo "formlib_key=formlib$items" >>"$GITHUB_OUTPUT"
           echo "formlib_restore_keys=formlib-" >>"$GITHUB_OUTPUT"
           echo "FORMPATH=${{ github.workspace }}/formlib" >>"$GITHUB_ENV"
@@ -563,6 +565,11 @@ runs:
           cat HyperFORM/check/*.frm | sed 's/\*{{{/*--#[/' | sed 's/\*}}}/*--#]/' > formlib/hyperform.frm
           rm -f formlib/hyperform-*
           touch formlib/hyperform-1.0.0
+        fi
+        if ${{ steps.setup.outputs.fmft }} && [ ! -f formlib/fmft-1.0.0 ]; then
+          rm -f formlib/fmft*
+          wget https://raw.githubusercontent.com/apik/fmft/refs/heads/master/fmft.hh -P formlib
+          touch formlib/fmft-1.0.0
         fi
 
     - name: Copy test files from cache
