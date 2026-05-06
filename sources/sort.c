@@ -1604,7 +1604,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 				}
 			}
 #ifdef WITHFLOAT
-			else if ( AC.DefaultPrecision ) {
+			else if ( AT.aux_ != 0 ) {
 				WORD *floatstop, *sa;
 				sa = p + i;
 				sa -= ABS(sa[-1]);
