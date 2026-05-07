@@ -1190,6 +1190,7 @@ typedef struct SoRtBlOcK {
     WORD    **MasterStart;
     WORD    **MasterFill;
     WORD    **MasterStop;
+    LONG    *BlockTerms;
     int     MasterNumBlocks;
     int     MasterBlock;
     int     FillBlock;
