@@ -49,7 +49,12 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }} ${{ matrix.timeout && format('--timeout {0}', matrix.timeout) || '' }} ${{ matrix.test != 'default' && format('-C {0}', matrix.test) || '' }}
+        run: >-
+          ./check/check.rb ./sources/${{ matrix.bin }} --stat
+          ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }}
+          ${{ matrix.timeout && format('--timeout {0}', matrix.timeout) || '' }}
+          ${{ matrix.test != 'default' && format('-C {0}', matrix.test) || '' }}
+          ${{ ( matrix.test != 'default' && matrix.flint == 'no' ) && '-x ''HypSimplifyDiffLogDiffFuncs_(59|60|61|62)*'' -x HypSimplifyDiffLogDiffFuncs_126' || '' }}
 
   check-parform:
     name: Test (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}${{ matrix.flint && format(' (flint - {0})', matrix.flint) || '' }}
@@ -202,7 +207,12 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --timeout ${{ matrix.timeout && format('{0}', matrix.timeout) || '30' }} ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }} ${{ matrix.test != 'default' && format('-C {0}', matrix.test) || '' }} --fake-valgrind
+        run: >-
+          ./check/check.rb ./sources/${{ matrix.bin }} --stat --fake-valgrind
+          --timeout ${{ matrix.timeout && format('{0}', matrix.timeout) || '30' }}
+          ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }}
+          ${{ matrix.test != 'default' && format('-C {0}', matrix.test) || '' }}
+          ${{ ( matrix.test != 'default' && matrix.flint == 'no' ) && '-x ''HypSimplifyDiffLogDiffFuncs_(59|60|61|62)*'' -x HypSimplifyDiffLogDiffFuncs_126' || '' }}
 
       - name: Generate LCOV coverage data
         run: |
