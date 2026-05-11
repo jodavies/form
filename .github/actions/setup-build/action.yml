@@ -568,7 +568,7 @@ runs:
         fi
         if ${{ steps.setup.outputs.fmft }} && [ ! -f formlib/fmft-1.0.0 ]; then
           rm -f formlib/fmft*
-          wget https://raw.githubusercontent.com/apik/fmft/refs/heads/master/fmft.hh -P formlib
+          wget https://raw.githubusercontent.com/apik/fmft/refs/tags/1.0/fmft.hh -P formlib
           touch formlib/fmft-1.0.0
         fi
 

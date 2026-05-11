@@ -1,5 +1,7 @@
 * Requires the FMFT library: https://github.com/apik/fmft
 * These tests are adapted from "tests.frm" there.
+* The filename starts with "z-" such that it doesn't run in
+* the same "group" as the Forcer tests, in the CI.
 #ifndef `TEST'
   #message Use -D TEST=XXX
   #terminate
