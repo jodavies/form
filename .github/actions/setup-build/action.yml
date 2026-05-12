@@ -31,6 +31,7 @@ runs:
           automake=false diffutils=false gcc=true git=false ruby=true wget=false
           latex=false latex2html=false
           formlib=false color=false forcer=false mincer=false series=false hyperform=false fmft=false
+          mzv=false
         # NOTE: Some features and OS image combinations are not implemented.
       shell: bash
       run: |
@@ -136,9 +137,10 @@ runs:
           feat_series=true
           feat_hyperform=true
           feat_fmft=true
+          feat_mzv=true
         fi
 
-        if $feat_color || $feat_forcer || $feat_mincer || $feat_series || $feat_hyperform || $feat_fmft; then
+        if $feat_color || $feat_forcer || $feat_mincer || $feat_series || $feat_hyperform || $feat_fmft || $feat_mzv; then
           feat_formlib=true
           items=''
           $feat_color && items="$items-color-1.0.0"
@@ -147,6 +149,7 @@ runs:
           $feat_series && items="$items-series-1.0.0"
           $feat_hyperform && items="$items-hyperform-1.0.0"
           $feat_fmft && items="$items-fmft-1.0.0"
+          $feat_mzv && items="$items-mzv-1.0.0"
           echo "formlib_key=formlib$items" >>"$GITHUB_OUTPUT"
           echo "formlib_restore_keys=formlib-" >>"$GITHUB_OUTPUT"
           echo "FORMPATH=${{ github.workspace }}/formlib" >>"$GITHUB_ENV"
@@ -570,6 +573,11 @@ runs:
           rm -f formlib/fmft*
           wget https://raw.githubusercontent.com/apik/fmft/refs/tags/1.0/fmft.hh -P formlib
           touch formlib/fmft-1.0.0
+        fi
+        if ${{ steps.setup.outputs.mzv }} && [ ! -f formlib/mzv-1.0.0 ]; then
+          rm -f formlib/hexall.h
+          wget https://raw.githubusercontent.com/form-dev/form-bench/refs/heads/main/tests/mzv-dm/hexall.h -P formlib
+          touch formlib/mzv-1.0.0
         fi
 
     - name: Copy test files from cache

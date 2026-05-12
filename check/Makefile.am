@@ -36,6 +36,7 @@ EXTRA_DIST = \
 	extra/color.frm \
 	extra/forcer.frm \
 	extra/multithreaded.frm \
+	extra/mzv-dm.frm \
 	extra/z-fmft.frm \
 	features.frm \
 	fixes.frm \
