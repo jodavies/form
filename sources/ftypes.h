@@ -981,6 +981,9 @@ typedef int (*TFUN1)(UBYTE *,int);
 
 #define BUCKETDOINGTERMS 0
 #define BUCKETDOINGBRACKET 1
+
+// The minimum number of terms which should fit in a bucket
+#define BUCKETMINTERMS 2
 #endif
 
 /*
