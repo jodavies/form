@@ -276,8 +276,9 @@ WORD* flint::factorize_mpoly(PHEAD const WORD *argin, WORD *argout, const bool w
 	uint64_t output_size = 1;
 
 	// For finding the highest symbol, in FORM's lexicographic ordering
-	var_map_t var_map_inv;
-	for ( auto x: var_map ) {
+	vector<uint32_t> var_map_inv;
+	var_map_inv.resize(var_map.size());
+	for ( auto x : var_map ) {
 		var_map_inv[x.second] = x.first;
 	}
 
@@ -301,10 +302,10 @@ WORD* flint::factorize_mpoly(PHEAD const WORD *argin, WORD *argout, const bool w
 			fmpz_mpoly_get_term_exp_si((slong*)base_term_exponents.data(), base.d, (slong)j, ctx.d);
 
 			for ( size_t k = 0; k < var_map.size(); k++ ) {
-				if ( base_term_exponents[k] > 0 && ( var_map_inv.at(k) > max_var ||
-					( var_map_inv.at(k) == max_var && base_term_exponents[k] > max_pow ) ) ) {
+				if ( base_term_exponents[k] > 0 && ( var_map_inv[k] > max_var ||
+					( var_map_inv[k] == max_var && base_term_exponents[k] > max_pow ) ) ) {
 
-					max_var = var_map_inv.at(k);
+					max_var = var_map_inv[k];
 					max_pow = base_term_exponents[k];
 					base_sign[i] = fmpz_sgn(fmpz_mpoly_term_coeff_ref(base.d, j, ctx.d));
 				}
@@ -548,6 +549,7 @@ uint64_t flint::from_argument_mpoly(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 	// Search for numerical or symbol denominators to create "denpoly".
 	flint::fmpz den_coeff, tmp;
 	fmpz_set_si(den_coeff.d, 1);
+	vector<uint64_t> exponents(var_map.size(), 0);
 	vector<uint64_t> neg_exponents(var_map.size(), 0);
 
 	for ( const WORD* term = args; term < arg_stop; term += term[0] ) {
@@ -599,7 +601,7 @@ uint64_t flint::from_argument_mpoly(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 		const WORD* symbol_stop = term_stop - ABS(coeff_size);
 		const WORD* t = term;
 
-		vector<uint64_t> exponents(var_map.size(), 0);
+		fill(exponents.begin(), exponents.end(), 0);
 
 		t++; // skip over the total size entry
 		if ( t == symbol_stop ) {
@@ -1125,20 +1127,25 @@ flint::var_map_t flint::get_variables(const vector <WORD *> &es, const bool with
 		else {
 			for ( WORD i = with_arghead ? ARGHEAD:0; with_arghead ? i < e[0]:e[i] != 0; i += e[i] ) {
 				num_terms++;
-				if ( i+1 < i+e[i]-ABS(e[i+e[i]-1]) && e[i+1] != SYMBOL ) {
+				const WORD coeff_size = e[i+e[i]-1];
+				const WORD symbols_size = e[i] - ABS(coeff_size);
+				if ( e[i+1] != SYMBOL && 1 < symbols_size ) {
 					MLOCK(ErrorMessageLock);
 					MesPrint("ERROR: polynomials and polyratfuns must contain symbols only");
 					MUNLOCK(ErrorMessageLock);
 					Terminate(1);
 				}
 
-				for ( WORD j = i+3; j<i+e[i]-ABS(e[i+e[i]-1]); j += 2 ) {
-					if ( !var_map.count(e[j]) ) {
-						var_map[e[j]] = num_vars++;
-						degrees.push_back(e[j+1]);
+				for ( WORD j = i+3; j < i+symbols_size; j += 2 ) {
+					const WORD symbol = e[j];
+					const WORD degree = e[j+1];
+					auto it = var_map.find(symbol);
+					if ( it == var_map.end() ) {
+						var_map[symbol] = num_vars++;
+						degrees.push_back(degree);
 					}
 					else {
-						degrees[var_map[e[j]]] = MaX(degrees[var_map[e[j]]], e[j+1]);
+						degrees[it->second] = MaX(degrees[it->second], degree);
 					}
 				}
 			}
@@ -1797,8 +1804,9 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 	}
 
 	// Create the inverse of var_map, so we don't have to search it for each symbol written
-	var_map_t var_map_inv;
-	for ( auto x: var_map ) {
+	vector<uint32_t> var_map_inv;
+	var_map_inv.resize(var_map.size());
+	for ( auto x : var_map ) {
 		var_map_inv[x.second] = x.first;
 	}
 
@@ -2012,8 +2020,9 @@ uint64_t flint::to_argument_poly(PHEAD WORD *out, const bool with_arghead,
 	}
 
 	// Create the inverse of var_map, so we don't have to search it for each symbol written
-	var_map_t var_map_inv;
-	for ( auto x: var_map ) {
+	vector<uint32_t> var_map_inv;
+	var_map_inv.resize(var_map.size());
+	for ( auto x : var_map ) {
 		var_map_inv[x.second] = x.first;
 	}
 

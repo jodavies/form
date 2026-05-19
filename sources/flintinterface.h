@@ -65,6 +65,7 @@ extern "C" {
 // The bits of std that are needed:
 using std::cout;
 using std::endl;
+using std::fill;
 using std::map;
 using std::swap;
 using std::string;
