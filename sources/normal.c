@@ -5208,10 +5208,12 @@ int SymbolNormalize(WORD *term)
 	while ( t < tstop ) {	/* Step 1: collect symbols */
 	  if ( *t == SYMBOL && t < tstop ) {
 		for ( i = 2; i < t[1]; i += 2 ) {
+			const WORD sym = t[i];
+			const WORD pow = t[i+1];
 			bb = buffer+2;
 			while ( bb < b ) {
-				if ( bb[0] == t[i] ) {	/* add powers */
-					bb[1] += t[i+1];
+				if ( bb[0] == sym ) {	/* add powers */
+					bb[1] += pow;
 					if ( bb[1] > MAXPOWER || bb[1] < -MAXPOWER ) {
 						MLOCK(ErrorMessageLock);
 						MesPrint("Power in SymbolNormalize out of range");
@@ -5226,18 +5228,18 @@ int SymbolNormalize(WORD *term)
 					}
 					goto Nexti;
 				}
-				else if ( bb[0] > t[i] ) { /* insert it */
+				else if ( bb[0] > sym ) { /* insert it */
 					m = b;
 					while ( m > bb ) { m[1] = m[-1]; m[0] = m[-2]; m -= 2; }
 					b += 2;
-					bb[0] = t[i];
-					bb[1] = t[i+1];
+					bb[0] = sym;
+					bb[1] = pow;
 					goto Nexti;
 				}
 				bb += 2;
 			}
 			if ( bb >= b ) { /* add it to the end */
-				*b++ = t[i]; *b++ = t[i+1];
+				*b++ = sym; *b++ = pow;
 			}
 Nexti:;
 		}

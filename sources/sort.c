@@ -2798,31 +2798,38 @@ NoPoly:
 
 WORD CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 {
-	int sum1, sum2;
 	WORD *t1, *t2, *tt1, *tt2;
-	int low, high;
 	DUMMYUSE(par);
-	if ( AR.SortType == SORTLOWFIRST ) { low = 1; high = -1; }
-	else { low = -1; high = 1; }
-	t1 = term1 + 1; tt1 = term1+*term1; tt1 -= ABS(tt1[-1]); t1 += 2;
-	t2 = term2 + 1; tt2 = term2+*term2; tt2 -= ABS(tt2[-1]); t2 += 2;
-	if ( AN.polysortflag > 0 ) {
-		sum1 = 0; sum2 = 0;
-		while ( t1 < tt1 ) { sum1 += t1[1]; t1 += 2; }
-		while ( t2 < tt2 ) { sum2 += t2[1]; t2 += 2; }
-		if ( sum1 < sum2 ) return(low);
-		if ( sum1 > sum2 ) return(high);
-		t1 = term1+3; t2 = term2 + 3;
-	}
+	const int low = AR.SortType == SORTLOWFIRST ? 1 : -1;
+	const int high = - low;
+
+	t1 = term1 + 3; tt1 = term1+*term1; tt1 -= ABS(tt1[-1]);
+	t2 = term2 + 3; tt2 = term2+*term2; tt2 -= ABS(tt2[-1]);
+
+//	Currently, FORM never sets polysortflag != 0, so disable this code.
+//	if ( AN.polysortflag > 0 ) {
+//		WORD sum1, sum2;
+//		sum1 = 0; sum2 = 0;
+//		while ( t1 < tt1 ) { sum1 += t1[1]; t1 += 2; }
+//		while ( t2 < tt2 ) { sum2 += t2[1]; t2 += 2; }
+//		if ( sum1 < sum2 ) return(low);
+//		if ( sum1 > sum2 ) return(high);
+//		t1 = term1+3; t2 = term2 + 3;
+//	}
+
 	while ( t1 < tt1 && t2 < tt2 ) {
-		if ( *t1 > *t2 ) return(low);
-		if ( *t1 < *t2 ) return(high);
-		if ( t1[1] < t2[1] ) return(low);
-		if ( t1[1] > t2[1] ) return(high);
+		const WORD s1 = *t1;
+		const WORD s2 = *t2;
+		if ( s1 != s2 ) { return ( s1 > s2 ) ? low : high ; }
+		const WORD p1 = t1[1];
+		const WORD p2 = t2[1];
+		if ( p1 != p2 )  { return ( p1 < p2 ) ? low : high ; }
 		t1 += 2; t2 += 2;
 	}
+
 	if ( t1 < tt1 ) return(high);
 	if ( t2 < tt2 ) return(low);
+
 	return(0);
 }
 
