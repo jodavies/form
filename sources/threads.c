@@ -332,8 +332,8 @@ int StartAllThreads(int number)
 	MasterWaitAll();
 #ifdef WITHSORTBOTS
 	if ( numberofworkers > 2 ) {
-		numberofsortbots = numberofworkers-2;
-		for ( j = numberofworkers+1; j < 2*numberofworkers-1; j++ ) {
+		numberofsortbots = numberofworkers-1;
+		for ( j = numberofworkers+1; j < 2*numberofworkers; j++ ) {
 			if ( pthread_create(&thethread,NULL,RunSortBot,(void *)(&dummy)) )
 				goto failure;
 		}
@@ -4167,8 +4167,6 @@ int SortBotMasterMerge(void)
 	numberclaimed = 0;
 	BB = AB[AT.SortBotIn1];
 	LOCK(BB->T.SB.MasterBlockLock[BB->T.SB.MasterNumBlocks]);
-	BB = AB[AT.SortBotIn2];
-	LOCK(BB->T.SB.MasterBlockLock[BB->T.SB.MasterNumBlocks]);
 
 	MasterWaitAllSortBots();
 /*
@@ -4261,6 +4259,7 @@ int SortBotMerge(PHEAD0)
 	WORD *term1, *term2, *wp;
 	int blin1, blin2;	/* Current block numbers */
 	int error = 0;
+	WORD zero = 0;
 	WORD l1, l2, *m1, *m2, *w, r1, r2, r3, r33, r31, *tt1, ii;
 	WORD *to, *from, im, c;
 	UWORD *coef;
@@ -4286,10 +4285,14 @@ int SortBotMerge(PHEAD0)
 	which means that there will be input.
 */
 	LOCK(Bin1->T.SB.MasterBlockLock[blin1]);
-	LOCK(Bin2->T.SB.MasterBlockLock[blin2]);
-
 	term1 = Bin1->T.SB.MasterStart[blin1];
-	term2 = Bin2->T.SB.MasterStart[blin2];
+	if ( AT.identity == 0 ) {
+		term2 = &zero;
+	}
+	else {
+		LOCK(Bin2->T.SB.MasterBlockLock[blin2]);
+		term2 = Bin2->T.SB.MasterStart[blin2];
+	}
 	AT.SB.FillBlock = 1;
 /*
 	Now the main loop. Keep going until one of the two hits the end.
@@ -4704,7 +4707,9 @@ cancelled:;		/* Now we need two new terms */
 	// decrement the BlockTerms counters a final time, the marker is included
 	// in the count.
 	Bin1->T.SB.BlockTerms[blin1]--;
-	Bin2->T.SB.BlockTerms[blin2]--;
+	if ( AT.identity != 0 ) {
+		Bin2->T.SB.BlockTerms[blin2]--;
+	}
 
 	SortBotOut(BHEAD 0);
 ReturnError:;
@@ -4718,12 +4723,14 @@ ReturnError:;
 	else {
 		UNLOCK(Bin1->T.SB.MasterBlockLock[Bin1->T.SB.MasterNumBlocks]);
 	}
-	UNLOCK(Bin2->T.SB.MasterBlockLock[blin2]);
-	if ( blin2 > 1 ) {
-		UNLOCK(Bin2->T.SB.MasterBlockLock[blin2-1]);
-	}
-	else {
-		UNLOCK(Bin2->T.SB.MasterBlockLock[Bin2->T.SB.MasterNumBlocks]);
+	if ( AT.identity != 0 ) {
+		UNLOCK(Bin2->T.SB.MasterBlockLock[blin2]);
+		if ( blin2 > 1 ) {
+			UNLOCK(Bin2->T.SB.MasterBlockLock[blin2-1]);
+		}
+		else {
+			UNLOCK(Bin2->T.SB.MasterBlockLock[Bin2->T.SB.MasterNumBlocks]);
+		}
 	}
 	if ( AT.identity > 0 ) {
 		UNLOCK(AT.SB.MasterBlockLock[AT.SB.FillBlock]);
@@ -4764,7 +4771,7 @@ int IniSortBlocks(int numworkers)
 
 #ifdef WITHSORTBOTS
 	if ( numworkers > 2 ) {
-		numparts = 2*numworkers - 2;
+		numparts = 2*numworkers - 1;
 		numberofblocks = numberofblocks/2;
 	}
 	else {
@@ -4846,7 +4853,7 @@ int UpdateSortBlocks(int numworkers)
 
 #ifdef WITHSORTBOTS
 	if ( numworkers > 2 ) {
-		numparts = 2*numworkers - 2;
+		numparts = 2*numworkers - 1;
 		numberofblocks = numberofblocks/2;
 	}
 	else {
@@ -4910,7 +4917,7 @@ void DefineSortBotTree(void)
 	ALLPRIVATES *B;
 	int n, i, from;
 	if ( numberofworkers <= 2 ) return;
-	n = numberofworkers*2-2;
+	n = numberofworkers*2-1;
 	for ( i = numberofworkers+1, from = 1; i <= n; i++ ) {
 		B = AB[i];
 		AT.SortBotIn1 = from++;
@@ -4918,7 +4925,7 @@ void DefineSortBotTree(void)
 	}
 	B = AB[0];
 	AT.SortBotIn1 = from++;
-	AT.SortBotIn2 = from++;
+	AT.SortBotIn2 = from++; // TODO this now refers to a thread which doesn't exist, for the master!
 }
 
 #endif

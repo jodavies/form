@@ -6849,7 +6849,7 @@ int DoSetRandom(UBYTE *s)
 	if ( *s  == 0 ) {
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-		int id, totnum = MaX(2*AM.totalnumberofthreads-3,AM.totalnumberofthreads);
+		int id, totnum = MaX(2*AM.totalnumberofthreads-2,AM.totalnumberofthreads);
 #else
 		int id, totnum = AM.totalnumberofthreads;
 #endif

@@ -389,7 +389,7 @@ int RecalcSetups(void)
 	AM.MaxTer *= sizeof(WORD);
 #ifdef WITHSORTBOTS
 	if ( AM.totalnumberofthreads-1 > 2 ) {
-		minimumsize = (2*(AM.totalnumberofthreads-1)-2)*(AM.MaxTer+
+		minimumsize = (2*(AM.totalnumberofthreads-1)-1)*(AM.MaxTer+
 			NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS/2*AM.MaxTer);
 	}
 	else

@@ -1148,7 +1148,7 @@ void SetupMPFTables(void)
 	int id, totnum;
 	mpf_t *a;
 #ifdef WITHSORTBOTS
-	totnum = MaX(2*AM.totalnumberofthreads-3,AM.totalnumberofthreads);
+	totnum = MaX(2*AM.totalnumberofthreads-2,AM.totalnumberofthreads);
 #endif
     for ( id = 0; id < totnum; id++ ) {
 /*
@@ -1205,7 +1205,7 @@ void ClearMZVTables(void)
 		}
 	}
 #ifdef WITHSORTBOTS
-	totnum = MaX(2*AM.totalnumberofthreads-3,AM.totalnumberofthreads);
+	totnum = MaX(2*AM.totalnumberofthreads-2,AM.totalnumberofthreads);
 #endif
     for ( id = 0; id < totnum; id++ ) {
 		if ( AB[id]->T.aux_ ) { 
