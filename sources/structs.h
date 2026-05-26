@@ -1845,6 +1845,7 @@ struct C_const {
     int     OldFactArgFlag;
     int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
     int     OldGCDflag;
+    int     OldPRFSignFlag;
     int     WTimeStatsFlag;
     int     SortReallocateFlag;    /* Controls reallocation of large+small buffer at module end.
                                         0 : Off

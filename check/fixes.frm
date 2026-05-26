@@ -1295,6 +1295,8 @@ assert succeeded?
 assert result("F") =~ expr("1")
 *--#] Issue126 : 
 *--#[ Issue128 :
+* The result check here requires the old prf sign convention:
+On oldprfsign;
 * Rational arithmetic giving pi_
 CF rat;
 PolyRatFun rat;

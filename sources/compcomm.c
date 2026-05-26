@@ -135,6 +135,7 @@ static KEYWORDV onoffoptions[] = {
 	,{"oldfactarg",		&(AC.OldFactArgFlag),	1,	0}
 	,{"memdebugflag",	&(AC.MemDebugFlag),	1,	0}
 	,{"oldgcd", 		&(AC.OldGCDflag),	1,	0}
+	,{"oldprfsign", 		&(AC.OldPRFSignFlag),	1,	0}
 	,{"innertest",      &(AC.InnerTest),  1,  0}
 	,{"wtimestats",     &(AC.WTimeStatsFlag),  1,  0}
 	,{"sortreallocate",	&(AC.SortReallocateFlag), 1, 0}
