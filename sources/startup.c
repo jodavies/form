@@ -1341,6 +1341,7 @@ void StartVariables(void)
 	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = 0;
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = NEWFACTARG;
 	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = 1;
+	AC.OldPRFSignFlag = 0;
 	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = 0;
 	AM.gcNumDollars = AP.DollarList.num;
 	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;

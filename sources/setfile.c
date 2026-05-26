@@ -89,6 +89,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"oldgcd",                    ONOFFVALUE, 0, (LONG)1}
 	,{(UBYTE *)"oldorder",                  ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"oldparallelstatistics",     ONOFFVALUE, 0, (LONG)0}
+	,{(UBYTE *)"oldprfsign",                ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"parentheses",           NUMERICALVALUE, 0, (LONG)MAXPARLEVEL}
 	,{(UBYTE *)"path",                       PATHVALUE, 0, (LONG)curdirp}
 	,{(UBYTE *)"procedureextension",       STRINGVALUE, 0, (LONG)procedureextension}
@@ -708,6 +709,8 @@ int AllocSetups(void)
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"oldgcd");
 	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = sp->value;
+	sp = GetSetupPar((UBYTE *)"oldprfsign");
+	AC.OldPRFSignFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"wtimestats");
 	if ( sp->value == 2 ) sp->value = AM.ggWTimeStatsFlag;
 	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = sp->value;
