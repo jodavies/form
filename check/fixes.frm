@@ -4656,6 +4656,131 @@ Symbol x;
 .end
 assert succeeded?
 *--#] PullReq691 :
+*--#[ PullReq843_1 :
+#-
+
+#: TermsInSmall 16
+#: LargePatches 10
+#: FilePatches 16
+
+#: SubTermsInSmall 16
+#: SubLargePatches 10
+#: SubFilePatches 10
+
+Off statistics;
+Off threadstats;
+
+CFunction f,sum;
+Symbol i,j,x;
+
+#define N "{2*1776+1}"
+#define BLOWUP "{160+1}"
+
+* Generate enough terms to cause a stage sort:
+Local test = {`N'*(`N'+1)/2}
+	#do i = 1,`N'
+		- f(x^`i')
+	#enddo
+	;
+.sort
+
+* Generate enough terms in a sub-buffer sort to create a sort file:
+Argument f;
+	Identify x^i?pos_ = sum_(j,1,`BLOWUP',x^i*i/`BLOWUP');
+EndArgument;
+
+* Cancel everything:
+Identify f(x?) = x;
+Identify x^i? = 1;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] PullReq843_1 :
+*--#[ PullReq843_2 :
+#-
+
+#: TermsInSmall 16
+#: LargePatches 10
+#: FilePatches 16
+
+#: SubTermsInSmall 16
+#: SubLargePatches 10
+#: SubFilePatches 10
+
+Off statistics;
+Off threadstats;
+
+CFunction f,sum;
+Symbol i,j,x;
+
+#define N "{2*1776+1}"
+#define BLOWUP "{160+1}"
+
+* Generate enough terms to cause a stage sort:
+Local test = {`N'*(`N'+1)/2}
+	#do i = 1,`N'
+		- x^`i'
+	#enddo
+	;
+.sort
+
+* Generate enough terms in a sub-buffer sort to create a sort file:
+Term;
+	Identify x^i?pos_ = sum_(j,1,`BLOWUP',x^i*i/`BLOWUP');
+EndTerm;
+
+* Cancel everything:
+Identify x^i? = 1;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] PullReq843_2 :
+*--#[ PullReq843_3 :
+#-
+
+#: TermsInSmall 16
+#: LargePatches 10
+#: FilePatches 16
+
+#: SubTermsInSmall 16
+#: SubLargePatches 10
+#: SubFilePatches 10
+
+Off statistics;
+Off threadstats;
+
+CFunction f,sum;
+Symbol i,j,x;
+
+#define N "{2*1776+1}"
+#define BLOWUP "{160+1}"
+
+* Generate enough terms to cause a stage sort:
+Local test = {`N'*(`N'+1)/2}
+	#do i = 1,`N'
+		- f(x^`i')
+	#enddo
+	;
+.sort
+
+#$dol = 1;
+* Generate enough terms in a sub-buffer sort to create a sort file:
+Identify f(x?$dol) = 1;
+Inside $dol;
+	Identify x^i?pos_ = sum_(j,1,`BLOWUP',x^i*i/`BLOWUP');
+EndInside;
+Multiply $dol;
+
+* Cancel everything:
+Identify x^i? = 1;
+Print;
+ModuleOption local $dol;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] PullReq843_3 :
 *--#[ Issue808 :
 #do i=0,9
 Global E`i' = `i';

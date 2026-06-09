@@ -407,12 +407,7 @@ int NewSort(PHEAD0)
 	PUTZERO(S->file.POposition);
 	S->stage4 = 0;
 	if ( AR.sLevel > AN.MaxFunSorts ) AN.MaxFunSorts = AR.sLevel;
-/*
-	The next variable is for the staged sort only.
-	It should be treated differently
 
-	PUTZERO(AN.OldPosOut);
-*/
 	// Zero the SortVerbose counters:
 	S->verbComparisons = 0;
 	S->verbSBsortTerms = 0;
@@ -3493,7 +3488,7 @@ NewMerge:
 		fout = &(S->file);
 		if ( fout->handle < 0 ) {
 FileMake:
-			PUTZERO(AN.OldPosOut);
+			PUTZERO(S->OldPosOut);
 			if ( ( fhandle = CreateFile(fout->name) ) < 0 ) {
 				MLOCK(ErrorMessageLock);
 				MesPrint("Cannot create file %s",fout->name);
@@ -3552,7 +3547,7 @@ ConMer:
 		S->fPatches = S->inPatches;
 		S->inPatches = S->iPatches;
 		(S->inNum) = S->fPatchN;
-		AN.OldPosIn = AN.OldPosOut;
+		S->OldPosIn = S->OldPosOut;
 #ifdef WITHZLIB
 		m1 = S->fpincompressed;
 		S->fpincompressed = S->fpcompressed;
@@ -4121,9 +4116,9 @@ EndOfAll:
 */
 		(S->fPatchN)++;
 		S->fPatches[S->fPatchN] = position;
-		if ( ISNOTZEROPOS(AN.OldPosIn) ) {		/* We are not done */
+		if ( ISNOTZEROPOS(S->OldPosIn) ) {		/* We are not done */
 
-			SeekFile(fin->handle,&(AN.OldPosIn),SEEK_SET);
+			SeekFile(fin->handle,&(S->OldPosIn),SEEK_SET);
 /*
 			We don't need extra provisions for the zlib compression here.
 			If part of an expression has been sorted, the whole has been so.
@@ -4131,7 +4126,7 @@ EndOfAll:
 */
 			if ( (ULONG)ReadFile(fin->handle,(UBYTE *)(&(S->inNum)),(LONG)sizeof(WORD)) !=
 				sizeof(WORD)
-			  || (ULONG)ReadFile(fin->handle,(UBYTE *)(&AN.OldPosIn),(LONG)sizeof(POSITION)) !=
+			  || (ULONG)ReadFile(fin->handle,(UBYTE *)(&(S->OldPosIn)),(LONG)sizeof(POSITION)) !=
 				sizeof(POSITION)
 			  || (ULONG)ReadFile(fin->handle,(UBYTE *)S->iPatches,(LONG)((S->inNum)+1)
 					*sizeof(POSITION)) != ((S->inNum)+1)*sizeof(POSITION) ) {
@@ -4408,7 +4403,7 @@ void StageSort(FILEHANDLE *fout)
 */
 		if ( (ULONG)WriteFile(fout->handle,(UBYTE *)(&(S->fPatchN)),(LONG)sizeof(WORD)) !=
 			sizeof(WORD)
-		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(&(AN.OldPosOut)),(LONG)sizeof(POSITION)) !=
+		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(&(S->OldPosOut)),(LONG)sizeof(POSITION)) !=
 			sizeof(POSITION)
 		  || (ULONG)WriteFile(fout->handle,(UBYTE *)(S->fPatches),(LONG)(S->fPatchN+1)
 					*sizeof(POSITION)) != (S->fPatchN+1)*sizeof(POSITION) ) {
@@ -4417,7 +4412,7 @@ void StageSort(FILEHANDLE *fout)
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-		AN.OldPosOut = position;
+		S->OldPosOut = position;
 		fout->filesize = position;
 		ADDPOS(fout->filesize,(S->fPatchN+2)*sizeof(POSITION) + sizeof(WORD));
 		fout->POposition = fout->filesize;

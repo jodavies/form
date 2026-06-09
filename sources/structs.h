@@ -1114,6 +1114,8 @@ typedef struct PaRtI {
 typedef struct sOrT {
     FILEHANDLE file;            /* The own sort file */
     POSITION SizeInFile[3];     /* Sizes in the various files */
+    POSITION OldPosIn;          /* Sort file fill positions */
+    POSITION OldPosOut;
     WORD *lBuffer;              /* The large buffer */
     WORD *lTop;                 /* End of the large buffer */
     WORD *lFill;                /* The filling point of the large buffer */
@@ -2198,8 +2200,6 @@ struct T_const {
  */
 
 struct N_const {
-    POSITION OldPosIn;             /* (R) Used in sort. */
-    POSITION OldPosOut;            /* (R) Used in sort */
 	POSITION theposition;          /* () Used in index.c */
     WORD    *EndNest;              /* (R) Nesting of function levels etc. */
     WORD    *Frozen;               /* (R) Bracket info */
