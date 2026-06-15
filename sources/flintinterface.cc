@@ -641,8 +641,10 @@ uint64_t flint::from_argument_mpoly(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 		}
 
 	}
-	// And now sort the mpoly
-	fmpz_mpoly_sort_terms(poly, ctx);
+	// And now sort the mpoly if necessary:
+	if ( ! fmpz_mpoly_is_canonical(poly, ctx) ) {
+		fmpz_mpoly_sort_terms(poly, ctx);
+	}
 
 	return arg_size;
 }
