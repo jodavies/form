@@ -44,14 +44,14 @@
 
 #else  /* HAVE_CONFIG_H */
 
-#define MAJORVERSION 5
-#define MINORVERSION 0
-#define PATCHVERSION 0
+#define MAJORVERSION X
+#define MINORVERSION Y
+#define PATCHVERSION Z
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "27-jan-2026"
+#define PRODUCTIONDATE "DD-MMM-YYYY"
 #endif
 
 #undef BETAVERSION
