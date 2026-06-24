@@ -46,12 +46,12 @@
 
 #define MAJORVERSION 5
 #define MINORVERSION 0
-#define PATCHVERSION 0
+#define PATCHVERSION 1
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "27-jan-2026"
+#define PRODUCTIONDATE "24-jun-2026"
 #endif
 
 #undef BETAVERSION
