@@ -4817,6 +4817,82 @@ ModuleOption local $dol;
 assert succeeded?
 assert result("test") =~ expr("0")
 *--#] PullReq843_3 :
+*--#[ PullReq860_1 :
+#-
+
+CFunction f;
+Symbol x;
+
+Local test1 = f(-x+2);
+Local test2 = f(-2*x+2);
+Local test3 = f(x-2);
+Local test4 = f(2*x-2);
+.sort
+
+On highfirst;
+FactArg f;
+
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("f(-1,x - 2)")
+assert result("test2") =~ expr("f(-2,x - 1)")
+assert result("test3") =~ expr("f(x - 2)")
+assert result("test4") =~ expr("f(2,x - 1)")
+*--#] PullReq860_1 :
+*--#[ PullReq860_2 :
+#-
+
+CFunction f;
+Symbol x;
+
+Local test1 = f(-x+2);
+Local test2 = f(-2*x+2);
+Local test3 = f(x-2);
+Local test4 = f(2*x-2);
+.sort
+
+*On highfirst;
+FactArg f;
+
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("f(-1, - 2 + x)")
+assert result("test2") =~ expr("f(-2, - 1 + x)")
+assert result("test3") =~ expr("f( - 2 + x)")
+assert result("test4") =~ expr("f(2, - 1 + x)")
+*--#] PullReq860_2 :
+*--#[ PullReq860_3 :
+#-
+
+CFunction f,g,tag;
+Symbol x;
+
+Local test =
+	#do i = -3,3
+	#do j = -3,3
+		+ f(`i'*x+`j')*tag(`i',`j')
+		- g(`i'*x+`j')*tag(`i',`j')
+	#enddo
+	#enddo
+	;
+.sort
+
+On highfirst;
+FactArg f;
+Transform f mulargs(1,last);
+
+* Trigger re-sort of g into highfirst order
+Argument g;
+EndArgument;
+Identify g(x?) = f(x);
+
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] PullReq860_3 :
 *--#[ Issue808 :
 #do i=0,9
 Global E`i' = `i';
