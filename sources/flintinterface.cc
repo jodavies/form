@@ -414,6 +414,17 @@ WORD* flint::factorize_poly(PHEAD const WORD *argin, WORD *argout, const bool wi
 		// Initially 1, for the final trailing 0.
 		uint64_t output_size = 1;
 
+		// If the overall constant is not 1, make an fmpz_poly out of it and include it. Typically
+		// this does not happen: FORM takes out the overall factor. But we do sometimes have this
+		// case, for eg awkward interactions with "On highfirst;" and non-dirty arguments.
+		if ( ! fmpz_is_one(&(arg_fac.d)->c) ) {
+			flint::poly overall_factor;
+			fmpz_poly_set_fmpz(overall_factor.d, &(arg_fac.d)->c);
+			const bool write = false;
+			output_size += (uint64_t)flint::to_argument_poly(BHEAD NULL, with_arghead, is_fun_arg,
+				write, 0, overall_factor.d, var_map);
+		}
+
 		for ( long i = 0; i < num_factors; i++ ) {
 			fmpz_poly_struct* base = (arg_fac.d)->p + i;
 			
@@ -430,6 +441,17 @@ WORD* flint::factorize_poly(PHEAD const WORD *argin, WORD *argout, const bool wi
 	}
 
 	WORD* old_argout = argout;
+
+	// If the overall constant is not 1, make an fmpz_poly out of it and include it. Typically
+	// this does not happen: FORM takes out the overall factor. But we do sometimes have this
+	// case, for eg awkward interactions with "On highfirst;" and non-dirty arguments.
+	if ( ! fmpz_is_one(&(arg_fac.d)->c) ) {
+		flint::poly overall_factor;
+		fmpz_poly_set_fmpz(overall_factor.d, &(arg_fac.d)->c);
+		const bool write = true;
+		argout += (uint64_t)flint::to_argument_poly(BHEAD argout, with_arghead, is_fun_arg, write,
+			argout-old_argout, overall_factor.d, var_map);
+	}
 
 	for ( long i = 0; i < num_factors; i++ ) {
 		fmpz_poly_struct* base = (arg_fac.d)->p + i;
