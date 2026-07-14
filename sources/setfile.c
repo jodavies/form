@@ -444,10 +444,19 @@ int AllocSetups(void)
 */
 	sp = GetSetupPar((UBYTE *)"maxtermsize");
 	AM.MaxTer = sp->value*sizeof(WORD);
-	if ( AM.MaxTer < 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = 200*(LONG)(sizeof(WORD));
-	if ( AM.MaxTer > MAXPOSITIVE - 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = MAXPOSITIVE - 200*(LONG)(sizeof(WORD));
-	AM.MaxTer /= (LONG)sizeof(WORD);
-	AM.MaxTer *= (LONG)sizeof(WORD);
+	// Currently, this logic is repeated in RecalcSetups:
+	if ( AM.MaxTer < 200*(LONG)(sizeof(WORD)) ) {
+		const LONG newSizeWords = 200;
+		MesPrint("Warning: MaxTermSize of %l words is too small. Re-set to %l.",
+			AM.MaxTer/sizeof(WORD), newSizeWords);
+		AM.MaxTer = newSizeWords*(LONG)(sizeof(WORD));
+	}
+	if ( AM.MaxTer > MAXPOSITIVE - 200*(LONG)(sizeof(WORD)) ) {
+		const LONG newSizeWords = (MAXPOSITIVE - 200*(LONG)(sizeof(WORD)))/sizeof(WORD);
+		MesPrint("Warning: MaxTermSize of %l words is too large. Re-set to %l.",
+			AM.MaxTer/sizeof(WORD), newSizeWords);
+		AM.MaxTer = newSizeWords*(LONG)(sizeof(WORD));
+	}
 /*
 	Allocate workspace.
 */
