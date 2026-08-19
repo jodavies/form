@@ -2395,13 +2395,13 @@ Local test3 = (1+x)^1000;
 assert succeeded?
 assert stdout =~ exact_pattern("Generated terms =        500  ( <1 K  )")
 assert stdout =~ exact_pattern("Terms in output =        500  ( <1 K  )")
-assert stdout =~ exact_pattern("Bytes used      =      54420  ( 54 KiB)")
+assert stdout =~ exact_pattern("Bytes used      =      54420  ( 53 KiB)")
 assert stdout =~ exact_pattern("Generated terms =        501  (  1 K  )")
 assert stdout =~ exact_pattern("Terms in output =        501  (  1 K  )")
-assert stdout =~ exact_pattern("Bytes used      =      54644  ( 55 KiB)")
+assert stdout =~ exact_pattern("Bytes used      =      54644  ( 53 KiB)")
 assert stdout =~ exact_pattern("Generated terms =       1001  (  1 K  )")
 assert stdout =~ exact_pattern("Terms in output =       1001  (  1 K  )")
-assert stdout =~ exact_pattern("Bytes used      =     199172  (199 KiB)")
+assert stdout =~ exact_pattern("Bytes used      =     199172  (195 KiB)")
 *--#] humanstats :
 *--#[ ModuleOption_dollar_order :
 $a = 0;

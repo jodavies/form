@@ -86,10 +86,12 @@ char *toterms[] = { "   ", " >>", "-->" };
 #define HUMANSUFFSTRLEN 4
 const char humanTermsSuffix[HUMANSUFFLEN][HUMANSUFFSTRLEN] = {"K  ","M  ","B  ","T  "};
 const char humanBytesSuffix[HUMANSUFFLEN][HUMANSUFFSTRLEN] = {"KiB","MiB","GiB","TiB"};
-void HumanString(char* string, float input, const char suffix[HUMANSUFFLEN][HUMANSUFFSTRLEN]) {
+void HumanString(char* string, float input, const float scale,
+	const char suffix[HUMANSUFFLEN][HUMANSUFFSTRLEN]) {
+
 	int ind = -1;
-	while (ind < 0 || (input >= 1000.0f && ind+1 < HUMANSUFFLEN) ) {
-		input /= 1000.0f;
+	while (ind < 0 || (input >= scale && ind+1 < HUMANSUFFLEN) ) {
+		input /= scale;
 		ind++;
 	}
 	if ( input <= 0.5f ) {
@@ -167,12 +169,12 @@ void WriteStats(POSITION *plspace, WORD par, WORD checkLogType)
 		char humanComparisonsText[HUMANSTRLEN] = "";
 		char humanMaxTermSizeText[HUMANSTRLEN] = "";
 		if ( AC.HumanStatsFlag ) {
-			HumanString(humanGenTermsText, (float)(S->GenTerms), humanTermsSuffix);
-			HumanString(humanTermsLeftText, (float)(S->TermsLeft), humanTermsSuffix);
-			HumanString(humanBytesText, (float)(BASEPOSITION(*plspace)), humanBytesSuffix);
-			HumanString(humanUnsortedBytesText, (float)(S->verbUnsortedSize), humanBytesSuffix);
-			HumanString(humanComparisonsText, (float)(S->verbComparisons), humanTermsSuffix);
-			HumanString(humanMaxTermSizeText, (float)(S->verbMaxTermSize), humanTermsSuffix);
+			HumanString(humanGenTermsText, (float)(S->GenTerms), 1000.0f, humanTermsSuffix);
+			HumanString(humanTermsLeftText, (float)(S->TermsLeft), 1000.0f, humanTermsSuffix);
+			HumanString(humanBytesText, (float)(BASEPOSITION(*plspace)), 1024.0f, humanBytesSuffix);
+			HumanString(humanUnsortedBytesText, (float)(S->verbUnsortedSize), 1024.0f, humanBytesSuffix);
+			HumanString(humanComparisonsText, (float)(S->verbComparisons), 1000.0f, humanTermsSuffix);
+			HumanString(humanMaxTermSizeText, (float)(S->verbMaxTermSize), 1000.0f, humanTermsSuffix);
 		}
 
 		MLOCK(ErrorMessageLock);
