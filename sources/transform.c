@@ -1614,7 +1614,7 @@ int RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 			If we have f(a)*replace_(xarg_,b(xarg_)) this gives f(b(a))
 			In testing the wildcard we have CheckWild do the work.
 			This means that we have to set op the special variables
-			(AT.WildMask,AN.WildValue,AN.NumWild)
+			(AT.WildMask,AN.WildValue,AN.NumWild,AN.WildStop)
 
 */
 			wild[1] = 4;
@@ -1626,6 +1626,7 @@ int RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 					wild[2] = WILDARGSYMBOL;
 					wild[3] = 0;
 					AN.WildValue = wild;
+					AN.WildStop = wild + wild[1];
 					AT.WildMask = &mask;
 					mask = 0;
 					AN.NumWild = 1;
@@ -1702,6 +1703,7 @@ getthisone:;
 					wild[2] = WILDARGINDEX+AM.OffsetIndex;
 					wild[3] = 0;
 					AN.WildValue = wild;
+					AN.WildStop = wild + wild[1];
 					AT.WildMask = &mask;
 					mask = 0;
 					AN.NumWild = 1;
@@ -1723,6 +1725,7 @@ getthisone:;
 					wild[2] = WILDARGVECTOR+AM.OffsetVector;
 					wild[3] = 0;
 					AN.WildValue = wild;
+					AN.WildStop = wild + wild[1];
 					AT.WildMask = &mask;
 					mask = 0;
 					AN.NumWild = 1;
@@ -1750,6 +1753,7 @@ getthisone:;
 					wild[2] = WILDARGFUN;
 					wild[3] = 0;
 					AN.WildValue = wild;
+					AN.WildStop = wild + wild[1];
 					AT.WildMask = &mask;
 					mask = 0;
 					AN.NumWild = 1;
