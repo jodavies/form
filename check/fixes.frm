@@ -4371,12 +4371,12 @@ assert result("F4") =~ expr("f(g(y))")
 assert result("F5") =~ expr("f1(f2(f3(0)))")
 assert result("F6") =~ expr("f(g(0))")
 *--#] Issue741_1 :
-*--#[ Issue741_2 :
+*--#[ Issue741_2a :
 #-
 Off Statistics;
 
 CFunction f1,...,f3;
-Symbol x,y,z;
+Symbol w,x,y,z,a1,a2,a3;
 Vector k1,k2,p1,p2,p3;
 
 #procedure genterms(a1,a2,a3)
@@ -4406,12 +4406,15 @@ Vector k1,k2,p1,p2,p3;
 	+ f1(`a1'+`a2'*f2(`a3'))
 	+ f1((`a1'+`a2'*f2(`a3'))^2)
 
+	+ f1(`a1',`a2',`a3')
+	+ f1(`a1',f2(`a2',`a3'))
+	+ f1(f2(`a1',`a2'),`a3')
 	+ f1(`a1',f2(`a2'),f2(f3(`a3')))
 	+ f1(f2(`a2'),`a1',f2(f3(`a3')))
 	+ f1(f2(f3(`a3')),f2(`a2'),`a1')
 #endprocedure
 
-#define ARGS "10"
+#define ARGS "12"
 Local arg0 = 1;
 Local arg1 = x;
 Local arg2 = -x;
@@ -4423,6 +4426,8 @@ Local arg7 = -k1.k1;
 Local arg8 = p1-p2;
 Local arg9 = p1-p3;
 Local arg10 = z^5;
+Local arg11 = w^5;
+Local arg12 = (a1+a2+a3)^2;
 
 * Generate a large number of nested functions of various arguments.
 * Then make replacements of the the arguments. We generate duplicates
@@ -4445,6 +4450,8 @@ Multiply replace_(k1,4321*k2);
 Multiply replace_(p1,p2);
 Multiply replace_(p3,k1-k2);
 Multiply replace_(z,1000000);
+Multiply replace_(w,(x+y)^2);
+Multiply replace_(a1,-a2-a3);
 .sort
 
 * The "arg" expressions have had their content replaced directly, so subtract
@@ -4464,7 +4471,108 @@ Print diff;
 #require wordsize == 4
 assert succeeded?
 assert result("diff") =~ expr("0")
-*--#] Issue741_2 :
+*--#] Issue741_2a :
+*--#[ Issue741_2b :
+#-
+Off Statistics;
+
+CFunction f1,...,f3;
+Symbol w,x,y,z,a1,a2,a3;
+Vector k1,k2,p1,p2,p3;
+
+#procedure genterms(a1,a2,a3)
+	+ f1(`a1')
+	+ f1(f2(`a2'))
+	+ f1(f2(f3(`a3')))
+	+ f1(f2(f3(`a3'))^2)
+
+	+ f1(`a1')*f2(`a2')
+	+ f1(`a1')*f2(f3(`a2'))
+
+	+ f1(`a1'+f2(`a2'))
+	+ f1(`a1'+f2(`a2'+f3(`a3')))
+
+	+ f1(`a1'*f2(`a2'))
+	+ f1(`a1'*f2(`a2'*f3(`a3')))
+
+	+ f1(f2(`a1') + f3(`a3'))
+	+ f1(f2(`a1') * f3(`a3'))
+	+ f1((f2(`a1') + f3(`a3'))^2)
+	+ f1((f2(`a1') * f3(`a3'))^2)
+
+	+ f1(`a1')^2
+	+ f1(`a1'+f2(`a2')^2)^2
+	+ f1(`a1'+f2(`a2'+f3(`a3')^2)^2)^2
+
+	+ f1(`a1'+`a2'*f2(`a3'))
+	+ f1((`a1'+`a2'*f2(`a3'))^2)
+
+	+ f1(`a1',`a2',`a3')
+	+ f1(`a1',f2(`a2',`a3'))
+	+ f1(f2(`a1',`a2'),`a3')
+	+ f1(`a1',f2(`a2'),f2(f3(`a3')))
+	+ f1(f2(`a2'),`a1',f2(f3(`a3')))
+	+ f1(f2(f3(`a3')),f2(`a2'),`a1')
+#endprocedure
+
+#define ARGS "12"
+Local arg0 = 1;
+Local arg1 = x;
+Local arg2 = -x;
+Local arg3 = y;
+Local arg4 = -y;
+Local arg5 = x+y;
+Local arg6 = k1.k1;
+Local arg7 = -k1.k1;
+Local arg8 = p1-p2;
+Local arg9 = p1-p3;
+Local arg10 = z^5;
+Local arg11 = w^5;
+Local arg12 = (a1+a2+a3)^2;
+
+* Generate a large number of nested functions of various arguments.
+* Then make replacements of the the arguments. We generate duplicates
+* of the same terms a lot, but they merge quickly in the sort.
+Local test =
+	#do a1 = 0,`ARGS'
+	#do a2 = 0,`ARGS'
+	#do a3 = 0,`ARGS'
+		#call genterms((arg`a1'),(arg`a2'),(arg`a3'))
+	#enddo
+	#enddo
+	#enddo
+	;
+.sort
+
+#message Make replacements:
+Multiply replace_(x,0
+	,y,12345
+	,k1,4321*k2
+	,p1,p2
+	,p3,k1-k2
+	,z,1000000
+	,w,(x+y)^2
+	,a1,-a2-a3);
+.sort
+
+* The "arg" expressions have had their content replaced directly, so subtract
+* the same set of terms, with the final arguments already in place:
+Local diff = test - (
+	#do a1 = 0,`ARGS'
+	#do a2 = 0,`ARGS'
+	#do a3 = 0,`ARGS'
+		#call genterms((arg`a1'),(arg`a2'),(arg`a3'))
+	#enddo
+	#enddo
+	#enddo
+	);
+
+Print diff;
+.end
+#require wordsize == 4
+assert succeeded?
+assert result("diff") =~ expr("0")
+*--#] Issue741_2b :
 *--#[ Issue741_3a :
 #-
 #: FunctionLevels 31
@@ -4542,6 +4650,22 @@ Print diff;
 .end
 assert compile_error?("FunctionLevels limit (30) reached. Increase in setup.")
 *--#] Issue741_3b :
+*--#[ Issue741_4 :
+Symbol w,x,y,z;
+CFunction f,g;
+Local F1 = -5/3*f(g(1/(x^5+y),x-y),z)*replace_(x,100000,y,w);
+Local F2 = -5/3*f(exp_(x+y,5),z);
+Local F3 = f(exp_(5+x-(w-y),5+x^2-(w-y)^2)) - f(exp_(5,5));
+Local F4 = f(1/((5+x^2-(w-y)^2)/(5+x^2-(w-y)^2))) - f(1/((5)/(5)));
+Multiply replace_(x,w-y);
+Print;
+.end
+assert succeeded?
+assert result("F1") =~ expr("-5/3*f(g(1/(10000000000000000000000000+w),100000-w),z)")
+assert result("F2") =~ expr("-5/3*f(w^5,z)")
+assert result("F3") =~ expr("0")
+assert result("F4") =~ expr("0")
+*--#] Issue741_4 :
 *--#[ Issue747_1 :
 #-
 Off Statistics;
