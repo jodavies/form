@@ -697,7 +697,8 @@ WORD TestSub(PHEAD WORD *term, WORD level)
 	WORD *stop, *t1, *t2, funnum, wilds, tbufnum, stilldirty = 0;
 	NESTING n;
 	CBUF *C = cbuf+AT.ebufnum;
-	LONG isp, i;
+	LONG isp, i, sizedelta, propagated, oldargsize, oldfunsize, oldtermsize;
+	WORD *oldendnest;
 	TABLES T;
 	COMPARE oldcompareroutine = (COMPARE)(AR.CompareRoutine);
 	WORD oldsorttype = AR.SortType;
@@ -1617,13 +1618,31 @@ DoSpec:
 							/* Sum over terms */
 							AT.RecFlag++;
 							i = *t;
+							oldargsize  = *t2;
+							oldfunsize  = t1[1];
+							oldtermsize = *term;
+							oldendnest  = AN.EndNest;
 							AN.subsubveto = 1;
-							if ( ( retvalue = TestSub(BHEAD t,level) ) != 0 ) {
-								if ( i > *t ) {
+							retvalue = TestSub(BHEAD t,level);
+							if ( retvalue != 0 ) {
+								sizedelta = *t - i;
+								// A deeper argument may already have been resized by Normalising
+								// in the WorkSpace; in this case the size change has already been
+								// propagated through the whole nesting stack (see the Normalize +
+								// Sort code below).
+								// Remove the size shift that was already propagated, before dealing
+								// with any remaining size change:
+								propagated = *t2 - oldargsize;
+								if ( ( t1[1] - oldfunsize == propagated )
+									&& ( *term - oldtermsize == propagated )
+									&& ( (LONG)(AN.EndNest - oldendnest) == propagated ) ) {
+									sizedelta -= propagated;
+								}
+								if ( sizedelta < 0 ) {
 									// The term became shorter. Fix the sizes at the current
 									// level of nesting. Outer levels will each be fixed as
 									// we leave the TestSub recursion.
-									i -= *t;
+									i = - sizedelta;
 									*t2 -= i;
 									t1[1] -= i;
 									t += *t;
@@ -1632,13 +1651,13 @@ DoSpec:
 									while ( r < m ) *t++ = *r++;
 									*term -= i;
 								}
-								else if ( i < *t ) {
+								else if ( sizedelta > 0 ) {
 /* INTERNAL_ERROR_EXCL_START */
-									// The term became longer. Can this ever happen? The code
-									// here has never handled the case where TestSub increases
-									// the size of the term.
+									// The term became longer, in a way which was not already
+									// propagated through the nesting stack. Can this ever happen?
+									// The code here has never handled this case.
 									MLOCK(ErrorMessageLock);
-									MesPrint("!>TestSub: term size increased during recursion.");
+									MesPrint("!>TestSub: unexpected term size increase during recursion.");
 									MUNLOCK(ErrorMessageLock);
 									Terminate(-1);
 /* INTERNAL_ERROR_EXCL_STOP */
