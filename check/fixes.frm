@@ -4186,6 +4186,18 @@ Evaluate 1;
 #pend_if wordsize == 2
 assert compile_error?("should be a built in function that can be evaluated numerically.")
 *--#] Issue664 :
+*--#[ Issue665 :
+CFunction f,g;
+Vector p1,p2;
+Local test = p1*p2 + f(p1*p2) + p1*f(p2);
+Identify p1?*p2? = g(1,p1,p2);
+Identify f(p1?*p2?) = g(2,p1,p2);
+Identify p1?*f(p2?) = g(3,p1,p2);
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("g(1,p1,p2) + g(2,p1,p2) + g(3,p1,p2)")
+*--#] Issue665 :
 *--#[ Issue666 :
 #-
 #$repcount = 1;

@@ -1032,7 +1032,28 @@ SubsL5:								fill += nq;
 				if ( *m == *t ) {
 					m += 1; t += 1;
 				}
-				else if ( *m >= (AM.OffsetIndex+WILDOFFSET) ) {
+				else if ( ( *m >= (AM.OffsetVector+WILDOFFSET) )
+				&& ( *m < (AM.OffsetVector+2*WILDOFFSET) ) ) {
+					while ( t < xstop ) *fill++ = *t++;
+					nq = WORDDIF(fill,subterm);
+					fill = subterm;
+					do {
+						if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*fill,&newval3) )
+							break;
+						fill++;
+						nq--;
+					} while ( nq > 0 );
+					if ( nq <= 0 ) {
+						m++;
+						continue;
+					}
+					nq--;
+					q = fill + 1;
+					if ( nq > 0 ) { NCOPY(fill,q,nq); }
+					m++;
+				}
+				else if ( ( *m >= (AM.OffsetIndex+WILDOFFSET) )
+				&& ( *m < (AM.OffsetIndex+2*WILDOFFSET) ) ) {
 					while ( t < xstop ) *fill++ = *t++;
 					nq = WORDDIF(fill, subterm);
 					fill = subterm;
