@@ -518,8 +518,11 @@ void TestDrop(void)
 				ClearBracketIndex(j);
 				e->bracketinfo = e->newbracketinfo; e->newbracketinfo = 0;
 				if ( e->replace >= 0 ) {
-					Expressions[e->replace].replace = REGULAREXPRESSION;
-					AC.exprnames->namenode[e->node].number = e->replace;
+					WORD replacement = e->replace;
+					while ( Expressions[replacement].replace >= 0 )
+						replacement = Expressions[replacement].replace;
+					Expressions[replacement].replace = REGULAREXPRESSION;
+					AC.exprnames->namenode[e->node].number = replacement;
 					e->replace = REGULAREXPRESSION;
 				}
 				else {
