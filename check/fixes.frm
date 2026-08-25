@@ -4575,6 +4575,18 @@ assert stdout =~ exact_pattern(<<'EOF')
 sumpow: 129
 EOF
 *--#] Issue796c : 
+*--#[ Issue808 :
+#do i=0,9
+Global E`i' = `i';
+#enddo
+.store
+#do i=1,80
+Global F1 = E{`i' % 10}*E2*E3*E4;
+#enddo
+.sort
+.end
+assert succeeded?
+*--#] Issue808 :
 *--#[ Issue833_1 : 
 #-
 #: TermsInSmall 1024
@@ -4761,6 +4773,86 @@ assert result("test4") =~ expr("16384*f(4)^4")
 assert result("htest4") =~ expr("16*g(4)^8")
 assert result("ihtest4") =~ expr("4096*h(4)^12")
 *--#] Issue856 : 
+*--#[ Issue882_1 :
+Off statistics;
+Symbol x;
+Local test = 1+x;
+Local test = 1+2*x;
+Local test = 1+3*x;
+.sort
+Identify x=x^2;
+.sort
+Hide test;
+.sort
+Print;
+.end
+assert succeeded?
+assert result("test") !~ expr("1+2*x^2")
+*--#] Issue882_1 :
+*--#[ Issue882_2 :
+Off statistics;
+Symbol x;
+Local test = 1+x;
+Local test = 1+2*x;
+Local test = 1+3*x;
+.sort
+Print;
+.end
+assert succeeded?
+assert result("test") !~ expr("1+x")
+assert result("test") !~ expr("1+2*x")
+assert result("test") =~ expr("1+3*x")
+*--#] Issue882_2 :
+*--#[ Issue882_3 :
+Off statistics;
+Symbol x;
+Local test = 1+x;
+Local test = 2*test;
+.sort
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("2+2*x")
+*--#] Issue882_3 :
+*--#[ Issue882_4 :
+Off statistics;
+Symbol x;
+Local test = 1+x;
+.sort
+Local test = 2*test;
+.sort
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("2+2*x")
+*--#] Issue882_4 :
+*--#[ Issue882_5 :
+Off statistics;
+Symbol x;
+Local test = 1+x;
+.sort
+Local test = 2*test;
+Local test = 3*test;
+.sort
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("3+3*x")
+*--#] Issue882_5 :
+*--#[ Issue882_6 :
+Off statistics;
+Symbol x;
+Local test = 1+x;
+.sort
+Local test = 2*test;
+Local test = 3*test;
+Local test = 4*test;
+.sort
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("4+4*x")
+*--#] Issue882_6 :
 *--#[ PullReq535 :
 * This test requires more than the specified 50K workspace.
 #:maxtermsize 200
@@ -5129,15 +5221,3 @@ Print;
 assert succeeded?
 assert result("test") =~ expr("0")
 *--#] PullReq860_3 :
-*--#[ Issue808 :
-#do i=0,9
-Global E`i' = `i';
-#enddo
-.store
-#do i=1,80
-Global F1 = E{`i' % 10}*E2*E3*E4;
-#enddo
-.sort
-.end
-assert succeeded?
-*--#] Issue808 :

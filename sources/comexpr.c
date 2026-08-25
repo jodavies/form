@@ -98,7 +98,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 	GETIDENTITY
 	int error = 0;
 	UBYTE *p, *q, c;
-	WORD *w, i, j = 0, c1, c2, *OldWork = AT.WorkPointer, osize;
+	WORD *w, i, j = 0, c1, c2, c3, *OldWork = AT.WorkPointer, osize;
 	WORD jold = 0;
 	POSITION pos;
 	while ( *inp == ',' ) inp++;
@@ -132,8 +132,11 @@ int DoExpr(UBYTE *inp, int type, int par)
 							StrCmp(inp,AO.OptimizeResult.nameofexpr) == 0 ) {
 							ClearOptimize();
 						}
-						if ( Expressions[c2].status != DROPPEDEXPRESSION ) {
-							w = &(Expressions[c2].status);
+						c3 = c2;
+						while ( Expressions[c3].replace >= 0 )
+							c3 = Expressions[c3].replace;
+						if ( Expressions[c3].status != DROPPEDEXPRESSION ) {
+							w = &(Expressions[c3].status);
 							if ( *w == LOCALEXPRESSION || *w == SKIPLEXPRESSION )
 								*w = DROPLEXPRESSION;
 							else if ( *w == GLOBALEXPRESSION || *w == SKIPGEXPRESSION )
@@ -143,10 +146,10 @@ int DoExpr(UBYTE *inp, int type, int par)
 							else if ( *w == HIDDENGEXPRESSION )
 								*w = DROPHGEXPRESSION;
 						}
-						AC.TransEname = Expressions[c2].name;
+						AC.TransEname = Expressions[c3].name;
 						j = EntVar(CEXPRESSION,0,type,0,0,0);
-						Expressions[j].node = Expressions[c2].node;
-						Expressions[c2].replace = j;
+						Expressions[j].node = Expressions[c3].node;
+						Expressions[c3].replace = j;
 					}
 				}
 				else {
