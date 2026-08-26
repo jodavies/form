@@ -1497,8 +1497,10 @@ void WriteArgument(WORD *t)
 /*		StrCopy(VARNAME(functions,-*t-FUNCTION),Out); */
 	}
 	else {
-		MesPrint("Illegal function argument while writing");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Illegal function argument while writing");
 		goto CleanUp;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	TokenToLine(buffer);
 CleanUp:
@@ -1828,7 +1830,9 @@ int WriteSubTerm(WORD *sterm, WORD first)
 				if ( first ) TokenToLine((UBYTE *)" ");
 			}
 			if ( *sterm < FUNCTION ) {
-			return(MesPrint("Illegal subterm while writing"));
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Illegal subterm while writing"));
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			if ( !first ) MultiplyToLine();
 			first = 1;
@@ -2787,8 +2791,10 @@ int WriteOne(UBYTE *name, int alreadyinline, int nosemi, WORD plus)
 	if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
 			 AO.OutSkip = 6;
 	if ( GetTerm(BHEAD AO.termbuf) <= 0 ) {
-		MesPrint("@ReadError in expression %s",name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>ReadError in expression %s",name);
 		goto AboWrite;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*
 	PutPreVar(AM.oldnumextrasymbols,

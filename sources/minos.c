@@ -296,9 +296,11 @@ int ReadIndex(DBASE *d)
 */
 	if ( d->info.numberofindexblocks <= 0 ) return(0);
 	if ( sizeof(INDEXBLOCK)*d->info.numberofindexblocks > MAXINDEXSIZE ) {
-		MesPrint("We need more than %ld bytes for the index.\n",MAXINDEXSIZE);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>We need more than %ld bytes for the index.\n",MAXINDEXSIZE);
 		MesPrint("The file %s may not be a proper database\n",d->name);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	size = sizeof(INDEXBLOCK *)*d->info.numberofindexblocks;
 	if ( ( ib = (INDEXBLOCK **)Malloc1(size,"tb,index") ) == 0 ) return(-1);
@@ -328,19 +330,23 @@ int ReadIndex(DBASE *d)
 	for ( i = d->info.numberofindexblocks - 1; i >= 0; i-- ) {
 		fseek(d->handle,position,SEEK_SET);
 		if ( minosread(d->handle,(char *)(&scratchblock),sizeof(INDEXBLOCK)) ) {
-			MesPrint("Error while reading file %s\n",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while reading file %s\n",d->name);
 thisiswrong:
 			for ( i = 0; i < d->info.numberofnamesblocks; i++ ) M_free(ina[i],"index names block");
 			M_free(ina,"tb,indexnames");
 			for ( i = 0; i < d->info.numberofindexblocks; i++ ) M_free(ib[i],"tb,indexblock");
 			M_free(ib,"tb,index");
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		convertblock(&scratchblock,ib[i],FROMDISK);
 		if ( ib[i]->position != position ||
 		( ib[i]->previousblock <= 0 && i > 0 ) ) {
-			MesPrint("File %s has inconsistent contents\n",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>File %s has inconsistent contents\n",d->name);
 			goto thisiswrong;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		position = ib[i]->previousblock;
 	}
@@ -356,14 +362,18 @@ thisiswrong:
 	for ( i = d->info.numberofnamesblocks - 1; i >= 0; i-- ) {
 		fseek(d->handle,position,SEEK_SET);
 		if ( minosread(d->handle,(char *)(&scratchnamesblock),sizeof(NAMESBLOCK)) ) {
-			MesPrint("Error while reading file %s\n",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while reading file %s\n",d->name);
 			goto thisiswrong;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		convertnamesblock(&scratchnamesblock,ina[i],FROMDISK);
 		if ( ina[i]->position != position ||
 		( ina[i]->previousblock <= 0 && i > 0 ) ) {
-			MesPrint("File %s has inconsistent contents\n",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>File %s has inconsistent contents\n",d->name);
 			goto thisiswrong;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		position = ina[i]->previousblock;
 	}
@@ -399,15 +409,19 @@ thisiswrong:
 int WriteIndexBlock(DBASE *d,MLONG num)
 {
 	if ( num >= d->info.numberofindexblocks ) {
-		MesPrint("Illegal number specified for number of index blocks\n");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Illegal number specified for number of index blocks\n");
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	fseek(d->handle,d->iblocks[num]->position,SEEK_SET);
 	convertblock(d->iblocks[num],&scratchblock,TODISK);
 	if ( minoswrite(d->handle,(char *)(&scratchblock),sizeof(INDEXBLOCK)) ) {
-		MesPrint("Error while writing an index block in file %s\n",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Error while writing an index block in file %s\n",d->name);
 		MesPrint("File may be unreliable now\n");
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 }
@@ -420,15 +434,19 @@ int WriteIndexBlock(DBASE *d,MLONG num)
 int WriteNamesBlock(DBASE *d,MLONG num)
 {
 	if ( num >= d->info.numberofnamesblocks ) {
-		MesPrint("Illegal number specified for number of names blocks\n");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Illegal number specified for number of names blocks\n");
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	fseek(d->handle,d->nblocks[num]->position,SEEK_SET);
 	convertnamesblock(d->nblocks[num],&scratchnamesblock,TODISK);
 	if ( minoswrite(d->handle,(char *)(&scratchnamesblock),sizeof(NAMESBLOCK)) ) {
-		MesPrint("Error while writing a names block in file %s\n",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Error while writing a names block in file %s\n",d->name);
 		MesPrint("File may be unreliable now\n");
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 }
@@ -447,14 +465,18 @@ int WriteIndex(DBASE *d)
 	if ( d->nblocks == 0 ) return(0);
 	for ( i = 0; i < d->info.numberofindexblocks; i++ ) {
 		if ( d->iblocks[i] == 0 ) {
-			MesPrint("Error: unassigned index blocks. Cannot write\n");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error: unassigned index blocks. Cannot write\n");
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	for ( i = 0; i < d->info.numberofnamesblocks; i++ ) {
 		if ( d->nblocks[i] == 0 ) {
-			MesPrint("Error: unassigned names blocks. Cannot write\n");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error: unassigned names blocks. Cannot write\n");
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	d->info.lastindexblock = -1;
@@ -470,9 +492,11 @@ int WriteIndex(DBASE *d)
 		else fseek(d->handle,position,SEEK_SET);
 		convertblock(d->iblocks[i],&scratchblock,TODISK);
 		if ( minoswrite(d->handle,(char *)(&scratchblock),sizeof(INDEXBLOCK)) ) {
-			MesPrint("Error while writing index of file %s",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing index of file %s",d->name);
 			d->iblocks[i]->position = -1;
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		d->info.lastindexblock = position;
 	}
@@ -489,9 +513,11 @@ int WriteIndex(DBASE *d)
 		else fseek(d->handle,position,SEEK_SET);
 		convertnamesblock(d->nblocks[i],&scratchnamesblock,TODISK);
 		if ( minoswrite(d->handle,(char *)(&scratchnamesblock),sizeof(NAMESBLOCK)) ) {
-			MesPrint("Error while writing index of file %s",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing index of file %s",d->name);
 			d->nblocks[i]->position = -1;
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		d->info.lastnameblock = position;
 	}
@@ -509,8 +535,10 @@ int WriteIniInfo(DBASE *d)
 	fseek(d->handle,0,SEEK_SET);
 	convertiniinfo(&(d->info),&inf,TODISK);
 	if ( minoswrite(d->handle,(char *)(&inf),sizeof(INIINFO)) ) {
-		MesPrint("Error while writing masterindex of file %s",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Error while writing masterindex of file %s",d->name);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 }
@@ -525,15 +553,19 @@ int ReadIniInfo(DBASE *d)
 	INIINFO inf;
 	fseek(d->handle,0,SEEK_SET);
 	if ( minosread(d->handle,(char *)(&inf),sizeof(INIINFO)) ) {
-		MesPrint("Error while reading masterindex of file %s",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Error while reading masterindex of file %s",d->name);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	convertiniinfo(&inf,&(d->info),FROMDISK);
 	if ( d->info.entriesinindex < 0
 	|| d->info.numberofindexblocks < 0
 	|| d->info.lastindexblock < 0 ) {
-		MesPrint("The file %s is not a proper database\n",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>The file %s is not a proper database\n",d->name);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 }
@@ -660,6 +692,7 @@ DBASE *NewDbase(char *name,MLONG number)
 
 	if ( WriteIniInfo(d) ) {
 getout:
+/* INTERNAL_ERROR_EXCL_START */
 		fclose(f);
 		remove(d->fullname);
 		if ( d->name ) { M_free(d->name,"name tablebase"); d->name = 0; }
@@ -668,12 +701,15 @@ getout:
 		M_free(d->iblocks,"new database");
 		NumTableBases--;
 		return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	for ( i = 0; i < numblocks; i++ ) {
 		if ( ( d->iblocks[i] = (INDEXBLOCK *)Malloc1(sizeof(INDEXBLOCK),
 		"index blocks of new database") ) == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 			while ( --i >= 0 ) M_free(d->iblocks[i],"index blocks of new database");
 			goto getout;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		if ( i > 0 ) d->iblocks[i]->previousblock = d->iblocks[i-1]->position;
 		else d->iblocks[i]->previousblock = -1;
@@ -697,8 +733,10 @@ getout:
 			}
 		convertblock(d->iblocks[i],&scratchblock,TODISK);
 		if ( minoswrite(d->handle,(char *)(&scratchblock),sizeof(INDEXBLOCK)) ) {
-			MesPrint("Error while writing new index blocks\n");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing new index blocks\n");
 			goto getout;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	for ( i = 0; i < numnameblocks; i++ ) {
@@ -715,10 +753,12 @@ getout:
 		for ( j = 0; j < NAMETABLESIZE; j++ ) *s++ = 0;
 		convertnamesblock(d->nblocks[i],&scratchnamesblock,TODISK);
 		if ( minoswrite(d->handle,(char *)(&scratchnamesblock),sizeof(NAMESBLOCK)) ) {
-			MesPrint("Error while writing new names blocks\n");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing new names blocks\n");
 			for ( i = 0; i < numnameblocks; i++ ) M_free(d->nblocks[i],"names blocks of new database");
 			for ( i = 0; i < numblocks; i++ ) M_free(d->iblocks[i],"index blocks of new database");
 			goto getout;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	d->info.firstindexblock = d->iblocks[0]->position;
@@ -1049,9 +1089,11 @@ int PutTableNames(DBASE *d)
 		else fseek(d->handle,d->nblocks[i]->position,SEEK_SET);
 		convertnamesblock(d->nblocks[i],&scratchnamesblock,TODISK);
 		if ( minoswrite(d->handle,(char *)(&scratchnamesblock),sizeof(NAMESBLOCK)) ) {
-			MesPrint("Error while writing names blocks\n");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing names blocks\n");
 			FreeTableBase(d);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	d->info.lastnameblock = d->nblocks[d->info.numberofnamesblocks-1]->position;
@@ -1073,16 +1115,20 @@ int AddToIndex(DBASE *d,MLONG number)
 	if ( number == 0 ) return(0);
 	else if ( number < 0 ) {
 		if ( d->info.entriesinindex < -number ) {
-			MesPrint("There are only %ld entries in the index of file %s\n",
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>There are only %ld entries in the index of file %s\n",
 			d->info.entriesinindex,d->name);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		d->info.entriesinindex += number;
 dowrite:
 		if ( WriteIniInfo(d) ) {
+/* INTERNAL_ERROR_EXCL_START */
 			d->info.entriesinindex -= number;
-			MesPrint("File may be corrupted\n");
+			MesPrint("!>File may be corrupted\n");
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	else if ( d->info.entriesinindex+number <=
@@ -1125,20 +1171,24 @@ dowrite:
 			ib[i]->position = ftell(d->handle);
 			convertblock(ib[i],&scratchblock,TODISK);
 			if ( minoswrite(d->handle,(char *)(&scratchblock),sizeof(INDEXBLOCK)) ) {
-				MesPrint("Error while writing new index of file %s",d->name);
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Error while writing new index of file %s",d->name);
 				FreeTableBase(d);
 				return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 		}
 		d->info.lastindexblock = ib[newnumofindexblocks-1]->position;
 		d->info.firstindexblock = ib[0]->position;
 		d->info.numberofindexblocks = newnumofindexblocks;
 		if ( WriteIniInfo(d) ) {
+/* INTERNAL_ERROR_EXCL_START */
 			d->info.numberofindexblocks = oldnumofindexblocks;
 			d->info.entriesinindex -= number;
-			MesPrint("File may be corrupted\n");
+			MesPrint("!>File may be corrupted\n");
 			FreeTableBase(d);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		M_free(d->iblocks,"AddToIndex");
 		d->iblocks = ib;
@@ -1254,10 +1304,12 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 		ZWRAP_useZSTDcompression(0);
 #endif
 		if ( ( error = compress((Bytef *)buffer,&newsize,(Bytef *)rhs,ssize) ) != Z_OK ) {
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Due to error no compress used for element %s in file %s\n",arguments,d->name);
 			MesPrint("Error = %d\n",error);
-			MesPrint("Due to error no compress used for element %s in file %s\n",arguments,d->name);
 			M_free(buffer,"tb,WriteObject");
 			buffer = 0;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 #ifdef WITHZSTD
 		ZWRAP_useZSTDcompression(old_isUsingZSTDcompression);
@@ -1270,8 +1322,10 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 	}
 #endif
 	if ( minoswrite(d->handle,rhs,size) ) {
-		MesPrint("Error while writing rhs\n");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Error while writing rhs\n");
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	obj->position = position;
 	obj->size = size;
@@ -1345,20 +1399,24 @@ foundelement:;
 	else buffer2 = 0;
 #endif
 	if ( minosread(d->handle,buffer1,obj->size) ) {
-		MesPrint("Could not read rhs %s in file %s\n",arguments,d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Could not read rhs %s in file %s\n",arguments,d->name);
 		M_free(buffer1,"tb,ReadObject");
 #ifdef WITHZLIB
 		if ( buffer2 ) M_free(buffer2,"tb,ReadObject");
 #endif
 		return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 #ifdef WITHZLIB
 	if ( buffer2 == 0 ) return(buffer1);
 	finallength = obj->uncompressed;
 	if ( uncompress((Bytef *)buffer2,&finallength,(Bytef *)buffer1,obj->size) != Z_OK ) {
-		MesPrint("Cannot uncompress element %s in file %s\n",arguments,d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Cannot uncompress element %s in file %s\n",arguments,d->name);
 		M_free(buffer1,"tb,ReadObject"); M_free(buffer2,"tb,ReadObject");
 		return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	M_free(buffer1,"tb,ReadObject");
 	return(buffer2);
@@ -1396,21 +1454,25 @@ char *ReadijObject(DBASE *d,MLONG i,MLONG j,char *arguments)
 	else buffer2 = 0;
 #endif
 	if ( minosread(d->handle,buffer1,obj->size) ) {
-		MesPrint("Could not read rhs %s in file %s\n",arguments,d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Could not read rhs %s in file %s\n",arguments,d->name);
 		if ( buffer1 ) M_free(buffer1,"rhs buffer1");
 #ifdef WITHZLIB
 		if ( buffer2 ) M_free(buffer2,"rhs buffer2");
 #endif
 		return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 #ifdef WITHZLIB
 	if ( buffer2 == 0 ) return(buffer1);
 	finallength = obj->uncompressed;
 	if ( uncompress((Bytef *)buffer2,&finallength,(Bytef *)buffer1,obj->size) != Z_OK ) {
-		MesPrint("Cannot uncompress element %s in file %s\n",arguments,d->name);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Cannot uncompress element %s in file %s\n",arguments,d->name);
 		if ( buffer1 ) M_free(buffer1,"rhs buffer1");
 		if ( buffer2 ) M_free(buffer2,"rhs buffer2");
 		return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	M_free(buffer1,"rhs buffer1");
 	return(buffer2);

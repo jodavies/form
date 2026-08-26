@@ -2508,8 +2508,9 @@ NoInteg:;
 			default :
 defaultcase:;
 				if ( *t < FUNCTION ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Illegal code in Norm");
+					MesPrint("!>Illegal code in Norm");
 #ifdef DEBUGON
 					{
 						UBYTE OutBuf[140];
@@ -2528,6 +2529,7 @@ defaultcase:;
 #endif
 					MUNLOCK(ErrorMessageLock);
 					goto NormMin;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				if ( *t == REPLACEMENT ) {
 					if ( AR.Eside != LHSIDE ) ReplaceVeto--;
@@ -3699,10 +3701,12 @@ regularratfun:;
 								C->rhs[C->numrhs+1] = mm;
 								C->Pointer = mm;
 								if ( mm > C->Top ) {
+/* INTERNAL_ERROR_EXCL_START */
 									MLOCK(ErrorMessageLock);
-									MesPrint("Internal error in Normalize with extra compiler buffer");
+									MesPrint("!>Internal error in Normalize with extra compiler buffer");
 									MUNLOCK(ErrorMessageLock);
 									Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 								}
 								ma += 2 + ma[2];
 								continue;

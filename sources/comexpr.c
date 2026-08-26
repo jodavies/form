@@ -256,8 +256,10 @@ int DoExpr(UBYTE *inp, int type, int par)
 			AC.ProtoType[1] = osize;
 			AC.ProtoType[2] = i;
 			if ( PutOut(BHEAD OldWork+2,&pos,AR.outfile,0) < 0 ) {
-				MesPrint("&Cannot create expression");
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Cannot create expression");
 				error = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			else {
 				Expressions[j].sizeprototype = OldWork[2];
@@ -270,8 +272,10 @@ int DoExpr(UBYTE *inp, int type, int par)
 				OldWork[SUBEXPSIZE+6] = 0;
 				if ( PutOut(BHEAD OldWork+2,&pos,AR.outfile,0) < 0
 				|| FlushOut(&pos,AR.outfile,0) ) {
-					MesPrint("&Cannot create expression");
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>Cannot create expression");
 					error = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				AR.outfile->POfull = AR.outfile->POfill;
 			}
@@ -1472,9 +1476,11 @@ int CoFillExpression(UBYTE *inp)
 		SeekFile(fi->handle,&oldposition,SEEK_CUR);
 		SetScratch(fi,&(Expressions[expnum].onfile));
 		if ( ISNEGPOS(Expressions[expnum].onfile) ) {
-			MesPrint("&File error in FillExpression");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>File error in FillExpression");
 			BACKINOUT
 			goto noway;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	else {

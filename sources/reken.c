@@ -64,16 +64,20 @@ void Pack(UWORD *a, WORD *na, UWORD *b, WORD nb)
 	WORD c, sgn = 1, i;
 	UWORD *to,*from;
 	if ( (c = *na) == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Caught a zero in Pack");
+		MesPrint("!>Caught a zero in Pack");
 		MUNLOCK(ErrorMessageLock);
 		return;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( nb == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Division by zero in Pack");
+		MesPrint("!>Division by zero in Pack");
 		MUNLOCK(ErrorMessageLock);
 		return;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( *na < 0 ) { sgn = -sgn; c = -c; }
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
@@ -176,10 +180,12 @@ int Divvy(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 	WORD i, sgn = 1;
 	WORD nd, ne, adenom, anumer;
 	if ( !nb ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Division by zero in Divvy");
+		MesPrint("!>Division by zero in Divvy");
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	d = NumberMalloc("Divvy"); e = NumberMalloc("Divvy");
 	if ( nb < 0 ) { sgn = -sgn; nb = -nb; }
@@ -504,10 +510,12 @@ int DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	int ret;
 	UWORD *xd,*xe,xx;
 	if ( !nb ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Rational division by zero");
+		MesPrint("!>Rational division by zero");
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	j = i = (nb >= 0)? nb: -nb;
 	xd = b; xe = b + i;
@@ -1156,8 +1164,9 @@ int DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 					estim++;
 					SubPLon(f+ni,nh,e,ne,f+ni,&nh);
 					if ( BigLong(f+ni,nh,e,ne) >= 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 						MLOCK(ErrorMessageLock);
-						MesPrint("Problems in DivLong");
+						MesPrint("!>Problems in DivLong");
 						AO.OutSkip = 3;
 						FiniLine();
 						i = na;
@@ -1170,6 +1179,7 @@ int DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 						MUNLOCK(ErrorMessageLock);
 						NumberFree(e,"DivLong"); NumberFree(f,"DivLong"); NumberFree(g,"DivLong");
 						return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 				}
 			}
@@ -1201,11 +1211,13 @@ int DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 					}
 				}
 				if ( t ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Error in DivLong");
+					MesPrint("!>Error in DivLong");
 					MUNLOCK(ErrorMessageLock);
 					NumberFree(e,"DivLong"); NumberFree(f,"DivLong"); NumberFree(g,"DivLong");
 					return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				if ( !*(d+nh-1) ) (*nd)--;
 			}
@@ -1496,10 +1508,12 @@ int GetModInverses(WORD m1, WORD m2, WORD *im1, WORD *im2)
 	if (im2!=NULL) *im2 = b2;
 	return(0);
 somethingwrong:
+/* INTERNAL_ERROR_EXCL_START */
 	MLOCK(ErrorMessageLock);
-	MesPrint("Error trying to determine inverses in GetModInverses");
+	MesPrint("!>Error trying to determine inverses in GetModInverses");
 	MUNLOCK(ErrorMessageLock);
 	return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 /*
  		#] GetModInverses : 
@@ -1994,10 +2008,12 @@ int GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	GETBIDENTITY
 	if ( !na || !nb ) {
 		if ( !na && !nb ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Cannot take gcd");
+			MesPrint("!>Cannot take gcd");
 			MUNLOCK(ErrorMessageLock);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		
 		if ( !na ) {
@@ -2285,10 +2301,12 @@ int GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	LONG ma1, ma2, mb1, mb2, mc1, mc2, m;
 	if ( !na || !nb ) {
 		if ( !na && !nb ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Cannot take gcd");
+			MesPrint("!>Cannot take gcd");
 			MUNLOCK(ErrorMessageLock);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		
 		if ( !na ) {
@@ -3370,10 +3388,12 @@ int MakeModTable(void)
 		AC.modpowers = NULL;
 	}
 	if ( n > 2 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("&No memory for modulus generator power table");
+		MesPrint("!>No memory for modulus generator power table");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( n == 0 ) return(0);
 	size = (LONG)(*AC.cmod);
@@ -3705,12 +3725,14 @@ WORD NextPrime(PHEAD WORD num)
 nexti:;
 			}
 			if ( i < MAXPOWER ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("There are not enough short prime numbers for this calculation");
+				MesPrint("!>There are not enough short prime numbers for this calculation");
 				MesPrint("Try to use a computer with a %d-bits architecture",
 					(int)(BITSINWORD*4));
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 		}
 	}

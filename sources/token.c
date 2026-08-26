@@ -1978,8 +1978,10 @@ int simp4token(SBYTE *s)
 			case CNUMBER: type = TNUMBER1; break;
 			case CDUBIOUS: type = TDUBIOUS; break;
 			default:
-				MesPrint("&Unknown set type in simp4token");
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Unknown set type in simp4token");
 				error = 1; type = CDUBIOUS; break;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		s3 = s1buf; s1++;
 		while ( *s1 >= 0 ) *s3++ = *s1++;
@@ -2101,9 +2103,11 @@ int simp6token(SBYTE *tokens, int mode)
 */
 					if ( ( renumber = GetTable(n,&position,0) ) == 0 )
 					{
+/* INTERNAL_ERROR_EXCL_START */
 						error = 1;
-						MesPrint("&Problems getting information about stored expression %s(4)"
+						MesPrint("!>Problems getting information about stored expression %s(4)"
 						,EXPRNAME(n));
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 /*
 #ifdef WITHPTHREADS

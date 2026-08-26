@@ -947,10 +947,12 @@ abortlyndon:;
 						}
 						break;
 					default:
+/* INTERNAL_ERROR_EXCL_START */
 						MLOCK(ErrorMessageLock);
-						MesPrint("Irregular code in execution of transform statement");
+						MesPrint("!>Irregular code in execution of transform statement");
 						MUNLOCK(ErrorMessageLock);
 						Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				onetransform += *onetransform;
 			} while ( *onetransform );
@@ -1172,10 +1174,12 @@ int RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 		NumberFree(scrat1,"RunEncode");
 	}
 	else {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Unimplemented type of encoding encountered in RunEncode");
+		MesPrint("!>Unimplemented type of encoding encountered in RunEncode");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 CalledFrom:
@@ -1335,10 +1339,12 @@ int RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 		NumberFree(scrat1,"RunEncode");
 	}
 	else {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Unimplemented type of encoding encountered in RunDecode");
+		MesPrint("!>Unimplemented type of encoding encountered in RunDecode");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 CalledFrom:
@@ -1472,10 +1478,12 @@ int RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 			}
 		}
 		else {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("&irregular code found in replace transformation (RunReplace)");
+			MesPrint("!>irregular code found in replace transformation (RunReplace)");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	AT.WorkPointer = term2;

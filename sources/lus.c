@@ -914,9 +914,11 @@ LONG StartLoops(PHEAD WORD *term,WORD level,LONG vert,WORD nvert,
 /*
 		If we come here, we have a problem.
 */
-		MesPrint("Internal error in StartLoops. Object not found.");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Internal error in StartLoops. Object not found.");
 		Terminate(-1);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 havestart:
 		AT.pWorkSpace[vert+nvert] = vstart;
 /*

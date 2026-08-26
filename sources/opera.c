@@ -237,10 +237,12 @@ DoOnce:
 		tstop -= SUBEXPSIZE;
 		while ( t < tstop ) *m++ = *t++;
 		if ( t[2] != num || *t != SUBEXPRESSION ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Serious error in EpfCon");
+			MesPrint("!>Serious error in EpfCon");
 			MUNLOCK(ErrorMessageLock);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		tstop += SUBEXPSIZE;
 		if ( sizes ) {

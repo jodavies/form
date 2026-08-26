@@ -171,9 +171,11 @@ int InsTableTree(TABLES T, WORD *tp)
 			}
 		}
 	}
-	MesPrint("Serious problems in InsTableTree!\n");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>Serious problems in InsTableTree!\n");
 	Terminate(-1);
 	return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 balance:;
 	for (;;) {
 		p = boomlijst + ip;
@@ -321,9 +323,11 @@ int FindTableTree(TABLES T, WORD *tp, int inc)
 			else return(-1);
 		}
 	}
-	MesPrint("Serious problems in FindTableTree\n");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>Serious problems in FindTableTree\n");
 	Terminate(-1);
 	return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -357,8 +361,10 @@ int DoTableExpansion(WORD *term, WORD level)
 		t += t[1];
 	}
 	if ( t >= stopper ) {
-		MesPrint("Internal error: Missing table_ function");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Internal error: Missing table_ function");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*
 	Table in T. Now collect the numbers of the symbols;
@@ -1459,8 +1465,10 @@ int TestUse(WORD *term, WORD level)
 			}
 		}
 		else {
-			MesPrint("TestUse: Encountered a table element inside tbl_ that does not correspond to a tablebase element");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>TestUse: Encountered a table element inside tbl_ that does not correspond to a tablebase element");
 			error = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	return(error);
@@ -1715,8 +1723,10 @@ int CoTBuse(UBYTE *s)
 			MesPrint("&%s should be a sparse table",tablename);
 		}
 	if ( T->spare && T->mode == 0 ) {
-		MesPrint("In table %s we have a problem with stubb orders in CoTBuse",tablename);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>In table %s we have a problem with stubb orders in CoTBuse",tablename);
 		error = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*		if ( T->spare == 0 ) { SpareTable(T); } */
 		for ( i = 0; i < d->info.numberofindexblocks; i++ ) {
@@ -1733,10 +1743,12 @@ int CoTBuse(UBYTE *s)
 					}
 					sum = FindTableTree(T,AT.WorkPointer,1);
 					if ( sum < 0 ) {
-						MesPrint("Table %s in tablebase %s has not been loaded properly"
+/* INTERNAL_ERROR_EXCL_START */
+						MesPrint("!>Table %s in tablebase %s has not been loaded properly"
 								,tablename,tablebasename);
 						error = 1;
 						continue;
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					sum += ABS(T->numind) + 4;
 					mode = T->tablepointers[sum];

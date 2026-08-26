@@ -953,8 +953,10 @@ int CoDelete(UBYTE *s)
 	int error = 0;
 	if ( StrICmp(s,(UBYTE *)"storage") == 0 ) {
 		if ( DeleteStore(1) < 0 ) {
-			MesPrint("&Cannot restart storage file");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Cannot restart storage file");
 			error = 1;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	else {

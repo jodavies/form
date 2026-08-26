@@ -218,9 +218,11 @@ int Processor(void)
 			AR.GetFile = 0;
 			SetScratch(AR.infile,&(e->onfile));
 			if ( GetTerm(BHEAD term) <= 0 ) {
-				MesPrint("(1) Expression %d has problems in scratchfile",i);
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>(1) Expression %d has problems in scratchfile",i);
 				retval = -1;
 				break;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			term[3] = i;
 			AR.CurExpr = i;
@@ -327,9 +329,11 @@ commonread:;
 					MesPrint("Error condition 1a");
 					ExprStatus(e);
 #endif
-					MesPrint("(2) Expression %d has problems in scratchfile(process)",i);
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>(2) Expression %d has problems in scratchfile(process)",i);
 					retval = -1;
 					break;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				term[3] = i;
 				if ( term[5] < 0 ) {	/* Fill with spectator */
@@ -359,8 +363,10 @@ commonread:;
 #ifdef WITHPTHREADS
 				if ( AS.MultiThreaded && AC.mparallelflag == PARALLELFLAG ) {
 					if ( ThreadsProcessor(e,LastExpression,fromspectator) ) {
-						MesPrint("Error in ThreadsProcessor");
+/* INTERNAL_ERROR_EXCL_START */
+						MesPrint("!>Error in ThreadsProcessor");
 						goto ProcErr;
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					if ( AR.outtohide ) {
 						AR.outfile = oldoutfile;
@@ -487,9 +493,11 @@ commonread:;
 					MesPrint("Error condition 1b");
 					ExprStatus(e);
 #endif
-					MesPrint("(3) Expression %d has problems in scratchfile",i);
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>(3) Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				term[3] = i;
 				AR.DeferFlag = 0;
@@ -530,9 +538,11 @@ commonread:;
 					MesPrint("Error condition 1c");
 					ExprStatus(e);
 #endif
-					MesPrint("(4) Expression %d has problems in scratchfile",i);
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>(4) Expression %d has problems in scratchfile",i);
 					retval = -1;
 					break;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				term[3] = i;
 				AR.DeferFlag = 0;
@@ -826,10 +836,12 @@ ReStart:
 							We will generate more terms than we can count
 */
 TooMuch:;
+/* INTERNAL_ERROR_EXCL_START */
 							MLOCK(ErrorMessageLock);
-							MesPrint("Attempt to generate more terms than FORM can count");
+							MesPrint("!>Attempt to generate more terms than FORM can count");
 							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 						}
 						GetBinom(AN.BinoScrat,&AN.nbino,(WORD)mm,t[3]);
 						if ( AN.nbino > 2 ) goto TooMuch;
@@ -960,10 +972,12 @@ TooMuch:;
 						m = AT.WorkPointer;
 						AT.WorkPointer = m + *m;
 						if ( Normalize(BHEAD m) ) {
+/* INTERNAL_ERROR_EXCL_START */
 							MLOCK(ErrorMessageLock);
-							MesPrint("Error while picking up contents of bracket");
+							MesPrint("!>Error while picking up contents of bracket");
 							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 						}
 						if ( !*m ) {
 							*m++ = 4; *m++ = 1; *m++ = 1; *m++ = 3;
@@ -2675,8 +2689,9 @@ wrongtype:;
 		}
 		t += t[1];
 	}
+/* INTERNAL_ERROR_EXCL_START */
 	MLOCK(ErrorMessageLock);
-	MesPrint("Internal error in InFunction: Function not encountered.");
+	MesPrint("!>Internal error in InFunction: Function not encountered.");
 	if ( AM.tracebackflag ) {
 		MesPrint("%w: AR.TePos = %d",AR.TePos);
 		MesPrint("%w: AN.TeInFun = %d",AN.TeInFun);
@@ -2695,6 +2710,7 @@ wrongtype:;
 	}
 	MUNLOCK(ErrorMessageLock);
 	return(1);
+/* INTERNAL_ERROR_EXCL_STOP */
 
 InFunc:
 	MLOCK(ErrorMessageLock);
@@ -2948,10 +2964,12 @@ LONG PasteFile(PHEAD WORD number, WORD *accum, POSITION *position, WORD **accfil
 	}
 	accum += l;
 	if ( accum > stop ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Buffer too small in PasteFile");
+		MesPrint("!>Buffer too small in PasteFile");
 		MUNLOCK(ErrorMessageLock);
 		SETERROR(-1)
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	*accum = 0;
 	*accfill = accum;
@@ -3029,10 +3047,12 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 		*u = WORDDIF(accum,u);
 	}
 	if ( accum >= m ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Buffer too small in PasteTerm");
+		MesPrint("!>Buffer too small in PasteTerm");
 		MUNLOCK(ErrorMessageLock);
 		return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	*accum = 0;
 	return(accum);
@@ -4174,7 +4194,9 @@ AutoGen:	i = *AT.TMout;
 							MesPrint("Attempt to use factor %d of an unfactored $-variable",(WORD)(AT.TMdolfac-1));
 						}
 						else {
-							MesPrint("Internal error. Illegal number of factors for $-variable");
+/* INTERNAL_ERROR_EXCL_START */
+							MesPrint("!>Internal error. Illegal number of factors for $-variable");
+/* INTERNAL_ERROR_EXCL_STOP */
 						}
 						MUNLOCK(ErrorMessageLock);
 						goto GenCall;
@@ -4807,9 +4829,11 @@ EndExpr:
 		SeekFile(fi->handle,&oldposition,SEEK_SET);
 		UNLOCK(AS.inputslock);
 		if ( ISNEGPOS(oldposition) ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("File error");
+			MesPrint("!>File error");
 			goto PowCall2;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 #endif
 	}
@@ -5333,11 +5357,13 @@ int PrepPoly(PHEAD WORD *term,WORD par)
 */
 	}
 	else {
+/* INTERNAL_ERROR_EXCL_START */
 		DoError:;
 		MLOCK(ErrorMessageLock);
-		MesPrint("Illegal value for PolyFunType in PrepPoly");
+		MesPrint("!>Illegal value for PolyFunType in PrepPoly");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	r = term + *term;
 	AT.PolyAct = WORDDIF(poly,term);
@@ -5398,11 +5424,13 @@ SkipFun:
 			}
 			else {
 NoLegal:
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Illegal term with divergence in PolyRatFun");
+				MesPrint("!>Illegal term with divergence in PolyRatFun");
 				MesCall("PolyFunMul");
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			if ( *t < 0 ) {
 				if ( *t == -SYMBOL && t[1] == AR.PolyFunVar ) pow1--;
@@ -5665,8 +5693,10 @@ retry:
 					if ( t1[4] < minp1 ) minp1 = t1[4];
 				}
 				else {
-					MesPrint("Illegal term in expanded polyratfun.");
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>Illegal term in expanded polyratfun.");
 					goto PolyCall;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 			}
 		}
@@ -5683,8 +5713,10 @@ retry:
 					if ( t2[4] < minp2 ) minp2 = t2[4];
 				}
 				else {
-					MesPrint("Illegal term in expanded polyratfun.");
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>Illegal term in expanded polyratfun.");
 					goto PolyCall;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 			}
 		}

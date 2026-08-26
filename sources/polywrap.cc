@@ -275,10 +275,12 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 				if(denompower < prevdenompower)
 				{
 					// denompower increased beyond INT_MAX
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint ((char*)"ERROR: pseudo-division failed in poly_divmod (denompower > INT_MAX)");
+					MesPrint ((char*)"!>ERROR: pseudo-division failed in poly_divmod (denompower > INT_MAX)");
 					MUNLOCK(ErrorMessageLock);
 					Terminate(1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 
 				if(denompower != 0)
@@ -1228,8 +1230,10 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 		pos = expr->onfile;
 		SeekFile(file->handle,&pos,SEEK_SET);
 		if (ISNOTEQUALPOS(pos,expr->onfile)) {
-			MesPrint("ERROR: something wrong in scratch file [poly_factorize_expression]");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>ERROR: something wrong in scratch file [poly_factorize_expression]");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		file->POposition = expr->onfile;
 		file->POfull = file->PObuffer;
@@ -1247,8 +1251,10 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 	// read the first header term
 	WORD size = GetTerm(BHEAD term);
 	if (size <= 0) {
-		MesPrint ("ERROR: something wrong with expression [poly_factorize_expression]");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint ("!>ERROR: something wrong with expression [poly_factorize_expression]");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 
 	// store position: this is where the output will go
@@ -1270,8 +1276,10 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 		}
 		buffer.check_memory(bufpos);		
 		if (LocalConvertToPoly(BHEAD term, buffer.terms + bufpos, startebuf,0) < 0) {
-			MesPrint("ERROR: in LocalConvertToPoly [factorize_expression]");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>ERROR: in LocalConvertToPoly [factorize_expression]");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		bufpos += *(buffer.terms + bufpos);
 	}
@@ -1407,9 +1415,11 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 						// substitute extra symbols
 						if (ConvertFromPoly(BHEAD t, term, numxsymbol, CC->numrhs-startebuf+numxsymbol,
 																startebuf-numxsymbol, 1) <= 0 ) {
-							MesPrint("ERROR: in ConvertFromPoly [factorize_expression]");
+/* INTERNAL_ERROR_EXCL_START */
+							MesPrint("!>ERROR: in ConvertFromPoly [factorize_expression]");
 							Terminate(-1);
 							return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 						}
 						
 						// store term
@@ -1587,8 +1597,10 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 		pos = expr->onfile;
 		SeekFile(file->handle,&pos,SEEK_SET);
 		if (ISNOTEQUALPOS(pos,expr->onfile)) {
-			MesPrint("ERROR: something wrong in scratch file unfactorize_expression");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>ERROR: something wrong in scratch file unfactorize_expression");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		file->POposition = expr->onfile;
 		file->POfull = file->PObuffer;
@@ -1614,8 +1626,10 @@ int poly_unfactorize_expression(EXPRESSIONS expr)
 */
 	size = GetTerm(BHEAD term);
 	if ( size <= 0 ) {
-		MesPrint ("ERROR: something wrong with expression unfactorize_expression");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint ("!>ERROR: something wrong with expression unfactorize_expression");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	pos = expr->onfile;
 	ADDPOS(pos, size*sizeof(WORD));

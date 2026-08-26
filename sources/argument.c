@@ -605,10 +605,12 @@ ScaledVariety:;
 									break;
 								}
 								else {
+/* INTERNAL_ERROR_EXCL_START */
 									MLOCK(ErrorMessageLock);
-									MesPrint("Unknown fast notation found (TYPEARGTOEXTRASYMBOL)");
+									MesPrint("!>Unknown fast notation found (TYPEARGTOEXTRASYMBOL)");
 									MUNLOCK(ErrorMessageLock);
 									return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 								}
 						}
 						n = FindSubexpression(tmp);
@@ -2004,8 +2006,10 @@ int ArgumentExplode(PHEAD WORD *term, WORD *thelist)
 						if ( i > 1 ) {
 TooMany:					old = AN.currentTerm;
 							AN.currentTerm = term;
+							MLOCK(ErrorMessageLock);
 							MesPrint("Too many arguments in output of ArgExplode");
 							MesPrint("Term = %t");
+							MUNLOCK(ErrorMessageLock);
 							AN.currentTerm = old;
 							return(-1);
 						}
@@ -2231,7 +2235,9 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			t += *t;
 		}
 		if ( sumcommu > 1 ) {
+			MLOCK(ErrorMessageLock);
 			MesPrint("ERROR: Cannot factorize an argument with more than one noncommuting object");
+			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
 	}
@@ -3294,11 +3300,15 @@ nextterm:						mm = mnext;
 	if ( argin2 != argin  ) TermFree(argin2,"TakeArgContent2");
 	return(argfree);
 Irreg:
-	MesPrint("Irregularity while sorting argument in TakeArgContent");
+/* INTERNAL_ERROR_EXCL_START */
+	MLOCK(ErrorMessageLock);
+	MesPrint("!>Irregularity while sorting argument in TakeArgContent");
+	MUNLOCK(ErrorMessageLock);
 	if ( argin3 != argin2 ) TermFree(argin3,"TakeArgContent3");
 	if ( argin2 != argin  ) TermFree(argin2,"TakeArgContent2");
 	Terminate(-1);
 	return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*

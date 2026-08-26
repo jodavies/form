@@ -379,8 +379,10 @@ void FullCleanUp(void)
 
 	NumExpressions = 0;
 	if ( DeleteStore(0) < 0 ) {
-		MesPrint("@Cannot restart the storage file");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Cannot restart the storage file");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	RemoveDollars();
 	CleanUp(1);

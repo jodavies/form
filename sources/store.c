@@ -131,25 +131,31 @@ void SetScratch(FILEHANDLE *f, POSITION *position)
 		if ( f->handle < 0 ) {
 			if ( ISEQUALPOSINC(*position,f->POposition,
 				(f->POfull-f->PObuffer)*sizeof(WORD)) ) goto endpos;
-			MesPrint("Illegal position in SetScratch");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Illegal position in SetScratch");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		possize = *position;
 		LOCK(AS.inputslock);
 		SeekFile(f->handle,&possize,SEEK_SET);
 		if ( ISNOTEQUALPOS(possize,*position) ) {
+/* INTERNAL_ERROR_EXCL_START */
 			UNLOCK(AS.inputslock);
-			MesPrint("Cannot position file in SetScratch");
+			MesPrint("!>Cannot position file in SetScratch");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 #ifdef HIDEDEBUG
 			MesPrint("SetScratch1(%w): position = %12p, size = %l, address = %x",position,f->POsize,f->PObuffer);
 #endif
 		if ( ( size = ReadFile(f->handle,(UBYTE *)(f->PObuffer),f->POsize) ) < 0
 		|| ( size & 1 ) != 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 			UNLOCK(AS.inputslock);
-			MesPrint("Read error in SetScratch");
+			MesPrint("!>Read error in SetScratch");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		UNLOCK(AS.inputslock);
 		if ( size == 0 ) {
@@ -203,11 +209,15 @@ int RevertScratch(void)
 		PUTZERO(scrpos);
 		SeekFile(AR.infile->handle,&scrpos,SEEK_SET);
 		if ( ISNOTZEROPOS(scrpos) ) {
-			return(MesPrint("Error with scratch output."));
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error with scratch output."));
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		if ( ( AR.InInBuf = ReadFile(AR.infile->handle,(UBYTE *)(AR.infile->PObuffer)
 			,AR.infile->POsize) ) < 0 || AR.InInBuf & 1 ) {
-			return(MesPrint("Error while reading from scratch file"));
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error while reading from scratch file"));
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		else {
 			AR.InInBuf /= TABLESIZE(WORD,UBYTE);
@@ -246,11 +256,15 @@ int ResetScratch(void)
 		PUTZERO(scrpos);
 		SeekFile(AR.outfile->handle,&scrpos,SEEK_SET);
 		if ( ISNOTZEROPOS(scrpos) ) {
-			return(MesPrint("Error with scratch output."));
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error with scratch output."));
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		if ( ( AR.InInBuf = ReadFile(AR.outfile->handle,(UBYTE *)(AR.outfile->PObuffer)
 		,AR.outfile->POsize) ) < 0 || AR.InInBuf & 1 ) {
-			return(MesPrint("Error while reading from scratch file"));
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error while reading from scratch file"));
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		else AR.InInBuf /= TABLESIZE(WORD,UBYTE);
 		AR.outfile->POfull = AR.outfile->PObuffer + AR.InInBuf;
@@ -279,11 +293,13 @@ int ReadFromScratch(FILEHANDLE *fi, POSITION *pos, UBYTE *buffer, POSITION *leng
 	else {
 		SeekFile(fi->handle,pos,SEEK_SET);
 		if ( ReadFile(fi->handle,buffer,l) != l ) {
+/* INTERNAL_ERROR_EXCL_START */
 			if ( fi == AR.hidefile )
-				MesPrint("Error reading from hide file.");
+				MesPrint("!>Error reading from hide file.");
 			else
-				MesPrint("Error reading from scratch file.");
+				MesPrint("!>Error reading from scratch file.");
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	return(0);
@@ -480,9 +496,11 @@ int CoSave(UBYTE *inp)
 							if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 							if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 							!= wSize ) {
-								MesPrint("ReadError");
+/* INTERNAL_ERROR_EXCL_START */
+								MesPrint("!>ReadError");
 								error = -1;
 								goto EndSave;
+/* INTERNAL_ERROR_EXCL_STOP */
 							}
 							if ( WriteFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize)
 							!= wSize ) goto SavWrt;
@@ -542,9 +560,11 @@ NextExpr:;
 			do {
 				if ( ISLESSPOS(scrpos,scrpos1) ) wSize = BASEPOSITION(scrpos);
 				if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,wSize) != wSize ) {
-					MesPrint("ReadError");
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>ReadError");
 					error = -1;
 					goto EndSave;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				if ( WriteFile(AO.SaveData.Handle,(UBYTE *)AT.WorkPointer,wSize) != wSize )
 					goto SavWrt;
@@ -559,9 +579,11 @@ EndSave:
 	}
 	return(error);
 SavWrt:
-	MesPrint("WriteError");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>WriteError");
 	error = -1;
 	goto EndSave;
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -751,13 +773,17 @@ EndLoad:
 	SeekFile(AR.StoreData.Handle,&(AC.StoreFileSize),SEEK_END);
 	return(error);
 LoadWrt:
-	MesPrint("WriteError");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>WriteError");
 	error = -1;
 	goto EndLoad;
+/* INTERNAL_ERROR_EXCL_STOP */
 LoadRead:
-	MesPrint("ReadError");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>ReadError");
 	error = -1;
 	goto EndLoad;
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -963,7 +989,9 @@ int PutInStore(INDEXENTRY *ind, WORD num)
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)sizeof(FILEINDEX))
 	== (LONG)sizeof(FILEINDEX) ) return(0);
 PutErrS:
-	return(MesPrint("File error"));
+/* INTERNAL_ERROR_EXCL_START */
+	return(MesPrint("!>File error"));
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -1233,9 +1261,11 @@ RegRet:;
 */
 	return(*from);
 GTerr:
-	MesPrint("Error while reading scratch file in GetTerm");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>Error while reading scratch file in GetTerm");
 	Terminate(-1);
 	return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -1403,11 +1433,13 @@ WORD GetOneTerm(PHEAD WORD *term, FILEHANDLE *fi, POSITION *pos, int par)
 		error = 6;
 	}
 ErrGet:
+/* INTERNAL_ERROR_EXCL_START */
 	MLOCK(ErrorMessageLock);
-	MesPrint("Error while reading scratch file in GetOneTerm (%d)",error);
+	MesPrint("!>Error while reading scratch file in GetOneTerm (%d)",error);
 	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -1760,10 +1792,12 @@ InNew:
 		SeekFile(AR.StoreData.Handle,position,SEEK_CUR);
 		UNLOCK(AM.storefilelock);
 		if ( RetCode != sizeof(WORD) ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("@Error in compression of store file");
+			MesPrint("!>Error in compression of store file");
 			MUNLOCK(ErrorMessageLock);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		num = *m;
 		*to += (WORD)num;
@@ -1776,10 +1810,12 @@ InNew:
 	first = num;
 	num *= wsizeof(WORD);
 	if ( num < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("@Error in stored expressions file at position %9p",position);
+		MesPrint("!>Error in stored expressions file at position %9p",position);
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	LOCK(AM.storefilelock);
 	SeekFile(AR.StoreData.Handle,position,SEEK_SET);
@@ -1787,10 +1823,12 @@ InNew:
 	SeekFile(AR.StoreData.Handle,position,SEEK_CUR);
 	UNLOCK(AM.storefilelock);
 	if ( RetCode != num ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("@Error in stored expressions file at position %9p",position);
+		MesPrint("!>Error in stored expressions file at position %9p",position);
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	NCOPY(r,m,first);
 PastEnd:
@@ -1809,10 +1847,12 @@ PastEnd:
 		return((WORD)*to);
 	}
 PastErr:
+/* INTERNAL_ERROR_EXCL_START */
 	MLOCK(ErrorMessageLock);
-	MesCall("GetFromStore");
+	MesCall("!>GetFromStore");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -2038,8 +2078,10 @@ int ToStorage(EXPRESSIONS e, POSITION *length)
 		scrpos = e->onfile;
 		SeekFile(f->handle,&scrpos,SEEK_SET);
 		if ( ISNOTEQUALPOS(scrpos,e->onfile) ) {
-			MesPrint(":::Error in Scratch file");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error in Scratch file");
 			goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		f->POposition = e->onfile;
 		f->POfull = f->PObuffer;
@@ -2169,23 +2211,31 @@ int ToStorage(EXPRESSIONS e, POSITION *length)
 */
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->numdummies)),(LONG)sizeof(WORD)) != 
 		sizeof(WORD) ) {
-			MesPrint("Error while writing storage file");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing storage file");
 			goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->numfactors)),(LONG)sizeof(WORD)) != 
 		sizeof(WORD) ) {
-			MesPrint("Error while writing storage file");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing storage file");
 			goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->vflags)),(LONG)sizeof(WORD)) != 
 		sizeof(WORD) ) {
-			MesPrint("Error while writing storage file");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing storage file");
 			goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->uflags)),(LONG)sizeof(WORD)) != 
 		sizeof(WORD) ) {
-			MesPrint("Error while writing storage file");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing storage file");
 			goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	TELLFILE(AR.StoreData.Handle,&(indexent->position));
 	if ( f->handle >= 0 ) {
@@ -2197,12 +2247,16 @@ int ToStorage(EXPRESSIONS e, POSITION *length)
 			if ( ISLESSPOS(llength,scrpos) ) size = BASEPOSITION(llength);
 			else				             size = AO.wlen;
 			if ( ReadFile(f->handle,AO.wpos,size) != size ) {
-				MesPrint("Error while reading scratch file");
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Error while reading scratch file");
 				goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			if ( WriteFile(AR.StoreData.Handle,AO.wpos,size) != size ) {
-				MesPrint("Error while writing storage file");
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Error while writing storage file");
 				goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			ADDPOS(llength,-size);
 		}
@@ -2212,8 +2266,10 @@ int ToStorage(EXPRESSIONS e, POSITION *length)
 		ppp = (WORD *)((UBYTE *)(f->PObuffer) + BASEPOSITION(e->onfile));
 		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)ppp,BASEPOSITION(*length)) != 
 		BASEPOSITION(*length) ) {
-			MesPrint("Error while writing storage file");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error while writing storage file");
 			goto ErrReturn;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	ADD2POS(*length,indexent->position);
@@ -2237,11 +2293,13 @@ int ToStorage(EXPRESSIONS e, POSITION *length)
 	if ( AO.wpos ) M_free(AO.wpos,"AO.wpos buffer");
 	AO.wpos = AO.wpoin = 0;
 	return(0);
+/* INTERNAL_ERROR_EXCL_START */
 ErrToSto:
-	MesPrint("---Error while storing namelists");
+	MesPrint("!>Error while storing namelists");
 	goto ErrReturn;
 ErrInSto:
-	MesPrint("Error in storage");
+	MesPrint("!>Error in storage");
+/* INTERNAL_ERROR_EXCL_STOP */
 ErrReturn:
 	if ( AO.wpos ) M_free(AO.wpos,"AO.wpos buffer");
 	AO.wpos = AO.wpoin = 0;
@@ -2302,8 +2360,10 @@ INDEXENTRY *NextFileIndex(POSITION *indexpos)
 	ADDPOS(AR.StoreData.Index.number,1);
 	return(ind);
 ErrNextS:
-	MesPrint("Error in storage file");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>Error in storage file");
 	return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -2329,13 +2389,21 @@ int SetFileIndex(void)
 #ifdef SYSDEPENDENTSAVE
 		SETBASEPOSITION(AR.StoreData.Fill,sizeof(FILEINDEX));
 #else
-		if ( WriteStoreHeader(AR.StoreData.Handle) ) return(MesPrint("Error writing storage file header"));
+		if ( WriteStoreHeader(AR.StoreData.Handle) ) {
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error writing storage file header"));
+/* INTERNAL_ERROR_EXCL_STOP */
+		}
 		SETBASEPOSITION(AR.StoreData.Fill, (LONG)sizeof(FILEINDEX)+(LONG)sizeof(STOREHEADER));
 #endif
 		lo = (LONG *)(&AR.StoreData.Index);
 		for ( i = 0; i < j; i++ ) *lo++ = 0;
 		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
-		(LONG)(sizeof(FILEINDEX)) ) return(MesPrint("Error writing storage file"));
+		(LONG)(sizeof(FILEINDEX)) ) {
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error writing storage file"));
+/* INTERNAL_ERROR_EXCL_STOP */
+		}
 	}
 	else {
 		POSITION scrpos;
@@ -2346,7 +2414,11 @@ int SetFileIndex(void)
 #endif
 		SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);
 		if ( ReadFile(AR.StoreData.Handle,(UBYTE *)(&AR.StoreData.Index),(LONG)(sizeof(FILEINDEX))) !=
-		(LONG)(sizeof(FILEINDEX)) ) return(MesPrint("Error reading storage file"));
+		(LONG)(sizeof(FILEINDEX)) ) {
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error reading storage file"));
+/* INTERNAL_ERROR_EXCL_STOP */
+		}
 	}
 #ifdef SYSDEPENDENTSAVE
 	PUTZERO(AR.StoreData.Position);
@@ -2592,8 +2664,10 @@ WORD FindrNumber(WORD n, VARRENUM *v)
 	med = v->start;
 	if ( *hi == 0 ) {
 		if ( n != *hi ) {
-			MesPrint("Serious problems coming up in FindrNumber");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Serious problems coming up in FindrNumber");
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		return(*hi);
 	}
@@ -2615,9 +2689,10 @@ ErrFindr:
 	Reconstruction:
 */
 	{
+/* INTERNAL_ERROR_EXCL_START */
 		int i;
 		i = WORDDIF(v->hi,v->lo);
-		MesPrint("FindrNumber: n = %d, list has %d members",n,i);
+		MesPrint("!>FindrNumber: n = %d, list has %d members",n,i);
 		while ( i >= 0 ) {
 			MesPrint("v->lo[%d] = %d",i,v->lo[i]); i--;
 		}
@@ -2642,6 +2717,7 @@ ErrFindr:
 	return(WORDDIF(med,v->lo));
 ErrFindr2:
 	return(MesPrint("Renumbering problems"));
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -2690,16 +2766,6 @@ INDEXENTRY *FindInIndex(WORD expr, FILEDATA *f, WORD par, WORD mode)
 				if ( ( !par && ISEQUALPOS(indexpos,Expressions[expr].onfile) )
 				|| ( par && !StrCmp(EXPRNAME(expr),(UBYTE *)(ind->name)) ) ) {
 					nomatch = 1;
-/*
-MesPrint("index: position: %8p",&(ind->position));
-MesPrint("index: length: %8p",&(ind->length));
-MesPrint("index: variables: %8p",&(ind->variables));
-MesPrint("index: nsymbols: %d",ind->nsymbols);
-MesPrint("index: nindices: %d",ind->nindices);
-MesPrint("index: nvectors: %d",ind->nvectors);
-MesPrint("index: nfunctions: %d",ind->nfunctions);
-MesPrint("index: size: %d",ind->size);
-*/
 					if ( par ) return(ind);
 					scrpos = ind->position;
 					SeekFile(hand,&scrpos,SEEK_SET);
@@ -2782,8 +2848,10 @@ ErrGetTab:
 	}
 	return(0);
 ErrGt2:
-	MesPrint("Readerror in IndexSearch");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>Readerror in IndexSearch");
 	return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -3269,16 +3337,19 @@ GetTb3:
 	num *= sizeof(WORD);
 	if ( *AT.WorkPointer < 0 ||
 	ReadFile(AR.StoreData.Handle,(UBYTE *)(AT.WorkPointer+1),num) != num ) {
-		MesPrint("@Error in stored expressions file at position %10p",*position);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Error in stored expressions file at position %10p",*position);
 		UNLOCK(AM.storefilelock);
 		AT.WorkPointer = oldwork;
 		return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	UNLOCK(AM.storefilelock);
 	ADDPOS(*position,num+sizeof(WORD));
 	r->startposition = *position;
 	AT.WorkPointer = oldwork;
 	return(r);
+/* INTERNAL_ERROR_EXCL_START */
 GetTcall:
 	UNLOCK(AM.storefilelock);
 	AT.WorkPointer = oldwork;
@@ -3287,8 +3358,9 @@ GetTcall:
 ErrGt2:
 	UNLOCK(AM.storefilelock);
 	AT.WorkPointer = oldwork;
-	MesPrint("Readerror in GetTable");
+	MesPrint("!>Readerror in GetTable");
 	return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -3386,10 +3458,12 @@ int CopyExpression(FILEHANDLE *from, FILEHANDLE *to)
 	while ( ISLESSPOS(poscopy,posfrom) ) {
 		fullsize = ReadFile(from->handle,((UBYTE *)(from->PObuffer)),from->POsize);
 		if ( fullsize < 0 || ( fullsize % sizeof(WORD) ) != 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Error while reading from disk while copying expression.");
+			MesPrint("!>Error while reading from disk while copying expression.");
 			MUNLOCK(ErrorMessageLock);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		fullsize /= sizeof(WORD);
 		from->POfull = from->PObuffer + fullsize;
@@ -3938,7 +4012,9 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 		}
 
 		if ( out > (int32_t *)top ) {
-			MesPrint("Error in resizing coefficient!");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error in resizing coefficient!");
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 
 		*bout = (UBYTE *)out;
@@ -4031,8 +4107,11 @@ static unsigned int CompactifySizeof(unsigned int size)
 		case  4: return 1;
 		case  8: return 2;
 		case 16: return 3;
-		default: MesPrint("Error compactifying size.");
-		         return 3;
+		default:
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error compactifying size.");
+		   return 3;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 }
 
@@ -4082,8 +4161,11 @@ int ReadSaveHeader(void)
 	AO.bufferedInd = 0;
 
 	if ( ReadFile(AO.SaveData.Handle,(UBYTE *)(&AO.SaveHeader),
-		(LONG)sizeof(STOREHEADER)) != (LONG)sizeof(STOREHEADER) )
-		return(MesPrint("Error reading save file header"));
+		(LONG)sizeof(STOREHEADER)) != (LONG)sizeof(STOREHEADER) ) {
+/* INTERNAL_ERROR_EXCL_START */
+			return(MesPrint("!>Error reading save file header"));
+/* INTERNAL_ERROR_EXCL_STOP */
+		}
 
 	/* check whether save-file has no header. if yes then it is an old version
 	   of FORM -> go back to position 0 in file which then contains the first
@@ -4199,7 +4281,9 @@ LONG ReadSaveIndex(FILEINDEX *fileind)
 
 		if ( ReadFile(AO.SaveData.Handle, (UBYTE *)fileind, sizeof(FILEINDEX))
 				!= sizeof(FILEINDEX) ) {
-			return ( MesPrint("Error(1) reading stored expression.") );
+/* INTERNAL_ERROR_EXCL_START */
+			return ( MesPrint("!>Error(1) reading stored expression.") );
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 
 		/* do we need to flip the endianness? */
@@ -4412,7 +4496,9 @@ LONG ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 		}
 
 		if ( ( numread = ReadFile(AO.SaveData.Handle, in, *size) ) != *size ) {
-			return ( MesPrint("Error(2) reading stored expression.") );
+/* INTERNAL_ERROR_EXCL_START */
+			return ( MesPrint("!>Error(2) reading stored expression.") );
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 
 		*size = 0;
@@ -5027,8 +5113,10 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 								++out; ++r;
 								break;
 							} else {
-								MesPrint("short function code %d not implemented.", *out);
+/* INTERNAL_ERROR_EXCL_START */
+								MesPrint("!>short function code %d not implemented.", *out);
 								return ( (UBYTE *)in );
+/* INTERNAL_ERROR_EXCL_STOP */
 							}
 					}
 				}
@@ -5082,8 +5170,10 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			}
 		}
 		else {
-			MesPrint("ID %d not recognized.", id);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>ID %d not recognized.", id);
 			return ( (UBYTE *)in );
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 
 		*newsubtermp = out - newsubtermp + 1;
@@ -5172,7 +5262,9 @@ LONG ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
 		outend = out + *size;
 
 		if ( ReadFile(AO.SaveData.Handle, in, *size) != *size ) {
-			return ( MesPrint("Error(3) reading stored expression.") );
+/* INTERNAL_ERROR_EXCL_START */
+			return ( MesPrint("!>Error(3) reading stored expression.") );
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 
 		if ( AO.transFlag & 1 ) {

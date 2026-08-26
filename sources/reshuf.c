@@ -184,10 +184,12 @@ void FunLevel(PHEAD WORD *term)
 				break;
 			default:
 				if ( *t < FUNCTION ) {
+/* INTERNAL_ERROR_EXCL_START */
 				  MLOCK(ErrorMessageLock);
-				  MesPrint("Unexpected code in ReNumber");
+				  MesPrint("!>Unexpected code in ReNumber");
 				  MUNLOCK(ErrorMessageLock);
 				  Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				fun = t+2;
 				if ( *t >= FUNCTION && functions[*t-FUNCTION].spec
@@ -1415,10 +1417,12 @@ int DoDelta3(PHEAD WORD *term, WORD level)
 	while ( ( *t != DELTA3 || ((t[1]-FUNHEAD) & 1 ) != 0 ) && t < stopper )
 		t += t[1];
 	if ( t >= stopper ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Internal error with dd_ function");
+		MesPrint("!>Internal error with dd_ function");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	m1 = t; m2 = t + t[1];
 	num = t[1] - FUNHEAD;
@@ -3089,10 +3093,12 @@ WORD *StuffRootAdd(WORD *t1, WORD *t2, WORD *to)
 */
 DoCoeffi:
 			if ( AddLong((UWORD *)tt1,size1,(UWORD *)tt2,size2,(UWORD *)to,&size3) ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Called from StuffRootAdd");
+				MesPrint("!>Called from StuffRootAdd");
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			sgn = sgn1*sgn2*sgn3;
 			if ( nosymbols && size3 == 1 ) {

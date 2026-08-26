@@ -363,11 +363,13 @@ int PutInSpectator(WORD *term,WORD specnum)
 					PUTZERO(fi->POposition);
 				}
 				else {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Cannot create spectator file %s",fi->name);
+					MesPrint("!>Cannot create spectator file %s",fi->name);
 					MUNLOCK(ErrorMessageLock);
 					UNLOCK(fi->pthreadslock);
 					return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 			}
 			SeekFile(fi->handle,&(sp->position),SEEK_SET);
@@ -427,10 +429,12 @@ void FlushSpectators(void)
 				fh->handle = (WORD)RetCode;
 			}
 			else {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Cannot create spectator file %s",fh->name);
+				MesPrint("!>Cannot create spectator file %s",fh->name);
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			PUTZERO(sp->position);
 		}
@@ -619,10 +623,12 @@ FillBuffer:
 		SeekFile(fh->handle,&(sp->readpos),SEEK_SET);
 		InIn = ReadFile(fh->handle,(UBYTE *)(fh->PObuffer),fh->POsize);
 		if ( InIn < 0 || ( InIn & 1 ) ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Error reading information for %s spectator",sp->name);
+			MesPrint("!>Error reading information for %s spectator",sp->name);
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		InIn /= sizeof(WORD);
 		if ( InIn == 0 ) { *term = 0; return(0); }
@@ -642,17 +648,21 @@ FillBuffer:
 			SeekFile(fh->handle,&(sp->readpos),SEEK_SET);
 			InIn = ReadFile(fh->handle,(UBYTE *)(fh->PObuffer),fh->POsize);
 			if ( InIn < 0 || ( InIn & 1 ) ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Error reading information for %s spectator",sp->name);
+				MesPrint("!>Error reading information for %s spectator",sp->name);
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			InIn /= sizeof(WORD);
 			if ( InIn == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Reading incomplete information for %s spectator",sp->name);
+				MesPrint("!>Reading incomplete information for %s spectator",sp->name);
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			SeekFile(fh->handle,&(sp->readpos),SEEK_CUR);
 			fh->POposition = sp->readpos;

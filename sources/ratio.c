@@ -644,10 +644,12 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 		t += t[1];
 	}
 	if ( t >= tstop ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Internal error. Indicated gcd_ function not encountered.");
+		MesPrint("!>Internal error. Indicated gcd_ function not encountered.");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	WantAddPointers(totargs);
 	args = AT.pWorkPointer; AT.pWorkPointer += totargs;
@@ -769,10 +771,12 @@ doshort:
 			goto gcdone;
 		}
 		else {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Internal error. Illegal short argument in GCDfunction.");
+			MesPrint("!>Internal error. Illegal short argument in GCDfunction.");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 /*
@@ -990,10 +994,12 @@ oneterm:;
 			abuf[i].size = m-abuf[i].buffer;
 		}
 		else {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("What argument is this?");
+			MesPrint("!>What argument is this?");
 			MUNLOCK(ErrorMessageLock);
 			goto CalledFrom;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 	for ( i = 0; i < numargs; i++ ) {
@@ -2458,11 +2464,13 @@ int FromPolyRatFun(PHEAD WORD *fun, WORD **numout, WORD **denout)
 	AT.WorkPointer = tt;
 	return(0);
 Improper:
+/* INTERNAL_ERROR_EXCL_START */
 	MLOCK(ErrorMessageLock);
-	MesPrint("Improper use of PolyRatFun");
+	MesPrint("!>Improper use of PolyRatFun");
 	MesCall("FromPolyRatFun");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -2846,10 +2854,12 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	int division = ( par <= 2 );  /* false for mul_ */
 	if ( par < 0 || par > 3 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Internal error. Illegal parameter %d in DIVfunction.",par);
+		MesPrint("!>Internal error. Illegal parameter %d in DIVfunction.",par);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*
 	Find the function
@@ -2872,10 +2882,12 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		t = tt;
 	}
 	if ( t >= tstop ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Internal error. Indicated div_ or rem_ function not encountered.");
+		MesPrint("!>Internal error. Indicated div_ or rem_ function not encountered.");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*
 	We have two arguments in arg1 and arg2.
@@ -3029,13 +3041,15 @@ WORD *MULfunc(PHEAD WORD *p1, WORD *p2)
 			else               sign2 = 1;
 			size2 = (size2-1)/2;
 			if ( MulLong(num1,size1,num2,size2,num3,&size3) ) {
+/* INTERNAL_ERROR_EXCL_START */
 				error = 1;
 CalledFrom:
 				MLOCK(ErrorMessageLock);
-				MesPrint(" Error %d",error);
+				MesPrint("!>Error %d",error);
 				MesCall("MulFunc");
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			tfill = prod+1;
 			t = p1+1; while ( t < (WORD *)num1 ) *tfill++ = *t++;

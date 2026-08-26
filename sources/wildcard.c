@@ -1707,10 +1707,12 @@ DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 				C->rhs[C->numrhs+1] = m;
 				C->Pointer = m;
 				if ( m > C->Top ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Internal problems with extra compiler buffer");
+					MesPrint("!>Internal problems with extra compiler buffer");
 					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				goto FlipOn;
 			}
@@ -1732,10 +1734,12 @@ DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 			m++; w += w[1];
 		} while ( --n > 0 );
 	}
+/* INTERNAL_ERROR_EXCL_START */
 	MLOCK(ErrorMessageLock);
-	MesPrint("Bug in AddWild.");
+	MesPrint("!>Bug in AddWild.");
 	MUNLOCK(ErrorMessageLock);
 	return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 FlipOn:
 	if ( i >= 0 ) {
 		m = AT.WildMask;
@@ -1748,9 +1752,11 @@ FlipOn:
 			}
 			m++; w += w[1];
 		}
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint(" Bug in AddWild with passing set[i]");
+		MesPrint("!>Bug in AddWild with passing set[i]");
 		MUNLOCK(ErrorMessageLock);
+/* INTERNAL_ERROR_EXCL_STOP */
 /*
 		For the moment we want to crash here. That is easier with debugging.
 */
@@ -2128,13 +2134,15 @@ int CheckWild(PHEAD WORD oldnumber, WORD type, WORD newnumber, WORD *newval)
 			} while ( --n > 0 );
 			break;
 	}
+/* INTERNAL_ERROR_EXCL_START */
 	AN.oldtype = -1;
 	AN.oldvalue = -1;
 	AN.WildReserve = 0;
 	MLOCK(ErrorMessageLock);
-	MesPrint("Inconsistency in Wildcard prototype.");
+	MesPrint("!>Inconsistency in Wildcard prototype.");
 	MUNLOCK(ErrorMessageLock);
 	return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 NoMatch:
 	AN.WildReserve = 0;
 	return(1+retblock);

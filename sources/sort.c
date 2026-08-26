@@ -740,11 +740,13 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 						if ( AN.tryterm > 0 ) AN.tryterm = 0;
 						if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(newout->filesize)) ) !=
 								BASEPOSITION(newout->filesize) ) {
+/* INTERNAL_ERROR_EXCL_START */
 							MLOCK(ErrorMessageLock);
-							MesPrint("Error reading information for $ variable");
+							MesPrint("!>Error reading information for $ variable");
 							MUNLOCK(ErrorMessageLock);
 							M_free(to,"$-buffer reading");
 							retval = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 						}
 						else {
 							*((WORD **)buffer) = to;
@@ -776,10 +778,12 @@ TooLarge:
 							if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop )
 								goto WorkSpaceError;
 							if ( j > AM.MaxTer ) {
+/* INTERNAL_ERROR_EXCL_START */
 								MLOCK(ErrorMessageLock);
-								MesPrint("Encountered term of size: %d words.", j/(LONG)sizeof(WORD) );
+								MesPrint("!>Encountered term of size: %d words.", j/(LONG)sizeof(WORD) );
 								MUNLOCK(ErrorMessageLock);
 								goto TooLarge;
+/* INTERNAL_ERROR_EXCL_STOP */
 							}
 							NCOPY(to,t,j);
 							retval = to - buffer - 1;
@@ -979,11 +983,13 @@ RetRetval:
 				if ( AN.tryterm > 0 ) AN.tryterm = 0;
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
 				BASEPOSITION(position) ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Error reading information for $ variable");
+					MesPrint("!>Error reading information for $ variable");
 					MUNLOCK(ErrorMessageLock);
 					M_free(to,"$-buffer reading");
 					retval = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				else {
 					*((WORD **)buffer) = to;
@@ -1064,10 +1070,12 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
 	i = from - *take;
 	if ( i*((LONG)(sizeof(WORD))) > AM.MaxTer ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Problems in PutIn");
+		MesPrint("!>Problems in PutIn");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	to = buffer;
 	while ( --i >= 0 ) *--to = *--from;
@@ -1075,11 +1083,13 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 #ifdef WITHZLIB
 	if ( ( RetCode = FillInputGZIP(file,position,(UBYTE *)buffer
 									,file->POsize,npat) ) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
+		MesPrint("!>PutIn: We have RetCode = %x while reading %x bytes",
 			RetCode,file->POsize);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 #else
 #ifdef ALLLOCK
@@ -1090,11 +1100,13 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 #ifdef ALLLOCK
 		UNLOCK(file->pthreadslock);
 #endif
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
+		MesPrint("!>PutIn: We have RetCode = %x while reading %x bytes",
 			RetCode,file->POsize);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 #ifdef ALLLOCK
 	UNLOCK(file->pthreadslock);
@@ -1304,11 +1316,13 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 		if ( i < 0 ) {			/* Compressed term */
 			i = term[1] + 2;
 			if ( fi == AR.outfile || fi == AR.hidefile ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Ran into precompressed term");
+				MesPrint("!>Ran into precompressed term");
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 				return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 		}
 		else if ( !AR.NoCompress && ( ncomp > 0 ) && AR.sLevel <= 0 ) {	/* Must compress */
@@ -2300,10 +2314,12 @@ twogen:
 				i1 = REDLENG(i1);
 				i2 = REDLENG(i2);
 				if ( AddRat(BHEAD (UWORD *)t1,i1,(UWORD *)t2,i2,(UWORD *)m,&i) ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Addition of coefficients of PolyFun");
+					MesPrint("!>Addition of coefficients of PolyFun");
 					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				if ( i == 0 ) {
 					m = mm;
@@ -3793,9 +3809,11 @@ ConMer:
 				m1 = m2 + *m2;
 			}
 			if ( length < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Readerror");
+				MesPrint("!>Readerror");
 				goto PatCall2;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 #ifdef WITHPTHREADS
 			if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
@@ -3818,9 +3836,11 @@ ConMer:
 				ADDPOS(S->SizeInFile[par],length/sizeof(WORD));
 			}
 			if ( length < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Readerror");
+				MesPrint("!>Readerror");
 				goto PatCall2;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 #endif
 		}
@@ -4124,10 +4144,12 @@ NextTerm:
 		else
 #endif
 		if ( ( im = PutOut(BHEAD poin[k],&position,fout,1) ) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Called from MergePatches with k = %d (stream %d)",k,S->ktoi[k]);
+			MesPrint("!>Called from MergePatches with k = %d (stream %d)",k,S->ktoi[k]);
 			MUNLOCK(ErrorMessageLock);
 			goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		ADDPOS(S->SizeInFile[par],im);
 		goto NextTerm;
@@ -4176,10 +4198,12 @@ EndOfAll:
 				sizeof(POSITION)
 			  || (ULONG)ReadFile(fin->handle,(UBYTE *)S->iPatches,(LONG)((S->inNum)+1)
 					*sizeof(POSITION)) != ((S->inNum)+1)*sizeof(POSITION) ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Read error fourth stage sorting");
+				MesPrint("!>Read error fourth stage sorting");
 				MUNLOCK(ErrorMessageLock);
 				goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			*rr = 0;
 #ifdef WITHZLIB
@@ -4544,10 +4568,12 @@ int SortWild(WORD *w, WORD nw)
 							if ( sv < stop && ( *sv == FROMSET
 							|| *sv == SETTONUM || *sv == LOADDOLLAR ) ) {
 								if ( s[2] != sv[2] ) {
+/* INTERNAL_ERROR_EXCL_START */
 									error = -1;
 									MLOCK(ErrorMessageLock);
-									MesPrint("&Wildcard set conflict");
+									MesPrint("!>Wildcard set conflict");
 									MUNLOCK(ErrorMessageLock);
+/* INTERNAL_ERROR_EXCL_STOP */
 								}
 							}
 							*v = -1;

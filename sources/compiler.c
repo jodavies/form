@@ -1123,9 +1123,11 @@ doexpr:					s += 2;
 #endif
 */
 							if ( ( renumber = GetTable(x2,&position,0) ) == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 								error = 1;
-								MesPrint("&Problems getting information about stored expression %s(1)"
+								MesPrint("!>Problems getting information about stored expression %s(1)"
 								,EXPRNAME(x2));
+/* INTERNAL_ERROR_EXCL_STOP */
 							}
 							if ( renumber->symb.lo != AN.dummyrenumlist )
 								M_free(renumber->symb.lo,"VarSpace");
@@ -1372,9 +1374,11 @@ dofunction:			firstsumarg = 1;
 #endif
 */
 									if ( ( renumber = GetTable(x2,&position,0) ) == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 										error = 1;
-										MesPrint("&Problems getting information about stored expression %s(2)"
+										MesPrint("!>Problems getting information about stored expression %s(2)"
 										,EXPRNAME(x2));
+/* INTERNAL_ERROR_EXCL_STOP */
 									}
 									if ( renumber->symb.lo != AN.dummyrenumlist )
 										M_free(renumber->symb.lo,"VarSpace");
@@ -1445,9 +1449,11 @@ dofunction:			firstsumarg = 1;
 									case TNUMBER1:
 										*t++ = -SNUMBER; *t++ = x2; break;
 									default:
-										MesPrint("&Internal error 435");
+/* INTERNAL_ERROR_EXCL_START */
+										MesPrint("!>Internal error 435");
 										error = 1;
 										*t++ = -SYMBOL; *t++ = x2; break;
+/* INTERNAL_ERROR_EXCL_STOP */
 								}
 								break;
 							case TSUBEXP:
@@ -1610,9 +1616,11 @@ dofunction:			firstsumarg = 1;
 									case TNUMBER1:
 										*t++ = SNUMBER; *t++ = 4; *t++ = x2; *t++ = 1; break;
 									default:
-										MesPrint("&Internal error 435");
+/* INTERNAL_ERROR_EXCL_START */
+										MesPrint("!>Internal error 435");
 										error = 1;
 										*t++ = SYMBOL; *t++ = 4; *t++ = x2; *t++ = 1; break;
+/* INTERNAL_ERROR_EXCL_STOP */
 								}
 								break;
 							default:
@@ -1658,9 +1666,11 @@ dofunction:			firstsumarg = 1;
 #endif
 */
 					if ( ( renumber = GetTable(x1,&position,0) ) == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 						error = 1;
-						MesPrint("&Problems getting information about stored expression %s(3)"
+						MesPrint("!>Problems getting information about stored expression %s(3)"
 						,EXPRNAME(x1));
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					if ( renumber->symb.lo != AN.dummyrenumlist )
 						M_free(renumber->symb.lo,"VarSpace");
@@ -1676,8 +1686,10 @@ dofunction:			firstsumarg = 1;
 */
 					s++;
 					if ( *s != TSUBEXP ) {
-						MesPrint("&Internal error 23");
+/* INTERNAL_ERROR_EXCL_START */
+						MesPrint("!>Internal error 23");
 						Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					s++; x2 = 0; while ( *s >= 0 ) { x2 = 128*x2 + *s++; }
 					r = cbuf[subexpbuffers[x2].buffernum].rhs[subexpbuffers[x2].subexpnum];
@@ -1689,8 +1701,10 @@ dofunction:			firstsumarg = 1;
 						error = -1;
 					}
 					if ( *s != RBRACE ) {
-						MesPrint("&Internal error 23b");
+/* INTERNAL_ERROR_EXCL_START */
+						MesPrint("!>Internal error 23b");
 						Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					s++;
 				}
@@ -2156,8 +2170,10 @@ dolast:
 					tt++;
 				}
 				if ( *tt != TNUMBER ) {
-					MesPrint("Internal problems(1) in CodeFactors");
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>Internal problems(1) in CodeFactors");
 					return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				tt++; x2 = 0; while ( *tt >= 0 ) { x2 = 100*x2 + *tt++; }
 /*
@@ -2207,8 +2223,10 @@ dopower:
 					tt++;
 				}
 				if ( *tt != TNUMBER ) {
-					MesPrint("Internal problems(2) in CodeFactors");
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>Internal problems(2) in CodeFactors");
 					return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				tt++; x2 = 0; while ( *tt >= 0 ) { x2 = 100*x2 + *tt++; }
 /*

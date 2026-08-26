@@ -148,11 +148,7 @@ WORD *DoubleCbuffer(int num, WORD *w,int par)
 	WORD *w1, *w2;
 	LONG offset, j, i;
 	DUMMYUSE(par)
-/*
-	MLOCK(ErrorMessageLock);
-		MesPrint(" doubleCbuffer: par = %d",par);
-	MUNLOCK(ErrorMessageLock);
-*/
+
 	w1 = C->Buffer; w2 = newbuffer;
 	i = w - w1;
 	j = i & 7;
@@ -441,8 +437,10 @@ int InsTree(int bufnum, int h)
 			return(p->value);
 		}
 	}
-	MesPrint("We vallen uit de boom!");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>We vallen uit de boom!");
 	Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	return(h);
 balance:;
 	for (;;) {

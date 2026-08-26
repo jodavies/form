@@ -170,11 +170,13 @@ int NormPolyTerm(PHEAD WORD *term)
 				t += t[1];
 				break;
 			default:
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Illegal code in NormPolyTerm");
+				MesPrint("!>Illegal code in NormPolyTerm");
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 				break;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 /*
@@ -481,10 +483,12 @@ int ConvertToPoly(PHEAD WORD *term, WORD *outterm, WORD *comlist, WORD par)
 	  i = action;
 	}
 	else {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Illegal internal code in conversion to polynomial notation");
+		MesPrint("!>Illegal internal code in conversion to polynomial notation");
 		MUNLOCK(ErrorMessageLock);
 		i = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(i);
 }

@@ -230,9 +230,11 @@ int AddName(NAMETREE *nametree, UBYTE *name, WORD type, WORD number, int *nodenu
 	}
 #ifdef DEBUGON
 	else {	/* Cannot be. Code here for debugging only */
-		MesPrint("We ran into an impossible case in AddName\n");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>We ran into an impossible case in AddName\n");
 		DumpTree(nametree);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 #endif
 	return(retval);
@@ -764,8 +766,10 @@ void CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
 				Dollars[n->number].node = newtree->nodefill;
 				break;
 			default:
-				MesPrint("Illegal variable type in CopyTree: %d",n->type);
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Illegal variable type in CopyTree: %d",n->type);
 				break;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		newtree->nodefill++;
 		s = newtree->namebuffer + newtree->namefill;

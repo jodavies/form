@@ -900,10 +900,12 @@ void WildDollars(PHEAD WORD *term)
 		t = m - 4;
 		while ( *t == LOADDOLLAR || *t == FROMSET || *t == SETTONUM ) t -= 4;
 		if ( t < wildvalue ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("&Serious bug in wildcard prototype. Found in WildDollars");
+			MesPrint("!>Serious bug in wildcard prototype. Found in WildDollars");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		numdollar = m[2];
 		d = Dollars + numdollar;
@@ -2511,10 +2513,12 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 			case LESSEQUAL: return(1);
 		}
 	}
+/* INTERNAL_ERROR_EXCL_START */
 	MLOCK(ErrorMessageLock);
-	MesPrint("@Internal problems with operator in $( )");
+	MesPrint("!>Internal problems with operator in $( )");
 	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	return(0);
 }
 

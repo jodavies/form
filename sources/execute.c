@@ -1114,8 +1114,10 @@ if ( AC.SwitchInArray > 0 ) {
 		AC.HideLevel = 0;
 		if ( par == CLEARMODULE ) {
 			if ( DeleteStore(0) < 0 ) {
-				MesPrint("Cannot restart the storage file");
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Cannot restart the storage file");
 				RetCode = -1;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			else RetCode = 0;
 			CleanUp(1);
@@ -1808,8 +1810,10 @@ void ExchangeExpressions(int num1, int num2)
 		SeekFile(AR.StoreData.Handle,&(e1->onfile),SEEK_SET);
 		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)ind,
 		(LONG)(sizeof(INDEXENTRY))) != sizeof(INDEXENTRY) ) {
-			MesPrint("File error while exchanging expressions");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>File error while exchanging expressions");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		FlushFile(AR.StoreData.Handle);
 	}
@@ -1832,8 +1836,10 @@ void ExchangeExpressions(int num1, int num2)
 		SeekFile(AR.StoreData.Handle,&(e2->onfile),SEEK_SET);
 		if ( WriteFile(AR.StoreData.Handle,(UBYTE *)ind,
 		(LONG)(sizeof(INDEXENTRY))) != sizeof(INDEXENTRY) ) {
-			MesPrint("File error while exchanging expressions");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>File error while exchanging expressions");
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		FlushFile(AR.StoreData.Handle);
 	}

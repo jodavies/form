@@ -127,10 +127,12 @@ int TestMatch(PHEAD WORD *term, WORD *level)
 		else {
 			AN.RepPoint--;
 			if ( AN.RepPoint < AT.RepCount ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Internal problems with REPEAT count");
+				MesPrint("!>Internal problems with REPEAT count");
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 		}
 		return(0);			/* Force the next level */

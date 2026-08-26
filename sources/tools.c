@@ -2250,7 +2250,9 @@ void *Malloc1(LONG size, const char *messageifwrong)
 	int i;
 	LOCK(MallocLock);
 	if ( size == 0 ) {
-		MesPrint("%wAsking for 0 bytes in Malloc1");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>%wAsking for 0 bytes in Malloc1");
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 #endif
 #ifdef WITHSTATS
@@ -2781,17 +2783,21 @@ void *FromVarList(LIST *L)
 			if ( L == &(AP.DollarList) ) {
 				if ( L->maxnum > MAXDOLLARVARIABLES ) L->maxnum = MAXDOLLARVARIABLES;
 				if ( L->num >= MAXDOLLARVARIABLES ) {
-					MesPrint("!!!More than %l objects in list of $-variables",
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>More than %l objects in list of $-variables",
 						MAXDOLLARVARIABLES);
 					Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 			}
 			else {
 				if ( L->maxnum > MAXVARIABLES ) L->maxnum = MAXVARIABLES;
 				if ( L->num >= MAXVARIABLES ) {
-					MesPrint("!!!More than %l objects in list of variables",
+/* INTERNAL_ERROR_EXCL_START */
+					MesPrint("!>More than %l objects in list of variables",
 						MAXVARIABLES);
 					Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 			}
 		}
@@ -3130,10 +3136,12 @@ WORD ToPolyFunGeneral(PHEAD WORD *term)
 							tt += 2;
 						}
 						else {
+/* INTERNAL_ERROR_EXCL_START */
 							MLOCK(ErrorMessageLock);
-							MesPrint("Internal error: Zero in PolyRatFun");
+							MesPrint("!>Internal error: Zero in PolyRatFun");
 							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 						}
 					}
 				}
@@ -3387,8 +3395,10 @@ docompare:
 	return(0);
  
 argerror:
-	MesPrint("Illegal type of short function argument in Normalize");
+/* INTERNAL_ERROR_EXCL_START */
+	MesPrint("!>Illegal type of short function argument in Normalize");
 	Terminate(-1); return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -3570,7 +3580,9 @@ LONG Timer(int par)
 	struct timespec t;
 	if ( par == 0 ) {
 		if ( clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t) ) {
-			MesPrint("Error in getting timing information");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Error in getting timing information");
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		return (LONG)t.tv_sec * 1000 + (LONG)t.tv_nsec / 1000000;
 	}
@@ -3804,18 +3816,22 @@ int TestTerm(WORD *term)
 	endterm = term + *term;
 	coeffsize = ABS(endterm[-1]);
 	if ( coeffsize >= *term ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("TestTerm: Internal inconsistency in term. Coefficient too big.");
+		MesPrint("!>TestTerm: Internal inconsistency in term. Coefficient too big.");
 		MUNLOCK(ErrorMessageLock);
 		errorcode = 1;
 		goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( ( coeffsize < 3 ) || ( ( coeffsize & 1 ) != 1 ) ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("TestTerm: Internal inconsistency in term. Wrong size coefficient.");
+		MesPrint("!>TestTerm: Internal inconsistency in term. Wrong size coefficient.");
 		MUNLOCK(ErrorMessageLock);
 		errorcode = 2;
 		goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	t = term+1;
 	tstop = endterm - coeffsize;
@@ -3830,12 +3846,14 @@ int TestTerm(WORD *term)
 				break;
 			case SNUMBER:
 			case LNUMBER:
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("TestTerm: Internal inconsistency in term. L or S number");
+				MesPrint("!>TestTerm: Internal inconsistency in term. L or S number");
 				MUNLOCK(ErrorMessageLock);
 				errorcode = 3;
 				goto finish;
 				break;
+/* INTERNAL_ERROR_EXCL_STOP */
 			case EXPRESSION:
 			case SUBEXPRESSION:
 			case DOLLAREXPRESSION:
@@ -3851,48 +3869,58 @@ int TestTerm(WORD *term)
 			case MINVECTOR:
 			case SETEXP:
 			case ARGFIELD:
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("TestTerm: Internal inconsistency in term. Illegal subterm.");
+				MesPrint("!>TestTerm: Internal inconsistency in term. Illegal subterm.");
 				MUNLOCK(ErrorMessageLock);
 				errorcode = 5;
 				goto finish;
 				break;
+/* INTERNAL_ERROR_EXCL_STOP */
 			case ARGWILD:
 				break;
 			default:
 				if ( *t <= 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("TestTerm: Internal inconsistency in term. Illegal subterm number.");
+					MesPrint("!>TestTerm: Internal inconsistency in term. Illegal subterm number.");
 					MUNLOCK(ErrorMessageLock);
 					errorcode = 6;
 					goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 /*
 				This is a regular function.
 */
 				if ( *t-FUNCTION >= NumFunctions ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("TestTerm: Internal inconsistency in term. Illegal function number");
+					MesPrint("!>TestTerm: Internal inconsistency in term. Illegal function number");
 					MUNLOCK(ErrorMessageLock);
 					errorcode = 7;
 					goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				funstop = t + t[1];
 				if ( funstop > tstop ) goto subtermsize;
 				if ( t[2] != 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("TestTerm: Internal inconsistency in term. Dirty flag nonzero.");
+					MesPrint("!>TestTerm: Internal inconsistency in term. Dirty flag nonzero.");
 					MUNLOCK(ErrorMessageLock);
 					errorcode = 8;
 					goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				targ = t + FUNHEAD;
 				if ( targ > funstop ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("TestTerm: Internal inconsistency in term. Illegal function size.");
+					MesPrint("!>TestTerm: Internal inconsistency in term. Illegal function size.");
 					MUNLOCK(ErrorMessageLock);
 					errorcode = 9;
 					goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				if ( functions[*t-FUNCTION].spec >= TENSORFUNCTION ) {
 				}
@@ -3900,11 +3928,13 @@ int TestTerm(WORD *term)
 				  while ( targ < funstop ) {
 					if ( *targ < 0 ) {
 						if ( *targ <= -(FUNCTION+NumFunctions) ) {
+/* INTERNAL_ERROR_EXCL_START */
 							MLOCK(ErrorMessageLock);
-							MesPrint("TestTerm: Internal inconsistency in term. Illegal function number in argument.");
+							MesPrint("!>TestTerm: Internal inconsistency in term. Illegal function number in argument.");
 							MUNLOCK(ErrorMessageLock);
 							errorcode = 10;
 							goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 						}
 						if ( *targ <= -FUNCTION ) { targ++; }
 						else {
@@ -3913,46 +3943,56 @@ int TestTerm(WORD *term)
 							&& ( *targ != -SNUMBER )
 							&& ( *targ != -ARGWILD )
 							&& ( *targ != -INDEX ) ) {
+/* INTERNAL_ERROR_EXCL_START */
 								MLOCK(ErrorMessageLock);
-								MesPrint("TestTerm: Internal inconsistency in term. Illegal object in argument.");
+								MesPrint("!>TestTerm: Internal inconsistency in term. Illegal object in argument.");
 								MUNLOCK(ErrorMessageLock);
 								errorcode = 11;
 								goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 							}
 							targ += 2;
 						}
 					}
 					else if ( ( *targ < ARGHEAD ) || ( targ+*targ > funstop ) ) {
+/* INTERNAL_ERROR_EXCL_START */
 						MLOCK(ErrorMessageLock);
-						MesPrint("TestTerm: Internal inconsistency in term. Illegal size of argument.");
+						MesPrint("!>TestTerm: Internal inconsistency in term. Illegal size of argument.");
 						MUNLOCK(ErrorMessageLock);
 						errorcode = 12;
 						goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					else if ( targ[1] != 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 						MLOCK(ErrorMessageLock);
-						MesPrint("TestTerm: Internal inconsistency in term. Dirty flag in argument.");
+						MesPrint("!>TestTerm: Internal inconsistency in term. Dirty flag in argument.");
 						MUNLOCK(ErrorMessageLock);
 						errorcode = 13;
 						goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					else {
 						targstop = targ + *targ;
 						argterm = targ + ARGHEAD;
 						while ( argterm < targstop ) {
 							if ( ( *argterm < 4 ) || ( argterm + *argterm > targstop ) ) {
+/* INTERNAL_ERROR_EXCL_START */
 								MLOCK(ErrorMessageLock);
-								MesPrint("TestTerm: Internal inconsistency in term. Illegal termsize in argument.");
+								MesPrint("!>TestTerm: Internal inconsistency in term. Illegal termsize in argument.");
 								MUNLOCK(ErrorMessageLock);
 								errorcode = 14;
 								goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 							}
 							if ( TestTerm(argterm) != 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 								MLOCK(ErrorMessageLock);
-								MesPrint("TestTerm: Internal inconsistency in term. Called from TestTerm.");
+								MesPrint("!>TestTerm: Internal inconsistency in term. Called from TestTerm.");
 								MUNLOCK(ErrorMessageLock);
 								errorcode = 15;
 								goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 							}
 							argterm += *argterm;
 						}
@@ -3965,11 +4005,13 @@ int TestTerm(WORD *term)
 		tt = t + t[1];
 		if ( tt > tstop ) {
 subtermsize:
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("TestTerm: Internal inconsistency in term. Illegal subterm size.");
+			MesPrint("!>TestTerm: Internal inconsistency in term. Illegal subterm size.");
 			MUNLOCK(ErrorMessageLock);
 			errorcode = 100;
 			goto finish;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		t = tt;
 	}

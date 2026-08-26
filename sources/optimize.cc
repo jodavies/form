@@ -4454,14 +4454,18 @@ WORD generate_expression (WORD exprnr) {
 	SetScratch(AR.infile,&(e->onfile));
 
 	if ( GetTerm(BHEAD term) <= 0 ) {
-		MesPrint("Expression %d has problems in scratchfile",exprnr);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Expression %d has problems in scratchfile",exprnr);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	SeekScratch(AR.outfile,&position);
 	e->onfile = position;
 	if ( PutOut(BHEAD term,&position,AR.outfile,0) < 0 ) {
-		MesPrint("Expression %d has problems in output scratchfile",exprnr);
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Expression %d has problems in output scratchfile",exprnr);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 
 	AR.CurExpr = exprnr;
@@ -4994,8 +4998,10 @@ int ClearOptimize()
 		comexpr.c
 */
 		if ( GetName(AC.exprnames,AO.OptimizeResult.nameofexpr,&numexpr,NOAUTO) != CEXPRESSION ) {
-			MesPrint("@Internal error while clearing optimized expression %s ",AO.OptimizeResult.nameofexpr);
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Internal error while clearing optimized expression %s ",AO.OptimizeResult.nameofexpr);
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		M_free(AO.OptimizeResult.nameofexpr, "optimize expression name");
 		AO.OptimizeResult.nameofexpr = NULL;

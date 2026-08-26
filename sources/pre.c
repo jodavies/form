@@ -2726,7 +2726,11 @@ int DoCall(UBYTE *s)
 	return(0);
 wrongfile:;
 	if ( i < 0 ) MesPrint("@File %s is not a proper procedure",p->name);
-	else MesPrint("!!!Internal error with procedure names: %s",name);
+	else {
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Internal error with procedure names: %s",name);
+/* INTERNAL_ERROR_EXCL_STOP */
+	}
 	return(-1);
 }
 
@@ -6965,8 +6969,10 @@ int DoOptimize(UBYTE *s)
 			AR.GetFile = 0;
 			SetScratch(AR.infile,&(e->onfile));
 			if ( GetTerm(BHEAD term) <= 0 ) {
-				MesPrint("@Expression %d has problems reading from scratchfile",i);
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Expression %d has problems reading from scratchfile",i);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			term[3] = i;
 			AR.DeferFlag = 0;
@@ -6994,8 +7000,10 @@ int DoOptimize(UBYTE *s)
 			} while ( GetTerm(BHEAD term) );
 			if ( FlushOut(&position,AR.outfile,1) ) {
 DoSerr:
-				MesPrint("@Expression %d has problems writing to scratchfile",i);
+/* INTERNAL_ERROR_EXCL_START */
+				MesPrint("!>Expression %d has problems writing to scratchfile",i);
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 #ifdef WITHMPI
 			}
@@ -7554,9 +7562,11 @@ UBYTE *ConstructName(UBYTE *s,UBYTE type)
 			*t = 0;
 			break;
 		default:
-			MesPrint("&Unrecognized datatype in ConstructName");
+/* INTERNAL_ERROR_EXCL_START */
+			MesPrint("!>Unrecognized datatype in ConstructName");
 			*t = 0;
 			break;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(AP.fullname);
 }

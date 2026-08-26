@@ -385,9 +385,10 @@ void PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 /*
 problems:;
 */
+/* INTERNAL_ERROR_EXCL_START */
 				*term = oldsize; oldt[0] = a[0]; oldt[1] = a[1]; oldt[2] = a[2];
 				MLOCK(ErrorMessageLock);
-				MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");
+				MesPrint("!>Error! Illegal bracket sequence detected in PutBracketInIndex");
 #ifdef WITHPTHREADS
 				MesPrint("Worker = %w");
 #endif
@@ -396,6 +397,7 @@ problems:;
 				MUNLOCK(ErrorMessageLock);
 				AT.fromindex = 0;
 				Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			i = -1;
 		}

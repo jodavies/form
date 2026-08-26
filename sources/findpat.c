@@ -1399,10 +1399,12 @@ OneWild:
 			#] DELTAS : 
 */
 		else {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Pattern not yet implemented");
+			MesPrint("!>Pattern not yet implemented");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	} while ( m < mstop );
 	return(1);

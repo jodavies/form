@@ -358,10 +358,12 @@ int StartAllThreads(int number)
 MesPrint("AB = %x %x %x  %d",AB[0],AB[1],AB[2], identityofthreads);
 */
 	return(0);
+/* INTERNAL_ERROR_EXCL_START */
 failure:
-	MesPrint("Cannot start %d threads",number);
+	MesPrint("!>Cannot start %d threads",number);
 	Terminate(-1);
 	return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -798,12 +800,14 @@ ALLPRIVATES *InitializeOneThread(int identity)
 
 	ReserveTempFiles(2);
 	return(B);
+/* INTERNAL_ERROR_EXCL_START */
 OnError:;
 	MLOCK(ErrorMessageLock);
-	MesPrint("Error initializing thread %d",identity);
+	MesPrint("!>Error initializing thread %d",identity);
 	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(B);
+/* INTERNAL_ERROR_EXCL_STOP */
 }
 
 /*
@@ -1320,10 +1324,12 @@ void *RunThread(void *dummy)
 				Start with getting some buffers synchronized with the compiler
 */
 				if ( UpdateOneThread(identity) ) {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Update error in starting expression in thread %d in module %d",identity,AC.CModule);
+					MesPrint("!>Update error in starting expression in thread %d in module %d",identity,AC.CModule);
 					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				AR.DeferFlag = AC.ComDefer;
 				AR.sLevel = AS.sLevel;
@@ -1434,11 +1440,13 @@ void *RunThread(void *dummy)
 						PolyFunClean(BHEAD term);
 				  }
 				  if ( Generator(BHEAD term,0) ) {
+/* INTERNAL_ERROR_EXCL_START */
 					LowerSortLevel();
 					MLOCK(ErrorMessageLock);
-					MesPrint("Error in processing one term in thread %d in module %d",identity,AC.CModule);
+					MesPrint("!>Error in processing one term in thread %d in module %d",identity,AC.CModule);
 					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 				  }
 				  AN.ninterms++;
 				  }
@@ -1925,11 +1933,13 @@ bucketstolen:;
 			#] OPTIMIZEEXPRESSION : 
 */
 			default:
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
+				MesPrint("!>Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 				break;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		/* we need the following update in case we are using checkpoints. then we
 		   need to readjust the clocks when recovering using this information */
@@ -2039,11 +2049,13 @@ void *RunSortBot(void *dummy)
 			#] CLEARCLOCK : 
 */
 			default:
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
+				MesPrint("!>Illegal wakeup signal %d for thread %d",wakeupsignal,identity);
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 				break;
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 EndOfThread:;
@@ -2427,10 +2439,12 @@ void MasterWaitAllBlocks(void)
 void WakeupThread(int identity, int signalnumber)
 {
 	if ( signalnumber == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Illegal wakeup signal for thread %d",identity);
+		MesPrint("!>Illegal wakeup signal for thread %d",identity);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	LOCK(wakeuplocks[identity]);
 	wakeup[identity] = signalnumber;
@@ -2453,10 +2467,12 @@ void WakeupThread(int identity, int signalnumber)
 void WakeupMasterFromThread(int identity, int signalnumber)
 {
 	if ( signalnumber == 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Illegal wakeup signal for master %d",identity);
+		MesPrint("!>Illegal wakeup signal for master %d",identity);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	LOCK(wakeupmasterthreadlocks[identity]);
 	wakeupmasterthread[identity] = signalnumber;
@@ -3615,10 +3631,12 @@ int PutToMaster(PHEAD WORD *term)
 			// In this case, there has been an accounting error in a previous use
 			// of this block. Blocks that have been read from and unlocked, should
 			// have BlockTerms == 0.
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Error in PutToMaster, starting a block with BlockTerms != 0");
+			MesPrint("!>Error in PutToMaster, starting a block with BlockTerms != 0");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 	}
 
@@ -3658,10 +3676,12 @@ SortBotOut(PHEAD WORD *term)
 	else {
 		numberofterms++;
 		if ( ( im = PutOut(BHEAD term,&SortBotPosition,AR.outfile,1) ) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 			MLOCK(ErrorMessageLock);
-			MesPrint("Called from MasterMerge/SortBotOut");
+			MesPrint("!>Called from MasterMerge/SortBotOut");
 			MUNLOCK(ErrorMessageLock);
 			return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 		}
 		ADDPOS(AT.SS->SizeInFile[0],im);
 		return(im);
@@ -4096,10 +4116,12 @@ NextTerm:
 */
 	S->TermsLeft++;
 	if ( ( im = PutOut(B0,poin[k],&position,fout,1) ) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Called from MasterMerge with k = %d (stream %d)",k,S->ktoi[k]);
+		MesPrint("!>Called from MasterMerge with k = %d (stream %d)",k,S->ktoi[k]);
 		MUNLOCK(ErrorMessageLock);
 		goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	ADDPOS(S->SizeInFile[0],im);
 	goto NextTerm;
@@ -4250,11 +4272,13 @@ int SortBotMasterMerge(void)
 		WakeupThread(i,RUNSORTBOT);
 	}
 	if ( SortBotMerge(BHEAD0) ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Called from SortBotMasterMerge");
+		MesPrint("!>Called from SortBotMasterMerge");
 		MUNLOCK(ErrorMessageLock);
 		AS.MasterSort = 0;
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*
 	And next the cleanup
@@ -4371,11 +4395,13 @@ int SortBotMerge(PHEAD0)
 */
 			Bin1->T.SB.BlockTerms[blin1]--;
 			if ( SortBotOut(BHEAD term1) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
+				MesPrint("!>Called from SortBotMerge with thread = %d",AT.identity);
 				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			term1 += *term1;
 			if ( Bin1->T.SB.BlockTerms[blin1] == 0 ) {
@@ -4405,11 +4431,13 @@ int SortBotMerge(PHEAD0)
 */
 			Bin2->T.SB.BlockTerms[blin2]--;
 			if ( SortBotOut(BHEAD term2) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
+				MesPrint("!>Called from SortBotMerge with thread = %d",AT.identity);
 				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 next2:
 			term2 += *term2;
@@ -4557,11 +4585,13 @@ next2:
 					UnpackFloat(aux2,fun2);
 				}
 				else {
+/* INTERNAL_ERROR_EXCL_START */
 					MLOCK(ErrorMessageLock);
-					MesPrint("Illegal value %d for AT.SortFloatMode in SortBotMerge.",AT.SortFloatMode);
+					MesPrint("!>Illegal value %d for AT.SortFloatMode in SortBotMerge.",AT.SortFloatMode);
 					MUNLOCK(ErrorMessageLock);
 					Terminate(-1);
 					return(0);
+/* INTERNAL_ERROR_EXCL_STOP */
 				}
 				mpf_add(aux3,aux1,aux2);
 				size3 = mpf_sgn(aux3);
@@ -4646,21 +4676,25 @@ next2:
 					wp[0] = to - wp;
 PutOutwp:
 					if ( SortBotOut(BHEAD wp) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 						MLOCK(ErrorMessageLock);
-						MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
+						MesPrint("!>Called from SortBotMerge with thread = %d",AT.identity);
 						MUNLOCK(ErrorMessageLock);
 						error = -1;
 						goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 					}
 					goto cancelled;
 				}
 			}
 			if ( SortBotOut(BHEAD term1) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
+				MesPrint("!>Called from SortBotMerge with thread = %d",AT.identity);
 				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 cancelled:;		/* Now we need two new terms */
 			term1 += *term1;
@@ -4698,11 +4732,13 @@ cancelled:;		/* Now we need two new terms */
 		while ( *term1 ) {
 			Bin1->T.SB.BlockTerms[blin1]--;
 			if ( SortBotOut(BHEAD term1) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
+				MesPrint("!>Called from SortBotMerge with thread = %d",AT.identity);
 				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			if ( Bin1->T.SB.BlockTerms[blin1] == 0 ) {
 
@@ -4737,11 +4773,13 @@ cancelled:;		/* Now we need two new terms */
 		while ( *term2 ) {
 			Bin2->T.SB.BlockTerms[blin2]--;
 			if ( SortBotOut(BHEAD term2) < 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 				MLOCK(ErrorMessageLock);
-				MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
+				MesPrint("!>Called from SortBotMerge with thread = %d",AT.identity);
 				MUNLOCK(ErrorMessageLock);
 				error = -1;
 				goto ReturnError;
+/* INTERNAL_ERROR_EXCL_STOP */
 			}
 			if ( Bin2->T.SB.BlockTerms[blin2] == 0 ) {
 
@@ -4853,8 +4891,10 @@ int IniSortBlocks(int numworkers)
 /*
 		This should have been taken care of in RecalcSetups.
 */
-		MesPrint("We have a problem with the size of the blocks in IniSortBlocks");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>We have a problem with the size of the blocks in IniSortBlocks");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*
 	Layout:  For each worker
@@ -4888,8 +4928,10 @@ int IniSortBlocks(int numworkers)
 		}
 	}
 	if ( w > S->sTop2 ) {
-		MesPrint("Counting problem in IniSortBlocks");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Counting problem in IniSortBlocks");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 }
@@ -4935,8 +4977,10 @@ int UpdateSortBlocks(int numworkers)
 /*
 		This should have been taken care of in RecalcSetups.
 */
-		MesPrint("We have a problem with the size of the blocks in UpdateSortBlocks");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>We have a problem with the size of the blocks in UpdateSortBlocks");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 /*
 	Layout:  For each worker
@@ -4957,8 +5001,10 @@ int UpdateSortBlocks(int numworkers)
 		}
 	}
 	if ( w > S->sTop2 ) {
-		MesPrint("Counting problem in UpdateSortBlocks");
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Counting problem in UpdateSortBlocks");
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	return(0);
 }

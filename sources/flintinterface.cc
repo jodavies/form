@@ -1761,10 +1761,12 @@ void flint::ratfun_read_mpoly(const WORD *a, fmpz_mpoly_t num, fmpz_mpoly_t den,
 	}
 	else {
 		// The denominator is 1
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("implement this");
+		MesPrint("!>implement this");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( a < arg_stop ) {
 		MLOCK(ErrorMessageLock);
@@ -1818,10 +1820,12 @@ void flint::ratfun_read_poly(const WORD *a, fmpz_poly_t num, fmpz_poly_t den) {
 	}
 	else {
 		// The denominator is 1
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("implement this");
+		MesPrint("!>implement this");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	if ( a < arg_stop ) {
 		MLOCK(ErrorMessageLock);

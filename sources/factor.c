@@ -55,10 +55,12 @@ int FactorIn(PHEAD WORD *term, WORD level)
 	while ( ( t < tstop ) && ( *t != FACTORIN || ( ( *t == FACTORIN )
 	 && ( t[FUNHEAD] != -DOLLAREXPRESSION || t[1] != FUNHEAD+2 ) ) ) ) t += t[1];
 	if ( t >= tstop ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Internal error. Could not find proper factorin_ function.");
+		MesPrint("!>Internal error. Could not find proper factorin_ function.");
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	oldwork = AT.WorkPointer;
 	d = Dollars + t[FUNHEAD+1];
@@ -443,12 +445,14 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 		t += t[1];
 	}
 	if ( t >= tstop ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("Internal error. Could not find proper factorin_ function.");
+		MesPrint("!>Internal error. Could not find proper factorin_ function.");
 		MUNLOCK(ErrorMessageLock);
 		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	oldwork = AT.WorkPointer;
 	if ( AT.previousEfactor && ( expr == AT.previousEfactor[0] ) ) {
@@ -544,12 +548,14 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 	SeekScratch(file,&oldposition);
 	SetScratch(file,&position);
 	if ( GetTerm(BHEAD oldwork) <= 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
 		MLOCK(ErrorMessageLock);
-		MesPrint("(5) Expression %d has problems in scratchfile",expr);
+		MesPrint("!>(5) Expression %d has problems in scratchfile",expr);
 		MUNLOCK(ErrorMessageLock);
 		NumberFree(GCDbuffer,"FactorInExpr"); NumberFree(GCDbuffer2,"FactorInExpr");
 		NumberFree(LCMbuffer,"FactorInExpr"); NumberFree(LCMb,"FactorInExpr"); NumberFree(LCMc,"FactorInExpr");
 		return(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
 	}
 	SeekScratch(file,&startposition);
 	SeekScratch(file,&position);
