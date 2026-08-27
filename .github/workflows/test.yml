@@ -2,8 +2,22 @@ name: Test
 
 on:
   push:
+    # Only run the (slow) full tests if FORM source code, tests or this file change.
+    # The "deploy" workflow still compiles FORM and runs basic `make check` unconditionally.
+    paths:
+      - "sources/**"
+      - "check/**"
+      - ".github/workflows/test.yml"
   pull_request:
+    paths:
+      - "sources/**"
+      - "check/**"
+      - ".github/workflows/test.yml"
   workflow_dispatch:
+    paths:
+      - "sources/**"
+      - "check/**"
+      - ".github/workflows/test.yml"
 
 env:
   FORM_IGNORE_DEPRECATION: 1
