@@ -1095,6 +1095,30 @@ assert result("OK2") =~ expr("f(t(p1,p2),x,1)")
 assert result("OK3") =~ expr("f(t(p1,p2,p3),x,1)")
 assert result("BAD") =~ expr("f(t(p1,p2,p3,p4),x,1)")
 *--#] Issue97_2 : 
+*--#[ Issue103 :
+#-
+Symbol x,y,z;
+Local test1 = x;
+Local test3 = x;
+.sort
+Local test1 = y;
+Local test2 = test1;
+Local test1 = z;
+Local test3 = y;
+InExpression test1;
+	Multiply 2;
+EndInExpression;
+If ( expression(test3) );
+	Multiply 3;
+EndIf;
+Identify y = z;
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("2*z")
+assert result("test2") =~ expr("x")
+assert result("test3") =~ expr("3*z")
+*--#] Issue103 : 
 *--#[ Issue104 :
 * Leading zeroes in rational numbers not handled consistently
 Local test1 = 0001;

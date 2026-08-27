@@ -3408,6 +3408,9 @@ int CoInExpression(UBYTE *s)
 			}
 			c = *s; *s = 0;
 			if ( GetName(AC.exprnames,t,&number,NOAUTO) == CEXPRESSION ) {
+				while ( Expressions[number].replace >= 0 ) {
+					number = Expressions[number].replace;
+				}
 				*w++ = number;
 			}
 			else if ( GetName(AC.varnames,t,&number,NOAUTO) != NAMENOTFOUND ) {
@@ -4561,6 +4564,9 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 						}
 						c = *p; *p = 0;
 						if ( GetName(AC.exprnames,pp,&number,NOAUTO) == CEXPRESSION ) {
+							while ( Expressions[number].replace >= 0 ) {
+								number = Expressions[number].replace;
+							}
 							*w++ = number;
 						}
 						else if ( GetName(AC.varnames,pp,&number,NOAUTO) != NAMENOTFOUND ) {
