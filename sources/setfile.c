@@ -521,12 +521,17 @@ int AllocSetups(void)
 */
 	sp = GetSetupPar((UBYTE *)"scratchsize");
 	AM.ScratSize = sp->value/sizeof(WORD);
-	if ( AM.ScratSize < 4*AM.MaxTer ) AM.ScratSize = 4*AM.MaxTer;
+	// MaxTer is in bytes! Here we demand that Scratch/Hide fits at least 4 full-sized terms.
+	if ( AM.ScratSize < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
+		AM.ScratSize = 4*AM.MaxTer/sizeof(WORD);
+	}
 	AM.HideSize = AM.ScratSize;
 	sp = GetSetupPar((UBYTE *)"hidesize");
 	if ( sp->value > 0 ) {
 		AM.HideSize = sp->value/sizeof(WORD);
-		if ( AM.HideSize < 4*AM.MaxTer ) AM.HideSize = 4*AM.MaxTer;
+		if ( AM.HideSize < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
+			AM.HideSize = 4*AM.MaxTer/sizeof(WORD);
+		}
 	}
 	sp = GetSetupPar((UBYTE *)"factorizationcache");
 	AM.fbuffersize = sp->value;
@@ -558,7 +563,9 @@ int AllocSetups(void)
 */
 	sp = GetSetupPar((UBYTE *)"shmwinsize");
 	AM.shmWinSize = sp->value/sizeof(WORD);
-	if ( AM.shmWinSize < 4*AM.MaxTer ) AM.shmWinSize = 4*AM.MaxTer;
+	if ( AM.shmWinSize < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
+		AM.shmWinSize = 4*AM.MaxTer/(LONG)sizeof(WORD);
+	}
 /*
 	The sort buffer
 */
@@ -642,13 +649,15 @@ int AllocSetups(void)
 #endif
 
 	sp = GetSetupPar((UBYTE *)"compresssize");
+	// CompressSize is in bytes
 	if ( sp->value < 2*AM.MaxTer ) sp->value = 2*AM.MaxTer;
 	AM.CompressSize = sp->value;
 #ifndef WITHPTHREADS
-	AR.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
+	AR.CompressBuffer = (WORD *)Malloc1(AM.CompressSize+10, "compresssize");
 	AR.CompressPointer = AR.CompressBuffer;
-	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
+	AR.ComprTop = AR.CompressBuffer + AM.CompressSize/sizeof(WORD);
 #endif
+	// BracketIndexSize is given in bytes
 	sp = GetSetupPar((UBYTE *)"bracketindexsize");
 	if ( sp->value < 20*AM.MaxTer ) sp->value = 20*AM.MaxTer;
 	AM.MaxBracketBufferSize = sp->value/sizeof(WORD);

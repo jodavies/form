@@ -396,8 +396,9 @@ UBYTE *scratchname[] = { (UBYTE *)"scratchsize",
  *			AR.Fscr[1] : output of the sorting to be fed to the master
  *			AR.Fscr[2] : input for keep brackets and expressions in rhs
  *		Hence the 0 and 2 channels can use a rather small buffer like
- *			10*AM.MaxTer.
- *		The 1 channel needs a buffer roughly AM.ScratSize/#ofworkers.
+ *			4*AM.MaxTer (which is the minimal master size of these buffers)
+ *		The 1 channel needs a buffer roughly AM.ScratSize/#ofworkers,
+ *		but also we set it at least 4*AM.MaxTer.
  */
 
 ALLPRIVATES *InitializeOneThread(int identity)
@@ -535,17 +536,17 @@ ALLPRIVATES *InitializeOneThread(int identity)
 			else {
 				ScratchSize[j] = AM.ScratSize;
 			}
-			if ( ScratchSize[j] < 10*AM.MaxTer ) ScratchSize[j] = 10 * AM.MaxTer;
+			// AM.MaxTer is in bytes!
+			if ( ScratchSize[j] < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
+				ScratchSize[j] = 4*AM.MaxTer/sizeof(WORD);
+			}
 		}
 		else {
-/*
-			ScratchSize[j] = AM.ScratSize / (numberofthreads-1);
-			ScratchSize[j] = ScratchSize[j] / 20;
-			if ( ScratchSize[j] < 10*AM.MaxTer ) ScratchSize[j] = 10 * AM.MaxTer;
-*/
 			if ( j == 1 ) ScratchSize[j] = AM.ThreadScratOutSize;
 			else          ScratchSize[j] = AM.ThreadScratSize;
-			if ( ScratchSize[j] < 4*AM.MaxTer ) ScratchSize[j] = 4 * AM.MaxTer;
+			if ( ScratchSize[j] < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
+				ScratchSize[j] = 4*AM.MaxTer/sizeof(WORD);
+			}
 			AR.Fscr[j].name = 0;
 		}
 		ScratchSize[j] = ( ScratchSize[j] + 255 ) / 256;
@@ -600,8 +601,9 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AR.Fscr[1].name = (char *)s;
 	}
 
-	AR.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
-	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
+	// CompressSize is in bytes
+	AR.CompressBuffer = (WORD *)Malloc1(AM.CompressSize+10, "compresssize");
+	AR.ComprTop = AR.CompressBuffer + AM.CompressSize/sizeof(WORD);
 	AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 /*
 	Here we make all allocations for the struct AT
