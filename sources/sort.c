@@ -423,9 +423,15 @@ int NewSort(PHEAD0)
 	}
 	else {
 		if ( AN.FunSorts[AR.sLevel] == 0 ) {
+			// AllocSort expects size parameters to be in WORDs
 			AN.FunSorts[AR.sLevel] = AllocSort(
-				AM.SLargeSize,AM.SSmallSize,AM.SSmallEsize,AM.STermsInSmall
-					,AM.SMaxPatches,AM.SMaxFpatches,AM.SIOsize,1);
+				AM.SLargeSize/sizeof(WORD),
+				AM.SSmallSize/sizeof(WORD),
+				AM.SSmallEsize/sizeof(WORD),
+				AM.STermsInSmall,
+				AM.SMaxPatches,
+				AM.SMaxFpatches,
+				AM.SIOsize/sizeof(WORD));
 		}
 		AN.FunSorts[AR.sLevel]->PolyFlag = 0;
 	}
@@ -1037,7 +1043,7 @@ WorkSpaceError:
 
 /*
  		#] EndSort : 
- 		#[ PutIn :					LONG PutIn(handle,position,buffer,take,npat)
+		#[ PutIn :					LONG PutIn(handle,position,buffer,buffersize,take,npat)
 */
 /**
  *	Reads a new patch from position in file handle.
@@ -1048,20 +1054,22 @@ WorkSpaceError:
  *	@param file     The file system from which to read
  *	@param position The position from which to read
  *	@param buffer   The buffer into which to read
+ *	@param buffersize The size of buffer in bytes
  *	@param take     The unused tail should be moved before the buffer
  *	@param npat		The number of the patch. Is needed if the information
  *	                was compressed with gzip, because each patch has its
  *	                own independent gzip encoding.
  */
 
-LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int npat)
+LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, LONG buffersize,
+	WORD **take, int npat)
 {
 	LONG i, RetCode;
 	WORD *from, *to;
 #ifndef WITHZLIB
 	DUMMYUSE(npat);
 #endif
-	from = buffer + ( file->POsize * sizeof(UBYTE) )/sizeof(WORD);
+	from = buffer + buffersize/sizeof(WORD);
 	i = from - *take;
 	if ( i*((LONG)(sizeof(WORD))) > AM.MaxTer ) {
 		MLOCK(ErrorMessageLock);
@@ -1074,10 +1082,10 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 	*take = to;
 #ifdef WITHZLIB
 	if ( ( RetCode = FillInputGZIP(file,position,(UBYTE *)buffer
-									,file->POsize,npat) ) < 0 ) {
+									,buffersize,npat) ) < 0 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
-			RetCode,file->POsize);
+			RetCode,buffersize);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -1086,13 +1094,13 @@ LONG PutIn(FILEHANDLE *file, POSITION *position, WORD *buffer, WORD **take, int 
 	LOCK(file->pthreadslock);
 #endif
 	SeekFile(file->handle,position,SEEK_SET);
-	if ( ( RetCode = ReadFile(file->handle,(UBYTE *)buffer,file->POsize) ) < 0 ) {
+	if ( ( RetCode = ReadFile(file->handle,(UBYTE *)buffer,buffersize) ) < 0 ) {
 #ifdef ALLLOCK
 		UNLOCK(file->pthreadslock);
 #endif
 		MLOCK(ErrorMessageLock);
 		MesPrint("PutIn: We have RetCode = %x while reading %x bytes",
-			RetCode,file->POsize);
+			RetCode,buffersize);
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -3657,12 +3665,13 @@ ConMer:
 			for ( i = 0; i < S->lPatch; i++ ) {
 				p = (WORD *)(((UBYTE *)p)+2*AM.MaxTer+COMPINC*sizeof(WORD));
 				S->Patches[i] = p;
-				p = (WORD *)(((UBYTE *)p) + fin->POsize);
+				p = (WORD *)(((UBYTE *)p) + S->filePatchSize);
 				S->pStop[i] = m2 = p;
 #ifdef WITHZLIB
-				PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i);
+				PutIn(fin,&(S->iPatches[i]),S->Patches[i],S->filePatchSize,&m2,i);
 #else
-				ADDPOS(S->iPatches[i],PutIn(fin,&(S->iPatches[i]),S->Patches[i],&m2,i));
+				ADDPOS(S->iPatches[i],PutIn(fin,&(S->iPatches[i]),S->Patches[i],
+					S->filePatchSize,&m2,i));
 #endif
 			}
 		}
@@ -3915,7 +3924,7 @@ OneTerm:
 							w = poly_ratfun_add(BHEAD m1,m2);
 							if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 								MLOCK(ErrorMessageLock);
-								MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
+								MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l WORDs is too small",AM.MaxTer/sizeof(WORD));
 								MUNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
@@ -3925,7 +3934,7 @@ OneTerm:
 							w = AT.WorkPointer;
 							if ( w + m1[1] + m2[1] > AT.WorkTop ) {
 								MLOCK(ErrorMessageLock);
-								MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
+								MesPrint("A WorkSpace of %10l WORDs is too small",AM.WorkSize);
 								MUNLOCK(ErrorMessageLock);
 								Terminate(-1);
 							}
@@ -4025,10 +4034,11 @@ cancelled:
 						if ( !par && (poin[ul] + im + COMPINC) >= S->pStop[ki]
 						&& im > 0 ) {
 #ifdef WITHZLIB
-							PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[ul]),ki);
+							PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],S->filePatchSize,
+								&(poin[ul]),ki);
 #else
 							ADDPOS(S->iPatches[ki],PutIn(fin,&(S->iPatches[ki]),
-							S->Patches[ki],&(poin[ul]),ki));
+							S->Patches[ki],S->filePatchSize,&(poin[ul]),ki));
 #endif
 							poin2[ul] = poin[ul] + im;
 						}
@@ -4094,10 +4104,11 @@ NextTerm:
 					if ( !par && ( (poin[k] + im + COMPINC) >= S->pStop[ki] )
 					&& im > 0 ) {
 #ifdef WITHZLIB
-						PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],&(poin[k]),ki);
+						PutIn(fin,&(S->iPatches[ki]),S->Patches[ki],S->filePatchSize,
+							&(poin[k]),ki);
 #else
 						ADDPOS(S->iPatches[ki],PutIn(fin,&(S->iPatches[ki]),
-						S->Patches[ki],&(poin[k]),ki));
+						S->Patches[ki],S->filePatchSize,&(poin[k]),ki));
 #endif
 						poin2[k] = poin[k] + im;
 					}
@@ -4647,6 +4658,7 @@ void CleanUpSort(int num)
 #endif
 				M_free(S->ktoi, "CleanUpSort: ktoi");
 				M_free(S->lBuffer, "CleanUpSort: lBuffer+sBuffer");
+				M_free(S->file.name, "CleanUpSort: file.name");
 				M_free(S->file.PObuffer, "CleanUpSort: PObuffer");
 				M_free(S, "CleanUpSort: sorting struct");
 			}

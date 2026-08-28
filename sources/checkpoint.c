@@ -996,7 +996,10 @@ static void print_C()
 
 	print_LONGV(AC.termstack, AC.maxtermlevel);
 	print_LONGV(AC.termsortstack, AC.maxtermlevel);
-	print_VOIDP(AC.cmod, AM.MaxTal*4*sizeof(UWORD));
+	print_VOIDP(AC.cmod, AM.MaxTal*sizeof(UWORD));
+	print_VOIDP(AM.gcmod, AM.MaxTal*sizeof(UWORD));
+	print_VOIDP(AC.powmod, AM.MaxTal*sizeof(UWORD));
+	print_VOIDP(AM.gpowmod, AM.MaxTal*sizeof(UWORD));
 	print_WORDV((WORD *)(AC.cmod), 1);
 	print_WORDV((WORD *)(AC.powmod), 1);
 	print_WORDV((WORD*)AC.modpowers, 1);
@@ -1612,6 +1615,9 @@ int DoRecovery(int *moduletype)
 	R_FREE(AC.termstack);
 	R_FREE(AC.termsortstack);
 	R_FREE(AC.cmod);
+	R_FREE(AM.gcmod);
+	R_FREE(AC.powmod);
+	R_FREE(AM.gpowmod);
 	R_FREE(AC.modpowers);
 	R_FREE(AC.halfmod);
 	R_FREE(AC.IfHeap);
@@ -1949,10 +1955,10 @@ int DoRecovery(int *moduletype)
 	}
 
 	/* exception: here we also change values from struct AM */
-	R_COPY_B(AC.cmod, AM.MaxTal*4*(LONG)sizeof(UWORD), UWORD*);
-	AM.gcmod = AC.cmod + AM.MaxTal;
-	AC.powmod = AM.gcmod + AM.MaxTal;
-	AM.gpowmod = AC.powmod + AM.MaxTal;
+	R_COPY_B(AC.cmod, AM.MaxTal*(LONG)sizeof(UWORD), UWORD*);
+	R_COPY_B(AM.gcmod, AM.MaxTal*(LONG)sizeof(UWORD), UWORD*);
+	R_COPY_B(AC.powmod, AM.MaxTal*(LONG)sizeof(UWORD), UWORD*);
+	R_COPY_B(AM.gpowmod, AM.MaxTal*(LONG)sizeof(UWORD), UWORD*);
 
 	AC.modpowers = 0;
 	AC.halfmod = 0;
@@ -2771,7 +2777,10 @@ static int DoSnapshot(int moduletype)
 		S_WRITE_B(AC.termsortstack, AC.maxtermlevel*(LONG)sizeof(LONG));
 	}
 
-	S_WRITE_B(AC.cmod, AM.MaxTal*4*(LONG)sizeof(UWORD));
+	S_WRITE_B(AC.cmod, AM.MaxTal*(LONG)sizeof(UWORD));
+	S_WRITE_B(AM.gcmod, AM.MaxTal*(LONG)sizeof(UWORD));
+	S_WRITE_B(AC.powmod, AM.MaxTal*(LONG)sizeof(UWORD));
+	S_WRITE_B(AM.gpowmod, AM.MaxTal*(LONG)sizeof(UWORD));
 
 	if ( AC.IfHeap ) {
 		S_WRITE_B(AC.IfHeap, (LONG)sizeof(LONG)*(AC.MaxIf+1));

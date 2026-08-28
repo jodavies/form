@@ -20,7 +20,9 @@ define an alias with a standard setup file which can be overruled by a
 local setup file. If, in the beginning of the program file, before any 
 other statements with the exception of the \#- instruction and commentary 
 statements, there are lines that start with \#: the remaining contents of 
-these lines are interpreted exactly like the lines in the setup file. The 
+these lines are interpreted exactly like the lines in the setup file.
+Any \#: lines which appear later in the file are ignored, and a warning
+is printed. The
 specifications in the program file take precedence\index{precedence} over 
 all other specifications. If neither of the above methods is used, \FORM\ 
 will use a built in set of parameters. Their values may depend on the 
@@ -30,10 +32,9 @@ The following is a list of parameters that can be set. The syntax is rather
 simple: The full word must be specified (case insensitive), followed by one 
 or more blanks or tabs and the desired number, string or character. 
 Anything after this is considered to be commentary. In the setup file lines 
-that do not start with an alphabetic character are seen as commentary. The 
-sizes of the buffers are given in bytes, unless mentioned otherwise. A word 
-is 2 bytes for 32\index{32 bits} bit machines and 4 bytes for 64\index{64 
-bits} bit machines.
+that do not start with an alphabetic character are seen as commentary. The
+sizes of buffers are given in bytes, unless specified oitherwise. A ``word''
+is 4 bytes on 64bit machines.
 
 In \FORM\ version 3.3 and later, it is also allowed to define 
 preprocessor variables\index{preprocessor variables} (see also 
@@ -42,10 +43,10 @@ preprocessor variables in the setup, provided it is not in the name of the
 parameter/keyword.
 
 \leftvitem{4.0cm}{bracketindexsize\index{setup!bracketindexsize}\index{bracketindexsize}}
-\rightvitem{12.6cm}{Maximum size in bytes of any individual index of a 
+\rightvitem{12.6cm}{Maximum size, in bytes, of any individual index of a 
 bracketted expression. Each expression will have its own index. The index 
-starts with a relatively small size and will grow if needed. But it will 
-never grow beyond the specified size. If more space is needed, \FORM\ will 
+starts with a relatively small size and will grow if needed, up to this
+specified maximum size. If more space is needed, \FORM\ will 
 start skipping brackets and find those back later by linear search. See 
 also chapter~\ref{brackets} and section~\ref{substabracket}.}
 
@@ -57,18 +58,16 @@ commentary, instead of the regular $*$ in column 1.}
 \leftvitem{4.0cm}{CompressSize\index{setup!compresssize}\index{compresssize}}
 \rightvitem{12.6cm}{When compressing output terms, \FORM\ needs a compression 
 buffer. This buffer deals recursively with compression and decompression of 
-terms that are either written or read. Its size will be at least 
+terms that are either written or read. Its size will be at least twice 
 MaxTermSize but when there is heavy use of expressions in the right hand 
-side of definitions or substitution it would have to be considerably 
-longer. It is hoped that in the future this parameter can be eliminated. 
+side of definitions or substitution it may have to be considerably 
+larger. It is hoped that in the future this parameter can be eliminated. 
 CompressSize should be given in bytes.}
 
 \leftvitem{4.0cm}{ConstIndex\index{setup!constindex}\index{constindex}}
 \rightvitem{12.6cm}{This is the number of indices that are considered to be 
 constant indices like in fixed vector components (the so-called fixed 
-indices). The size of this parameter is not coupled to any array space, but 
-it should not go much beyond 1000 on a 32\index{32 bits} bit machine. On a 
-64\index{64 bits} bit machine it can go considerably further.}
+indices). The size of this parameter is not coupled to any array space.}
 
 \leftvitem{4.0cm}{ContinuationLines\index{setup!continuationlines}\index{continuationlines}}
 \rightvitem{12.6cm}{The maximum number of continuation lines, after which
@@ -92,23 +91,20 @@ at a later point in the program to activate a modulus statement (see
 (and the blank(s) after it). This character will be used instead of the \_, 
 when dotproducts\index{dotproducts} are printed in Fortran\index{Fortran} 
 output. This option is needed because some Fortran compilers do not 
-recognize the underscore as a valid character. In the olden days one could 
-use here the dollar character but nowadays many Fortran compilers do not 
-recognize this character as belonging to a variable name.}
+recognize the underscore as a valid character.}
 
 \leftvitem{4.0cm}{FunctionLevels\index{setup!functionlevels}\index{functionlevels}}
-\rightvitem{12.6cm}{The maximum number of levels that may occur, when 
+\rightvitem{12.6cm}{The maximum number of nested levels that may occur, when 
 functions have functions in their arguments.}
 
 \leftvitem{4.0cm}{HideSize\index{setup!hidesize}\index{hidesize}}
-\rightvitem{12.6cm}{The size of the hide buffer. The size of this buffer is 
-normally set equal to scratchsize (see below). If one uses the setting of 
-HideSize after the setting of ScratchSize, one can give the hide buffer its 
-own size. There are cases that this can make the program faster.}
+\rightvitem{12.6cm}{The size of the hide buffer, in bytes. By default, the size
+of this buffer is set equal to scratchsize (see below). When making heavy use
+of the Hide system, specifying a larger value here may improve performance.}
  
 \leftvitem{4.0cm}{IncDir\index{setup!incdir}\index{incdir}}
 \rightvitem{12.6cm}{Directory (or path of directories) in which \FORM\ will 
-look for files if they are not to be found in the current directory. This 
+look for files if they are not found in the current directory. This 
 involves files for the \#include\index{\#include} and \#call\index{\#call} 
 instructions. This variable takes precedence over the 
 Path\index{setup!path}\index{path} variable.}
@@ -124,34 +120,28 @@ Path\index{setup!path}\index{path} variable.}
  
 \leftvitem{4.0cm}{MaxNumberSize\index{setup!maxnumbersize}\index{maxnumbersize}}
 \rightvitem{12.6cm}{Allows the setting of the maximum size of the numbers 
-in \FORM\@. The number should be given in words. For 32\index{32 bits} bit 
-systems a word is two bytes and for 64\index{64 bits} bit systems a word is 
-4 bytes. The number size is always limited by the maximum size of the terms 
-(see MaxTermSize). Actually it has to be less than half of MaxTermSize 
-because a coefficient contains both a numerator and a denominator. It is 
-not always a good idea to have the number size at its maximum value, 
-especially when MaxTermSize is large. In that case it could be very long 
-before a runaway algorithm runs into limitations of size (arithmetic for 
-very long fractions is not very fast due to the continuous need for 
-computing GCD's)}
+in \FORM\@. The number should be given in words. The number size is always
+limited by the maximum size of the terms (see MaxTermSize); it must be fit in
+(MaxTermSize-2)/2 words, since a coefficient represents both a numerator and
+a denominator. By default, this is set to this maximum possible value, however
+when setting very large values for MaxTermSize it can be a good idea to set a
+smaller value for this parameter, since various internal buffers scale with
+this size.}
 
 \leftvitem{4.0cm}{MaxTermSize\index{setup!maxtermsize}\index{maxtermsize}}
 \rightvitem{12.6cm}{This\label{setupmaxtermsize} 
-is the maximum size that an individual term may occupy in words. This 
-size does not affect any allocations. One should realize however that the 
-larger this size is the heavier the demand can be on the workspace, because 
-the workspace acts as a heap during the execution and sometimes allocations 
-have to be made in advance, before \FORM\ knows what the actual size of the 
-term will be. Consequently the evaluation tree cannot be very deep, when 
-WorkSpace / MaxTermSize is not very big. MaxTermSize controls mainly how 
-soon \FORM\ starts complaining about terms that are too complicated. Its 
-absolute maximum is 32568 on 32\index{32 bits} bit systems and about $10^9$ 
-on 64\index{64 bits} bit systems (of course the workspace would have to be 
-considerably larger than that....).}
+is the maximum size that an individual term may occupy, in words. This
+size significantly affects the size of many allocations, since various
+buffers are required to be able to fit at least one term. Larger values also
+place a heavier demand on the WorkSpace, which acts as a heap during execution
+and MaxTermSize space may be reserved in advance of a term operation, before
+\FORM\ knows what the actual final size of the term will be. Consequently,
+the evaluation tree can not be very deep when WorkSpace/MaxTermSize is not
+very large. Its absolute maximum size is $2^{31}-1$ words, or about 2G.}
 
 \leftvitem{4.0cm}{MaxWildCards\index{setup!maxwildcards}\index{maxwildcards}}
 \rightvitem{12.6cm}{The maximum number of wildcards that 
-can be active in a single matching of a pattern. Under normal circumstance 
+can be active in a single matching of a pattern. Under normal circumstances
 the default value of 100 should be more than enough.}
 
 \leftvitem{4.0cm}{NoSpacesInNumbers\index{setup!nospacesinnumbers}\index{nospacesinnumbers}}
@@ -200,9 +190,6 @@ involves files for the \#include\index{\#include} and \#call\index{\#call}
 instructions. \FORM\ will test this path after a potential path specified as 
 IncDir\index{setup!incdir}\index{incdir}.}
 
-%\leftvitem{4.0cm}{PolyGCDchoice\index{setup!polygcdchoice}\index{polygcdchoice}}
-%\rightvitem{12.6cm}{}
- 
 \leftvitem{4.0cm}{ProcedureExtension\index{setup!procedureEetension}\index{procedureextension}}
 \rightvitem{12.6cm}{The extension that will be used by \FORM\ for finding the 
 procedures that are in separate files. Restrictions on the strings used are 
@@ -222,8 +209,8 @@ means that by default the clock is reset after each .clear\index{.clear}
 (see chapter \ref{modules} on modules) instruction at the end of a module.}
 
 \leftvitem{4.0cm}{ScratchSize\index{setup!scratchsize}\index{scratchsize}}
-\rightvitem{12.6cm}{The size of the input and the output buffers for the 
-regular algebra processing. Terms are read in in chunks this size and are 
+\rightvitem{12.6cm}{The size, in bytes, of the input and the output buffers for the 
+regular algebra processing. Expressions are read in in chunks this size and are 
 written to the output file using buffers of this size. There are either two 
 or three of these buffers, depending on whether the hide\index{hide} 
 facility is being used (see \ref{substahide}). These buffers must have a 
@@ -270,8 +257,10 @@ the setup file is ignored. If TempSortDir is not specified, then the value of
 TempDir is used also for sort files.}
  
 \leftvitem{4.0cm}{ThreadBucketSize\index{setup!threadbucketsize}\index{threadbucketsize}}
-\rightvitem{12.6cm}{Only relevant for \TFORM\@. The size of the number of 
-terms sent to the workers simultaneously. 
+\rightvitem{12.6cm}{Only relevant for \TFORM\@. This controls the size of batches
+of terms which are sent to the workers. Each bucket will be at least as large as
+MaxTermSize, but by default and for not-too-large MaxTermSize values they can hold
+more than one term.
 For details see the chapter on the parallel version (\ref{parallel}).}
  
 \leftvitem{4.0cm}{ThreadLoadBalancing\index{setup!threadloadbalancing}\index{threadloadbalancing}}
@@ -319,7 +308,7 @@ the "On TotalSize" statement (see \ref{ontotalsize}) or the -T option
 in the command tail when \FORM\ is started (see \ref{running}).}
 
 \leftvitem{4.0cm}{WorkSpace\index{setup!workspace}\index{workspace}}
-\rightvitem{12.6cm}{The size of the heap that is used by the algebra 
+\rightvitem{12.6cm}{The size, in words, of the heap that is used by the algebra 
 processor when it is evaluating the substitution tree. It will contain 
 terms, half finished terms and other information. The size of the workspace 
 may be a limitation on the depth of a substitution tree.}
@@ -332,52 +321,60 @@ Variables that take a path\index{path} for their value expect a sequence of
 directories, separated by colon characters as in the UNIX\index{UNIX} way 
 to define such objects.
 
+\section{Sorting settings}
+
 The above parameters are conceptually relatively easy. The parameters that 
 are still left are more complicated and are often restricted in their 
 size by some relationships. Hence it is necessary to understand the 
-sorting inside \FORM\ a little bit before using them. On the other hand 
-these parameters can influence the performance noticeably. See also chapter 
-\ref{sorting} for more details.
+sorting inside \FORM\ a little bit before using them. In addition,
+these parameters can noticably influence the performance of a computation.
+See also chapter \ref{sorting} for more details.
 
-When terms are send to `output' by the main algebra engine, they are put 
-inside a buffer. This buffer is called the `small\index{small buffer} 
-buffer\index{buffer!small}'. Its size is given by the variable {\sl 
+When terms are send to ``output'' by the main algebra engine, they are put 
+inside a buffer. This buffer is called the ``small\index{small buffer} 
+buffer\index{buffer!small}''. Its size is controlled by the variable {\sl 
 SmallSize\index{smallsize}}. When this buffer is full, or when the number 
-of terms in this buffer exceeds a given maximum, indicated by the variable 
-{\sl TermsInSmall\index{termsinsmall}}, the contents of the buffer are 
+of terms in this buffer exceeds a given maximum (controlled by the variable 
+{\sl TermsInSmall\index{termsinsmall}}) the contents of the buffer are 
 sorted. The sorting is done by pointers, hence it is important that the 
-small buffer resides inside the physical memory. During the sorting it may 
-happen that coefficients are added. The sum of two rational numbers can 
-take more space than any of the individual numbers, so there will be a 
+small buffer resides in the physical memory of the machine. During the sorting it may 
+happen that term coefficient are added. The sum of two rational numbers (or
+rational polynomials, in case PolyRatFun is active) can 
+require more space than either of the individual numbers (or polynomials),
+so there will be a 
 space problem. This has been solved by the construction of an extension to 
 the small buffer. The variable {\sl SmallExtension\index{smallextension}} 
-is the size of the small buffer together with this extension. The value for 
-SmallExtension will always be at least 7/6 times the value of SmallSize.
+controls the size of the small buffer together with this extension. The value for 
+SmallExtension will always be at least 3/2 times the value of SmallSize,
+but some computations may require it to be further increased.
 
 The result of the sorting of the small buffer is written to the 
-`large\index{large buffer} buffer\index{buffer!large}' (with the size {\sl 
-LargeSize\index{largesize}}) as a single object and the filling of the 
+``large\index{large buffer} buffer\index{buffer!large}'' (with the size {\sl 
+LargeSize\index{largesize}}) as a single ``patch'' and the filling of the 
 small buffer can resume. Whenever there is not enough room in the large 
 buffer for the result of sorting the small buffer, or whenever there are 
-already a given number of these sorted `patches' in it (controlled by the 
+already a given number of these sorted ``patches'' in it (controlled by the 
 variable {\sl LargePatches\index{largepatches}}) the buffer will be sorted 
 by merging the patches\index{patch} to make room for the new results. The 
 output is written to the sort file as a single patch. Then the results from 
 the small buffer can be written to the large buffer. This game can continue 
-till no more terms are generated. In the end it will be necessary to sort 
+until no more terms are generated. In the end it will be necessary to sort 
 the results in the intermediate sort file\index{file!sort}. This can be 
 done with up to {\sl FilePatches\index{filepatches}} at a time. Because 
-file operations are notoriously slow the combination of the small buffer, 
+file operations are notoriously slow, the combination of the small buffer, 
 the small extension and the large buffer is used for caching\index{cache} 
-purposes. Hence this space can be split in `FilePatches' caches. The 
-limitation is that each cache should be capable to contain at least two 
+purposes. Hence this space can be split in ``FilePatches'' caches. The 
+limitation is that each cache should be able to contain at least two 
 terms of maximal size. This means that the sum of SmallExtension and 
 LargeSize must be at least FilePatches times 2*MaxTermSize*(bytes in short 
 integer). It is possible to set the size of these caches directly with the 
 variable {\sl SortIOsize\index{sortiosize}}. If the variable is too large, 
-the variable FilePatches may be adjusted by \FORM\@. If there are more than 
+the variable FilePatches may be adjusted by \FORM\@, and a warning is printed.
+If FilePatches reaches its minimal value of 2, LargeSize may be increased
+to satisfy the above condition. Again, a warning is printed.
+If there are more than 
 FilePatches patches in the sort file, a second sort file is needed for the 
-output of each `superpatch'\index{superpatch}. When the first sort file has 
+output of each sorted ``superpatch''\index{superpatch}. When the first sort file has 
 been treated, the second sort file can be treated in exactly the same way 
 as its predecessor. This process will finish eventually. When there are at 
 most FilePatches patches in a sort file, the output of their merging can be 
@@ -395,18 +392,17 @@ nature of the sort that is applied to it.}
 
 \leftvitem{3cm}{TermsInSmall\index{setup!termsinsmall}\index{termsinsmall}}
 \rightvitem{13cm}{The maximum number of terms that is allowed in the small 
-buffer before it is sorted. The sorted result is either copied to the large 
-buffer or written to the intermediate sort file (when LargeSize is too 
-small).}
+buffer before it is sorted. The sorted result is copied to the large buffer
+as a ``large patch''.}
 
 \leftvitem{3cm}{SmallSize\index{setup!smallsize}\index{smallsize}}
-\rightvitem{13cm}{The size of the small buffer in bytes.}
+\rightvitem{13cm}{The size of the small buffer, in bytes.}
 
 \leftvitem{3cm}{SmallExtension\index{setup!smallextension}\index{smallextension}}
-\rightvitem{13cm}{The size of the small buffer plus its extension.}
+\rightvitem{13cm}{The size of the small buffer plus its extension, in bytes.}
 
 \leftvitem{3cm}{LargeSize\index{setup!largesize}\index{largesize}}
-\rightvitem{13cm}{The size of the large buffer.}
+\rightvitem{13cm}{The size of the large buffer, in bytes.}
 
 \leftvitem{3cm}{SortIOsize\index{setup!sortiosize}\index{sortiosize}}
 \rightvitem{13cm}{The size of the buffer that is used to write to the 
@@ -423,21 +419,21 @@ subexpressions\index{subexpressions} as in function arguments or in the
 term environment (see \ref{substaterm}). Because these things can happen 
 with more than one level, whatever allocations have to be made (during 
 runtime when needed) may have to be made several times. Hence one should be 
-far more conservative here than with the global allocations. Anyway, those 
-sorts should rarely involve anything very big. With the function arguments 
+far more conservative here than with the global allocations.
+With the function arguments 
 the condition is that the final result will fit inside a single term, but 
 with the term environment no such restriction exists. The relevant 
 variables here are subfilepatches, sublargepatches, sublargesize, 
 subsmallextension, subsmallsize, subsortiosize and subtermsinsmall. Their 
-meanings are the same as for the variables without the sub in front.
+meanings are the same as for the variables without the ``sub'' prefix.
 
 When \FORM\ is running in parallel mode (either \TFORM\ or \ParFORM) each worker 
 will need its own buffers. In \ParFORM\ in which the processors each control 
 their own memory, the size of each of these buffers are the same as for the 
 master process. In \TFORM\ with its shared memory the above sizes refer to 
-the buffers of the master thread. The workers each get basically buffers 
-with 1/N times the size of the buffer of the master. This may get made a 
-bit bigger when potential conflicts with MaxTermSize occur.
+the buffers of the master thread. The workers each allocate sorting buffers
+that are 1/N times the size of the buffer of the master. These may be increased
+in size to satisfy constraints, particularly for large values of MaxTermSize.
 
 The (typically) largest buffers (the small and large buffers) may be reallocated
 at the end of a single module (see \#sortreallocate (\ref{presortreallocate})) or
@@ -447,74 +443,84 @@ cases this can significantly reduce \FORM's memory usage as measured by
 quickly-running modules, this can incur a noticable performance penalty if performed
 every module.
 
-The default settings are
+\section{Default settings}
+
+One may specify setup values using the suffixes ``K'', ``M'', ``G'', ``T'' to
+indicate kilo-, mega-, giga- and tera-units, respecitively. For example, a
+LargeSize of 1500000000 maybe be specified as 1500M.
+
+The default values for settings related to ground-level sorting and expression
+input/output buffers are:
 \begin{center}
-\begin{tabular}{lrrr}
-Variable         &      32-bits       &    64-bits  & tform 64-bits   \\ \hline
-bracketindexsize &      200000        & 200000      & 200000       \\
-commentchar &           $*$           & $*$         & $*$          \\
-compresssize &          90000         & 90000       & 90000        \\
-constindex &            128           & 128         & 128          \\
-continuationlines &     15            & 15          & 15           \\
-dotchar &               .             & .           & .            \\
-filepatches &           256           & 256         & 256          \\
-functionlevels &        30            & 30          & 30           \\
-hidesize &              50000000      & 50000000    & 50000000     \\
-incdir &                .             & .           & .            \\
-%indentspace &                        &             &              \\
-insidefirst &           ON            & ON          & ON           \\
-largepatches &          256           & 256         & 256          \\
-largesize &             50000000      & 800000000   & 1500000000   \\
-maxnumbersize &         200           & 200         & 200          \\
-maxtermsize &           10000         & 40000       & 40000        \\
-maxwildcards &          100           & 100         & 100          \\
-nospacesinnumbers &     OFF           & OFF         & OFF          \\
-numstorecaches &        4             & 4           & 4            \\
-nwritefinalstatistics & OFF           & OFF         & OFF          \\
-nwritestatistics &      OFF           & OFF         & OFF          \\
-nwritethreadstatistics &OFF           & OFF         & OFF          \\
-oldorder &              OFF           & OFF         & OFF          \\
-parentheses &           100           & 100         & 100          \\
-path &                  .             & .           & .            \\
-%polygcdchoice &        0             & 0           & 0            \\
-processbucketsize &     1000          & 1000        & 1000         \\
-scratchsize &           50000000      & 500000000   & 500000000    \\
-sizestorecache &        32768         & 32768       & 32768        \\
-smallextension &        20000000      & 300000000   & 600000000    \\
-smallsize &             10000000      & 150000000   & 300000000    \\
-sortiosize &            100000        & 100000      & 100000       \\
-sorttype &              lowfirst      & lowfirst    & lowfirst     \\
-subfilepatches &        64            & 64          & 64           \\
-sublargepatches &       64            & 64          & 64           \\
-sublargesize &          26880512      & 26880512    & 26880512     \\
-subsmallextension &     3840032       & 3840032     & 3840032      \\
-subsmallsize &          2560016       & 2560016     & 2560016      \\
-subsortiosize &         32768         & 32768       & 32768        \\
-subtermsinsmall &       10000         & 10000       & 10000        \\
-tempdir &               .             & .           & .            \\
-tempsortdir &           .             & .           & .            \\
-termsinsmall &          100000        & 2000000     & 3000000      \\
-threadbucketsize &      500           & 500         & 500          \\
-threadloadbalancing &   ON            & ON          & ON           \\
-threads &               0             & 0           & 0            \\
-threadsortfilesynch &   OFF           & OFF         & OFF          \\
-threadscratchoutsize &  2500000       & 2500000     & 2500000      \\
-threadscratchsize &     100000        & 100000      & 100000       \\
-workspace &             10000000      & 40000000    & 40000000    
-%zipsize &               32768        & 32768       & 32768       
+\begin{tabular}{lrr}
+Variable         &      64-bit FORM  & 64-bit TFORM   \\ \hline
+termsinsmall &          2M          & 3M           \\
+smallsize (bytes) &     150M        & 300M         \\
+smallextension (bytes)& 225M        & 450M         \\ \hline
+largesize (bytes) &     750M        & 1500M        \\
+largepatches &          256         & 256          \\
+filepatches &           256         & 256          \\ \hline
+hidesize (bytes) &      500M        & 500M         \\
+scratchsize (bytes) &   500M        & 500M         \\
+sortiosize (bytes) &    200K        & 200K         \\ \hline
+threadscratchoutsize (bytes) & $-$  & 2500K        \\
+threadscratchsize (bytes) & $-$     & 160K
 \end{tabular}
 \end{center}
-If one compares these numbers with the corresponding numbers for older 
-versions one will notice that here we assume that the standard computer 
-will have much more memory available than in the `old time'. Basically we 
-expect that a serious \FORM\ user has at least 64 Mbytes available. If it is 
-considerably less one should define a setup file with smaller settings.
 
-More recently a new notation for large numbers has been allowed. One can 
-use the characters K, M, G and T to indicate kilo (three zeroes), mega (6 
-zeroes), giga (9 zeroes) and tera (12 zeros) as in 10M for 10000000.
+The default values for settings related to sub-buffer sorting, e.g.~inside
+function arguments, dollar variables and term environments, are:
+\begin{center}
+\begin{tabular}{lr}
+Variable         &      64-bit FORM and TFORM  \\ \hline
+subtermsinsmall &          30K        \\
+subsmallsize (bytes)&      3000K      \\
+subsmallextension (bytes)& 4500K      \\ \hline
+sublargesize (bytes)&      15M        \\
+sublargepatches &          64         \\
+subfilepatches &           40         \\ \hline
+subsortiosize (bytes)&     160K       \\
+\end{tabular}
+\end{center}
 
-To find out what the setup values are, one can use the `ON,setup;' 
+The default values for other settings are:
+\begin{center}
+\begin{tabular}{lr}
+Variable         &      64-bit FORM and TFORM \\ \hline
+bracketindexsize (bytes) & 3200K        \\
+commentchar &              $*$          \\
+compresssize (bytes)&      320K         \\
+constindex &               128          \\
+continuationlines &        15           \\
+dotchar &                  .            \\
+functionlevels &           30           \\
+incdir &                   .            \\
+insidefirst &              ON           \\
+maxnumbersize (words) &    Max.~for given maxtermsize \\
+maxtermsize (words) &      40K          \\
+maxwildcards &             100          \\
+nospacesinnumbers &        OFF          \\
+numstorecaches &           4            \\
+nwritefinalstatistics &    OFF          \\
+nwritestatistics &         OFF          \\
+nwritethreadstatistics &   OFF          \\
+oldorder &                 OFF          \\
+parentheses &              100          \\
+path &                     .            \\
+processbucketsize &        1000         \\
+sizestorecache &           32768        \\
+sorttype &                 lowfirst     \\
+tempdir &                  .            \\
+tempsortdir &              .            \\
+threadbucketsize &         500          \\
+threadloadbalancing &      ON           \\
+threads &                  0            \\
+threadsortfilesynch &      OFF          \\
+workspace (words)&         40M
+\end{tabular}
+\end{center}
+
+To find out what the current setup values are, one can use the `ON,setup;' 
 statement (\ref{substaon}).
 
 In version 3.3 and later one may use environment\index{environment} 

@@ -88,7 +88,7 @@ NORETURN void Error2(char *s1, char *s2, UBYTE *t)
 
 NORETURN void MesWork(void)
 {
-	MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
+	MesPrint("=== Workspace overflow. %l WORDs is not enough.",AM.WorkSize);
 	MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
 	Terminate(-1);
 }

@@ -212,8 +212,9 @@ assert result("G2") =~ expr("10/3*f(x1)*p(mu)*p.q*x1")
 assert result("g") =~ expr("10/3*f(x1)*p(mu)*p.q*x1")
 *--#] cov_factorin_ :
 *--#[ cov_hideskip :
-#: scratchsize 1
-#: hidesize 1
+#: maxtermsize 1K
+#: scratchsize 4K
+#: hidesize 4K
 Symbol x,y,z;
 Local f = (1+x+y+z)^70;
 Local g = (1+x+y+z)^70;

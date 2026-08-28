@@ -722,7 +722,7 @@ newright:
 				if ( S->PolyFlag == 2 ) {
 					w = poly_ratfun_add(BHEAD ml,mr);
 					if ( *tt1 + w[1] - ml[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
-						MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
+						MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l WORDs is too small",AM.MaxTer/sizeof(WORD));
 						Terminate(-1);
 					}
 					AT.WorkPointer = w;
@@ -730,7 +730,7 @@ newright:
 				else {
 					w = AT.WorkPointer;
 					if ( w + ml[1] + mr[1] > AT.WorkTop ) {
-						MesPrint("A WorkSpace of %10l is too small",AM.WorkSize);
+						MesPrint("A WorkSpace of %10l WORDs is too small",AM.WorkSize);
 						Terminate(-1);
 					}
 					AddArgs(BHEAD ml,mr,w);

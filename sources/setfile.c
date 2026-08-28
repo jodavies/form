@@ -352,77 +352,60 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar : 
- 		#[ RecalcSetups :
-*/
+		#] GetSetupPar :
+		#[ AllocSetups :
 
-int RecalcSetups(void)
-{
-	SETUPPARAMETERS *sp, *sp1;
-
-	sp1 = GetSetupPar((UBYTE *)"threads");
-	if ( AM.totalnumberofthreads > 1 ) sp1->value = AM.totalnumberofthreads - 1;
-	else sp1->value = 0;
-/*
-	if ( sp1->value > 0 ) AM.totalnumberofthreads = sp1->value+1;
-	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
-*/
-	sp  = GetSetupPar((UBYTE *)"filepatches");
-	if ( sp->value < AM.totalnumberofthreads-1 )
-		sp->value = AM.totalnumberofthreads - 1;
-
-	sp  = GetSetupPar((UBYTE *)"smallsize");
-	sp1 = GetSetupPar((UBYTE *)"smallextension");
-	if ( 6*sp1->value < 7*sp->value ) sp1->value = (7*sp->value)/6;
-	sp = GetSetupPar((UBYTE *)"termsinsmall");
-	sp->value = ( sp->value + 15 ) & (-16L);
-#ifdef WITHPTHREADS
-	{
-	SETUPPARAMETERS *sp2;
-	LONG totalsize, minimumsize;
-	sp = GetSetupPar((UBYTE *)"largesize");
-	totalsize = sp1->value+sp->value;
-	sp2 = GetSetupPar((UBYTE *)"maxtermsize");
-	AM.MaxTer = sp2->value*sizeof(WORD);
-	if ( AM.MaxTer < 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = 200*(LONG)(sizeof(WORD));
-	if ( AM.MaxTer > MAXPOSITIVE - 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = MAXPOSITIVE - 200*(LONG)(sizeof(WORD));
-	AM.MaxTer /= sizeof(WORD);
-	AM.MaxTer *= sizeof(WORD);
-#ifdef WITHSORTBOTS
-	if ( AM.totalnumberofthreads-1 > 2 ) {
-		minimumsize = (2*(AM.totalnumberofthreads-1)-2)*(AM.MaxTer+
-			NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS/2*AM.MaxTer);
-	}
-	else
-#endif
-	{
-		minimumsize = (AM.totalnumberofthreads-1)*(AM.MaxTer+
-			NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS*AM.MaxTer);
-	}
-	if ( totalsize < minimumsize ) {
-		sp->value = minimumsize - sp1->value;
-	}
-	}
-#endif
-	return(0);
-}
-
-/*
- 		#] RecalcSetups : 
- 		#[ AllocSetups :
+	Here we read the setup parameters, which have default values or have been
+	adjusted by the user. Various values must obey size constraints, which we
+	enforce here. See comments containing "CONSTRAINT".
+	Updated values are written back into SETUPPARAMETERS, in case they are queried
+	later elsewhere in the code (though this is probably not a good thing to do).
 */
 
 int AllocSetups(void)
 {
 	SETUPPARAMETERS *sp;
-	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
-	int MaxPatches, MaxFpatches, error = 0, i, size;
+	int error = 0, i;
 	UBYTE *s;
 #ifndef WITHPTHREADS
 	int j;
 #endif
+
 	sp = GetSetupPar((UBYTE *)"threads");
-	if ( sp->value > 0 ) AM.totalnumberofthreads = sp->value+1;
+	// A worker count specified on the command line with -w has precedence over a value
+	// from the setup. AM.totalnumberofthreads will already have a value in that case.
+	if ( AM.totalnumberofthreads > 1 ) {
+		sp->value = AM.totalnumberofthreads - 1;
+	}
+	else {
+		sp->value = 0;
+	}
+	if ( sp->value > 0 ) {
+		// totalnumberofthreads is the master + workers
+		AM.totalnumberofthreads = sp->value+1;
+	}
+
+
+	// MaxTermSize is specified by the user in WORDs, but AM.MaxTer is stored in bytes.
+	// Take care not to mis-match the units when comparing various buffer sizes to MaxTer!
+	sp = GetSetupPar((UBYTE *)"maxtermsize");
+	// CONSTRAINT: MINMAXTER WORDs <= MaxTermSize <= MAXPOSITIVE-MINMAXTER WORDs.
+	// CONSTRAINT: MaxTermSize is even (otherwise, in some places where half the value is added in
+	// bytes, mis-aligned pointers are produced).
+	// On 64bit systems, term sizes (in WORDs) are represented as 32bit signed integers.
+	// Historically, 200 WORDs of headroom was enforced, but also the upper limit was applied
+	// in bytes and not WORDs! We fix the mismatch: in principle we can have terms up to ~8GiB.
+	if ( sp->value < MINMAXTER ) {
+		MesPrint("Warning: MaxTermSize: %l -> %l", sp->value, MINMAXTER);
+		sp->value = MINMAXTER;
+	}
+	else if ( sp->value > MAXPOSITIVE-MINMAXTER ) {
+		MesPrint("Warning: MaxTermSize: %l -> %l", sp->value, MAXPOSITIVE-MINMAXTER);
+		sp->value = ROUNDUP(MAXPOSITIVE-1-MINMAXTER,2);
+	}
+	sp->value = ROUNDUP(sp->value, 2);
+	AM.MaxTer = sp->value * sizeof(WORD);
+
 
 	AM.OutBuffer = (UBYTE *)Malloc1(AM.OutBufSize+1,"OutputBuffer");
 	AP.PreAssignStack =(LONG *)Malloc1(AP.MaxPreAssignLevel*sizeof(LONG *),"PreAssignStack");
@@ -439,36 +422,36 @@ int AllocSetups(void)
 	AP.PreIfStack[0] = EXECUTINGIF;
 	sp = GetSetupPar((UBYTE *)"insidefirst");
 	AM.ginsidefirst = AC.minsidefirst = AC.insidefirst = sp->value;
-/*
-	We need to consider eliminating this variable
-*/
-	sp = GetSetupPar((UBYTE *)"maxtermsize");
-	AM.MaxTer = sp->value*sizeof(WORD);
-	if ( AM.MaxTer < 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = 200*(LONG)(sizeof(WORD));
-	if ( AM.MaxTer > MAXPOSITIVE - 200*(LONG)(sizeof(WORD)) ) AM.MaxTer = MAXPOSITIVE - 200*(LONG)(sizeof(WORD));
-	AM.MaxTer /= (LONG)sizeof(WORD);
-	AM.MaxTer *= (LONG)sizeof(WORD);
-/*
-	Allocate workspace.
-*/
+
+
+	// Allocate the WorkSpace. WorkSpace is provided by the user in WORDs.
+	// CONSTRAINT: WorkSize >= MINWORKBUFFERTERMS*MaxTermSize
+	// Historically, no minimal size was enforced here, and the default is 1000x larger than
+	// the default MaxTermSize. In many places, MaxTermSize is added to the WorkPointer, so
+	// we need a sensible minimum.
 	sp = GetSetupPar((UBYTE *)"workspace");
+	if ( sp->value < MINWORKBUFFERTERMS*AM.MaxTer/(LONG)sizeof(WORD) ) {
+		MesPrint("Warning: WorkSpace: %l -> %l (due to MaxTermSize)",
+			sp->value, MINWORKBUFFERTERMS*AM.MaxTer/sizeof(WORD));
+		sp->value = MINWORKBUFFERTERMS*AM.MaxTer/sizeof(WORD);
+	}
 	AM.WorkSize = sp->value;
 #ifdef WITHPTHREADS
+	// Worker threads each allocate their own WorkSpace.
 #else
 	AT.WorkSpace = (WORD *)Malloc1(AM.WorkSize*sizeof(WORD),(char *)(sp->parameter));
 	AT.WorkTop = AT.WorkSpace + AM.WorkSize;
 	AT.WorkPointer = AT.WorkSpace;
 #endif
-/*
-	Fixed indices
-*/
+
+	// Fixed indices
+	// CONSTRAINT:
 	sp = GetSetupPar((UBYTE *)"constindex");
-	if ( ( sp->value+100+5*WILDOFFSET ) > MAXPOSITIVE ) {
-		MesPrint("Setting of %s in setupfile too large","constindex");
-		AM.OffsetIndex = MAXPOSITIVE - 5*WILDOFFSET - 100;
-		MesPrint("value corrected to maximum allowed: %d",AM.OffsetIndex);
+	if ( ( sp->value+100+5*WILDOFFSET+1 ) > MAXPOSITIVE ) {
+		MesPrint("Warning: ConstIndex: %l -> %l", sp->value,MAXPOSITIVE-5*WILDOFFSET-100-1);
+		sp->value = MAXPOSITIVE-5*WILDOFFSET-100-1;
 	}
-	else AM.OffsetIndex = sp->value + 1;
+	AM.OffsetIndex = sp->value + 1;
 	AC.FixIndices = (WORD *)Malloc1((AM.OffsetIndex)*sizeof(WORD),(char *)(sp->parameter));
 	AM.WilInd = AM.OffsetIndex + WILDOFFSET;
 	AM.DumInd = AM.OffsetIndex + 2*WILDOFFSET;
@@ -481,64 +464,78 @@ int AllocSetups(void)
 	sp = GetSetupPar((UBYTE *)"parentheses");
 	AM.MaxParLevel = sp->value+1;
 	AC.tokenarglevel = (WORD *)Malloc1((sp->value+1)*sizeof(WORD),(char *)(sp->parameter));
-/*
-	Space during calculations
-*/
-	sp = GetSetupPar((UBYTE *)"maxnumbersize");
-/*
-	size = ( sp->value + 11 ) & (-4);
-	AM.MaxTal = size - 2;
-	if ( AM.MaxTal > (AM.MaxTer/sizeof(WORD)-2)/2 )
-				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
-	if ( AM.MaxTal < (AM.MaxTer/sizeof(WORD)-2)/4 )
-				AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/4;
-*/
-/*
-	There is too much confusion about MaxTal cq maxnumbersize.
-	It seems better to fix it at its maximum value. This way we only worry
-	about maxtermsize. This can be understood better by the 'innocent' user.
-*/
-	if ( sp->value == 0 ) {
-		AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
-	}
-	else {
-		size = ( sp->value + 11 ) & (-4);
-		AM.MaxTal = size - 2;
-		if ( (size_t)AM.MaxTal > (size_t)((AM.MaxTer/sizeof(WORD)-2)/2) )
-					AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
-	}
-	AM.MaxTal &= -sizeof(WORD)*2;
 
-	sp->value = AM.MaxTal;
-	AC.cmod = (UWORD *)Malloc1(AM.MaxTal*4*sizeof(UWORD),(char *)(sp->parameter));
-	AM.gcmod = AC.cmod + AM.MaxTal;
-	AC.powmod = AM.gcmod + AM.MaxTal;
-	AM.gpowmod = AC.powmod + AM.MaxTal;
-/*
-	The IO buffers for the input and output expressions.
-	Fscr[2] will be assigned in a later stage for hiding expressions from
-	the regular action. That will make the program faster.
-*/
-	sp = GetSetupPar((UBYTE *)"scratchsize");
-	AM.ScratSize = sp->value/sizeof(WORD);
-	// MaxTer is in bytes! Here we demand that Scratch/Hide fits at least 4 full-sized terms.
-	if ( AM.ScratSize < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
-		AM.ScratSize = 4*AM.MaxTer/sizeof(WORD);
+
+	// MaxNumberSize is specified by the user in WORDs, and stored in WORDs.
+	// CONSTRAINT: MaxNumberSize < (MaxTermSize-2)/2.
+	// A term containing only a rational number needs 1 WORD for the term size and 1 WORD for the
+	// number size. The remaining available size is divided between numerator and denominator.
+	// By default, we set it to its maximally allowed value. The user may very well want to make it
+	// smaller, when using very large MaxTermSize values.
+	// Historically, the value was also rounded up to a multiple of 8, but I don't think we need to.
+	sp = GetSetupPar((UBYTE *)"maxnumbersize");
+	const LONG maxnumbersizelimit = (AM.MaxTer/sizeof(WORD)-2)/2;
+	if ( sp-> value == 0 ) {
+		sp->value = maxnumbersizelimit;
 	}
-	AM.HideSize = AM.ScratSize;
+	if ( sp->value > maxnumbersizelimit ) {
+		MesPrint("Warning: MaxNumberSize %l -> %l (due to MaxTermSize)",
+			sp->value, maxnumbersizelimit);
+		sp->value = maxnumbersizelimit;
+	}
+	AM.MaxTal = sp->value;
+	AC.cmod    = (UWORD *)Malloc1(AM.MaxTal*sizeof(UWORD), "AC.cmod");
+	AM.gcmod   = (UWORD *)Malloc1(AM.MaxTal*sizeof(UWORD), "AM.gcmod");
+	AC.powmod  = (UWORD *)Malloc1(AM.MaxTal*sizeof(UWORD), "AC.powmod");
+	AM.gpowmod = (UWORD *)Malloc1(AM.MaxTal*sizeof(UWORD), "AM.gpowmod");
+
+
+	// ScratchSize controls the IO buffers for input and output expressions. The user specifies it
+	// in bytes but it is stored in WORDs. HideSize takes the same value unless specified otherwise.
+	// CONSTRAINT: ScratchSize >= MINSCRATCHTERMS*MaxTermSize
+	sp = GetSetupPar((UBYTE *)"scratchsize");
+	if ( sp->value < MINSCRATCHTERMS*AM.MaxTer ) {
+		MesPrint("Warning: ScratchSize: %l -> %l (due to MaxTermSize)",
+			sp->value, MINSCRATCHTERMS*AM.MaxTer);
+		sp->value = MINSCRATCHTERMS*AM.MaxTer;
+	}
+	sp->value = ROUNDUP(sp->value, sizeof(WORD));
+	AM.ScratSize = sp->value/sizeof(WORD);
+
 	sp = GetSetupPar((UBYTE *)"hidesize");
 	if ( sp->value > 0 ) {
-		AM.HideSize = sp->value/sizeof(WORD);
-		if ( AM.HideSize < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
-			AM.HideSize = 4*AM.MaxTer/sizeof(WORD);
+		if ( sp->value < MINSCRATCHTERMS*AM.MaxTer ) {
+			MesPrint("Warning: HideSize: %l -> %l (due to MaxTermSize)",
+				sp->value, MINSCRATCHTERMS*AM.MaxTer);
+			sp->value = MINSCRATCHTERMS*AM.MaxTer;
 		}
 	}
+	else {
+		// The user did not specify a value
+		sp->value = AM.ScratSize*sizeof(WORD);
+	}
+	sp->value = ROUNDUP(sp->value, sizeof(WORD));
+	AM.HideSize = sp->value/sizeof(WORD);
+
+
 	sp = GetSetupPar((UBYTE *)"factorizationcache");
 	AM.fbuffersize = sp->value;
 #ifdef WITHPTHREADS
+	// These are specified in bytes but stored in WORDs.
+	// CONSTRAINT: ThreadScratchSize >= MINSCRATCHTERMS*MaxTermSize
+	// CONSTRAINT: ThreadScratchOutSize >= MINSCRATCHTERMS*MaxTermSize
 	sp = GetSetupPar((UBYTE *)"threadscratchsize");
+	sp->value = ROUNDUP(sp->value, sizeof(WORD));
+	if ( sp->value < MINSCRATCHTERMS*AM.MaxTer ) {
+		sp->value = MINSCRATCHTERMS*AM.MaxTer;
+	}
 	AM.ThreadScratSize = sp->value/sizeof(WORD);
+
 	sp = GetSetupPar((UBYTE *)"threadscratchoutsize");
+	sp->value = ROUNDUP(sp->value, sizeof(WORD));
+	if ( sp->value < MINSCRATCHTERMS*AM.MaxTer ) {
+		sp->value = MINSCRATCHTERMS*AM.MaxTer;
+	}
 	AM.ThreadScratOutSize = sp->value/sizeof(WORD);
 #endif
 #ifndef WITHPTHREADS
@@ -566,38 +563,93 @@ int AllocSetups(void)
 	if ( AM.shmWinSize < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
 		AM.shmWinSize = 4*AM.MaxTer/(LONG)sizeof(WORD);
 	}
-/*
-	The sort buffer
-*/
-	sp = GetSetupPar((UBYTE *)"smallsize");
-	SmallSize = sp->value;
-	sp = GetSetupPar((UBYTE *)"smallextension");
-	SmallEsize = sp->value;
-	sp = GetSetupPar((UBYTE *)"largesize");
-	LargeSize = sp->value;
-	sp = GetSetupPar((UBYTE *)"termsinsmall");
-	TermsInSmall = sp->value;
-	sp = GetSetupPar((UBYTE *)"largepatches");
-	MaxPatches = sp->value;
-	sp = GetSetupPar((UBYTE *)"filepatches");
-	MaxFpatches = sp->value;
-	sp = GetSetupPar((UBYTE *)"sortiosize");
-	IOsize = sp->value;
-	if ( IOsize < AM.MaxTer ) { IOsize = AM.MaxTer; sp->value = IOsize; }
+
+
+	// Now we come to the main sorting buffers. Here there are various constraints, some of which
+	// have not been consistent within the code (or the manual) historically. These constraints
+	// must also be respected by the allocations of the TFORM workers.
+	SortBufferConstraints(
+		&(GetSetupPar((UBYTE *)"smallsize")->value),
+		&(GetSetupPar((UBYTE *)"smallextension")->value),
+		&(GetSetupPar((UBYTE *)"largesize")->value),
+		&(GetSetupPar((UBYTE *)"termsinsmall")->value),
+		&(GetSetupPar((UBYTE *)"largepatches")->value),
+		&(GetSetupPar((UBYTE *)"filepatches")->value),
+		&(GetSetupPar((UBYTE *)"sortiosize")->value), "", 1);
+
+	// The same for the sub-sort buffers
+	SortBufferConstraints(
+		&(GetSetupPar((UBYTE *)"subsmallsize")->value),
+		&(GetSetupPar((UBYTE *)"subsmallextension")->value),
+		&(GetSetupPar((UBYTE *)"sublargesize")->value),
+		&(GetSetupPar((UBYTE *)"subtermsinsmall")->value),
+		&(GetSetupPar((UBYTE *)"sublargepatches")->value),
+		&(GetSetupPar((UBYTE *)"subfilepatches")->value),
+		&(GetSetupPar((UBYTE *)"subsortiosize")->value), "Sub", 1);
+	AM.SSmallSize    = GetSetupPar((UBYTE *)"subsmallsize")->value;
+	AM.SSmallEsize   = GetSetupPar((UBYTE *)"subsmallextension")->value;
+	AM.SLargeSize    = GetSetupPar((UBYTE *)"sublargesize")->value;
+	AM.STermsInSmall = GetSetupPar((UBYTE *)"subtermsinsmall")->value;
+	AM.SMaxPatches   = GetSetupPar((UBYTE *)"sublargepatches")->value;
+	AM.SMaxFpatches  = GetSetupPar((UBYTE *)"subfilepatches")->value;
+	AM.SIOsize       = GetSetupPar((UBYTE *)"subsortiosize")->value;
+
+
+#ifdef WITHPTHREADS
+	// Now a constraint relevant to TFORM, for the ground-level buffers.
+	// The worker+sortbot+master threads communicate via ring-buffers called SORTBLOCKS.
+	// These live in the combined SmallExtension+LargeSize of the master thread during the sort.
+	// Therefore, we increase LargeSize if necessary:
+	// CONSTRAINT: SmallESize+LargeSize >=
+	// 	(# threads)*(1+(# SORTBLOCKS)*(TERMS IN BLOCK))*MaxTermSize
+	// where (# threads) depends whether we are using sortbots or not.
+	LONG minimumsizebytes;
+#ifdef WITHSORTBOTS
+	if ( AM.totalnumberofthreads-1 > 2 ) {
+		minimumsizebytes =
+			(2*(AM.totalnumberofthreads-1)-2)*(1+NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS/2)*AM.MaxTer;
+	}
+	else
+#endif
+	{
+		minimumsizebytes =
+			(AM.totalnumberofthreads-1)*(1+NUMBEROFBLOCKSINSORT*MINIMUMNUMBEROFTERMS)*AM.MaxTer;
+	}
+	{
+		const LONG smallextension = GetSetupPar((UBYTE *)"smallextension")->value;
+		const LONG largesize = GetSetupPar((UBYTE *)"largesize")->value;
+		if ( largesize+smallextension < minimumsizebytes ) {
+			GetSetupPar((UBYTE *)"largesize")->value = minimumsizebytes - smallextension;
+		}
+	}
+#endif
+
+
+	// Now we have fixed everything, we can make the sort allocations.
+	// Setup paramemters which are in bytes are now converted to WORDs.
+	const LONG SmallSize    = GetSetupPar((UBYTE *)"smallsize")->value / sizeof(WORD);
+	const LONG SmallEsize   = GetSetupPar((UBYTE *)"smallextension")->value / sizeof(WORD);
+	const LONG LargeSize    = GetSetupPar((UBYTE *)"largesize")->value / sizeof(WORD);
+	const LONG TermsInSmall = GetSetupPar((UBYTE *)"termsinsmall")->value;
+	const int  MaxPatches   = GetSetupPar((UBYTE *)"largepatches")->value;
+	const int  MaxFpatches  = GetSetupPar((UBYTE *)"filepatches")->value;
+	const LONG IOsize       = GetSetupPar((UBYTE *)"sortiosize")->value / sizeof(WORD);
+
 #ifndef WITHPTHREADS
 #ifdef WITHZLIB
-	for ( j = 0; j < 2; j++ ) { AR.Fscr[j].ziosize = IOsize; }
+	for ( j = 0; j < 2; j++ ) { AR.Fscr[j].ziosize = IOsize*sizeof(WORD); }
 #endif
 #endif
+
 	AM.S0 = 0;
-	AM.S0 = AllocSort(LargeSize,SmallSize,SmallEsize,TermsInSmall
-					,MaxPatches,MaxFpatches,IOsize,0);
-	/* AM.S0->file.ziosize was already set to a (larger) value by AllocSort, here it is re-set. */
+	AM.S0 = AllocSort(LargeSize, SmallSize, SmallEsize, TermsInSmall,
+		MaxPatches, MaxFpatches, IOsize);
+
 #ifdef WITHZLIB
-	AM.S0->file.ziosize = IOsize;
+	AM.S0->file.ziosize    = IOsize*sizeof(WORD);
 #ifndef WITHPTHREADS
-	AR.FoStage4[0].ziosize = IOsize;
-	AR.FoStage4[1].ziosize = IOsize;
+	AR.FoStage4[0].ziosize = IOsize*sizeof(WORD);
+	AR.FoStage4[1].ziosize = IOsize*sizeof(WORD);
 	AT.S0 = AM.S0;
 #endif
 #else
@@ -606,34 +658,16 @@ int AllocSetups(void)
 #endif
 #endif
 #ifndef WITHPTHREADS
-	AR.FoStage4[0].POsize   = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
-	AR.FoStage4[1].POsize   = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
+	AR.FoStage4[0].POsize  = IOsize*sizeof(WORD);
+	AR.FoStage4[1].POsize  = IOsize*sizeof(WORD);
 #endif
-	sp = GetSetupPar((UBYTE *)"subsmallsize");
-	AM.SSmallSize = sp->value;
-	sp = GetSetupPar((UBYTE *)"subsmallextension");
-	AM.SSmallEsize = sp->value;
-	sp = GetSetupPar((UBYTE *)"sublargesize");
-	AM.SLargeSize = sp->value;
-	sp = GetSetupPar((UBYTE *)"subtermsinsmall");
-	AM.STermsInSmall = sp->value;
-	sp = GetSetupPar((UBYTE *)"sublargepatches");
-	AM.SMaxPatches = sp->value;
-	sp = GetSetupPar((UBYTE *)"subfilepatches");
-	AM.SMaxFpatches = sp->value;
-	sp = GetSetupPar((UBYTE *)"subsortiosize");
-	AM.SIOsize = sp->value;
-	/* As for IOsize, make sure SIOsize is at least as large as AM.MaxTer. */
-	if ( AM.SIOsize < AM.MaxTer ) { AM.SIOsize = AM.MaxTer; sp->value = AM.SIOsize; }
+
 	sp = GetSetupPar((UBYTE *)"spectatorsize");
 	AM.SpectatorSize = sp->value;
-/*
-	The next code is just for the moment (26-jan-1997) because we have
-	the new parts combined with the old. Once the old parts are gone
-	from the program, we can eliminate this code too.
-*/
+
 	sp = GetSetupPar((UBYTE *)"functionlevels");
 	AM.maxFlevels = sp->value + 1;
+
 #ifdef WITHPTHREADS
 #else
 	AT.Nest = (NESTING)Malloc1((LONG)sizeof(struct NeStInG)*AM.maxFlevels,"functionlevels");
@@ -648,18 +682,27 @@ int AllocSetups(void)
 	AT.WildMask = (WORD *)Malloc1((LONG)AM.MaxWildcards*sizeof(WORD),"maxwildcards");
 #endif
 
+	// CompressSize is in bytes.
+	// CONSTRAINT: CompressSize >= 2*AM.MaxTer;
 	sp = GetSetupPar((UBYTE *)"compresssize");
-	// CompressSize is in bytes
-	if ( sp->value < 2*AM.MaxTer ) sp->value = 2*AM.MaxTer;
+	if ( sp->value < 2*AM.MaxTer ) {
+		sp->value = 2*AM.MaxTer;
+	}
 	AM.CompressSize = sp->value;
 #ifndef WITHPTHREADS
+	// TODO why +10? ComprTop is 10 short of the end? Maybe remove, and see if valgrind ever complains.
 	AR.CompressBuffer = (WORD *)Malloc1(AM.CompressSize+10, "compresssize");
 	AR.CompressPointer = AR.CompressBuffer;
 	AR.ComprTop = AR.CompressBuffer + AM.CompressSize/sizeof(WORD);
 #endif
-	// BracketIndexSize is given in bytes
+
+	// BracketIndexSize is given in bytes. MaxBracketBufferSize is stored in WORDs.
+	// CONSTRAINT: BracketIndexSize >= 2*MaxTermSize+sizeof(WORD)
 	sp = GetSetupPar((UBYTE *)"bracketindexsize");
-	if ( sp->value < 20*AM.MaxTer ) sp->value = 20*AM.MaxTer;
+	sp->value = ROUNDUP(sp->value, sizeof(WORD));
+	if ( sp->value < 2*AM.MaxTer+(LONG)sizeof(WORD) ) {
+		sp->value = 2*AM.MaxTer+sizeof(WORD);
+	}
 	AM.MaxBracketBufferSize = sp->value/sizeof(WORD);
 
 	sp = GetSetupPar((UBYTE *)"dotchar");
@@ -752,7 +795,7 @@ int AllocSetups(void)
 	sp = GetSetupPar((UBYTE *)"sizestorecache");
 	AM.SizeStoreCache = sp->value;
 	/* Make sure this is a multiple of sizeof(WORD). */
-	AM.SizeStoreCache = ((AM.SizeStoreCache+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
+	AM.SizeStoreCache = ROUNDUP(AM.SizeStoreCache, sizeof(WORD));
 #ifndef WITHPTHREADS
 /*
 	Install the store caches (15-aug-2006 JV)
@@ -761,8 +804,8 @@ int AllocSetups(void)
 	AT.StoreCache = AT.StoreCacheAlloc = 0;
 	if ( AM.NumStoreCaches > 0 ) {
 		STORECACHE sa, sb;
-		size = sizeof(struct StOrEcAcHe)+AM.SizeStoreCache;
-		size = ((size-1)/sizeof(size_t)+1)*sizeof(size_t);
+		LONG size = sizeof(struct StOrEcAcHe)+AM.SizeStoreCache;
+		size = ROUNDUP(size, sizeof(size_t));
 		AT.StoreCacheAlloc = (STORECACHE)Malloc1(size*AM.NumStoreCaches,"StoreCaches");
 		AT.StoreCache = AT.StoreCacheAlloc;
 		sa = AT.StoreCache;
@@ -803,6 +846,109 @@ int AllocSetups(void)
 
 /*
  		#] AllocSetups : 
+ 		#[ SortBufferConstraints :
+
+	Enforce constraints on the sizes of the various sorting buffers. The parameters
+	should be pointers to the setup parameter values, which we edit in place.
+	This function can be called on pointers to the ground level sorting buffers and
+	also the sub-buffers: both sets must obey the same constraints.
+*/
+void SortBufferConstraints(LONG *SmallSize, LONG *SmallExtension, LONG *LargeSize,
+	LONG *TermsInSmall, LONG *LargePatches, LONG *FilePatches, LONG *SortIOSize, char* prefix,
+	int warn) {
+
+	// SmallSize, SmallExtension, LargeSize, SortIOSize are given by the user in bytes.
+	// Remember that AM.MaxTer is in bytes.
+
+	// CONSTRAINT: Make sure all quantities in bytes are a multiple of sizeof(WORD).
+
+	// AM.MaxTer is supposed to already have been set appropriately.
+	if ( AM.MaxTer % sizeof(WORD) != 0 ) {
+/* INTERNAL_ERROR_EXCL_START */
+		MesPrint("!>Error, invalid AM.MaxTer in SortBufferConstraints: %l", AM.MaxTer);
+		Terminate(-1);
+/* INTERNAL_ERROR_EXCL_STOP */
+	}
+
+	// CONSTRAINT: SmallSize >= MaxTermSize. Demand that at least one term fits in the small buffer.
+	// Historically this was 16 terms, but now we set it to the minimal required value.
+	*SmallSize = ROUNDUP(*SmallSize, sizeof(WORD));
+	if ( *SmallSize < AM.MaxTer ) {
+		if ( warn == 1 ) MesPrint("Warning: %sSmallSize: %l -> %l (due to MaxTermSize)",
+			prefix, *SmallSize, AM.MaxTer);
+		*SmallSize = AM.MaxTer;
+	}
+
+	// CONSTRAINT: SmallExtension > SmallSize*3/2. Space for term merges which grow larger than either.
+	// Historically this was 7/6 and then 3/2. I presume it was made larger when users started to
+	// use PolyRatFun more, and a bug in GarbHand prevented proper cleanup.
+	if ( 2*(*SmallExtension) < 3*(*SmallSize) ) {
+		LONG newsize = (3*(*SmallSize))/2;
+		*SmallExtension = newsize;
+	}
+	*SmallExtension = ROUNDUP(*SmallExtension, sizeof(WORD));
+
+	// CONSTRAINT: LargeSize >= SmallExtension + 2*MaxTermSize. We guarantee that the small buffer
+	// fits in the large buffer. Patches start with MaxTermSize empty space for decompression,
+	// and patches are separated with "0" markers. 2*MaxTermSize is ample spare space.
+	if ( *LargeSize < *SmallExtension + 2*AM.MaxTer ) {
+		if ( warn == 1 ) MesPrint("Warning: %sLargeSize: %l -> %l (due to MaxTermSize, SmallSize)",
+			prefix, *LargeSize, *SmallExtension + 2*AM.MaxTer);
+		*LargeSize = *SmallExtension + 2*AM.MaxTer;
+	}
+	*LargeSize = ROUNDUP(*LargeSize, sizeof(WORD));
+
+	// CONSTRAINT: TermsInSmall > 0 and a multiple of 16
+	if ( *TermsInSmall <= 0 ) {
+		*TermsInSmall = 16;
+	}
+	*TermsInSmall = ROUNDUP(*TermsInSmall, 16);
+
+	// CONSTRAINT: LargePatches >= MINPATCHES
+	if ( *LargePatches < MINPATCHES ) {
+		*LargePatches = MINPATCHES;
+	}
+
+	// CONSTRAINT: FilePatches >= MINPATCHES
+	if ( *FilePatches < MINPATCHES ) {
+		*FilePatches = MINPATCHES;
+	}
+
+	// CONSTRAINT: SortIOSize >= AM.MaxTer
+	if ( *SortIOSize < AM.MaxTer ) {
+		*SortIOSize = AM.MaxTer;
+	}
+	*SortIOSize = ROUNDUP(*SortIOSize, sizeof(WORD));
+
+	// When merging patches, we require sufficient caching space in the combined large and small
+	// buffers to store SortIOSize+COMPINC + two maximally sized terms. Historically this
+	// constraint caused very large allocations, since we increased LargeSize to accomodate.
+	// Now, instead, we first try to reduce FilePatches before increasing LargeSize.
+	// This is anyway the behaviour the manual has always claimed.
+	// CONSTRAINT: LargeSize+SmallExtension >=
+	// 	FilePatches*(SortIOSize+COMPINC*sizeof(WORD)+2*AM.MaxTer)
+	LONG oldFilePatches = *FilePatches;
+	while ( ( *FilePatches > MINPATCHES ) && ( *LargeSize + *SmallExtension <
+		*FilePatches*(*SortIOSize+COMPINC*(LONG)sizeof(WORD)+2*AM.MaxTer) ) ) {
+
+		(*FilePatches)--;
+	}
+	if ( *FilePatches < oldFilePatches ) {
+		if ( warn == 1 ) MesPrint("Warning: %sFilePatches: %l -> %l (due to MaxTermSize, SmallSize, LargeSize, SortIOSize)",
+			prefix, oldFilePatches, *FilePatches);
+	}
+	if ( *LargeSize + *SmallExtension <
+		*FilePatches*(*SortIOSize+COMPINC*(LONG)sizeof(WORD)+2*AM.MaxTer) ) {
+
+		LONG oldLargeSize = *LargeSize;
+		*LargeSize = *FilePatches*(*SortIOSize+COMPINC*sizeof(WORD)+2*AM.MaxTer) - *SmallExtension;
+		if ( warn == 1 ) MesPrint("Warning: %sLargeSize: %l -> %l (due to MaxTermSize, SmallSize, SortIOSize)",
+			prefix, oldLargeSize, *LargeSize);
+	}
+	*LargeSize = ROUNDUP(*LargeSize, sizeof(WORD));
+}
+/*
+ 		#] SortBufferConstraints :
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -872,131 +1018,80 @@ void WriteSetup(void)
 		Routine allocates a complete struct for sorting.
 		To be used for the main allocation of the sort buffers, and
 		in a later stage for the function and subroutine sort buffers.
-		The level arg denotes a main buffer allocation (0) or a sub-buffer
-		allocation (1), used only for printing warning messages for buffer
-		size adjustments in DEBUGGING mode.
+		We can assume that all input parameters already satisfy necessary size constraints.
+		LargeSize, SmallSize, SmallEsize, IOsize are in WORDs.
 */
-SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG inTermsInSmall,
-                   int inMaxPatches, int inMaxFpatches, LONG inIOsize, int level)
-{
-	DUMMYUSE(level); /* This is only used in DEBUGGING mode */
-	LONG LargeSize = inLargeSize;
-	LONG SmallSize = inSmallSize;
-	LONG SmallEsize = inSmallEsize;
-	LONG TermsInSmall = inTermsInSmall;
-	int MaxPatches = inMaxPatches;
-	int MaxFpatches = inMaxFpatches;
-	LONG IOsize = inIOsize;
+SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsInSmall,
+	int MaxPatches, int MaxFpatches, LONG IOsize) {
 
-	LONG longer,terms2insmall,sortsize,longerp;
-	LONG IObuffersize = IOsize;
-	LONG IOtry;
-	SORTING *sort;
-	int fname2Size = 0, j = 0;
-	char *s;
+	int fname2Size = 0;
 	if ( AM.S0 != 0 ) {
-		s = FG.fname2; fname2Size = 0;
-		while ( *s ) { s++; fname2Size++; }
+		char *s = FG.fname2;
+		while (*s) {
+			s++;
+			fname2Size++;
+		}
 		fname2Size += 16;
 	}
-	if ( MaxFpatches < 4 ) MaxFpatches = 4;
-	longer = MaxPatches > MaxFpatches ? MaxPatches : MaxFpatches;
-	longerp = longer;
-	while ( (1 << j) < longerp ) j++;
-	longerp = (1 << j) + 1; 
-	longerp += sizeof(WORD*) - (longerp%sizeof(WORD *));
-	longer++;
-	longer += sizeof(WORD*) - (longer%sizeof(WORD *));
-	if ( SmallSize < 16*AM.MaxTer ) SmallSize = 16*AM.MaxTer+16;
-	TermsInSmall = (TermsInSmall+15) & (-16L);
-	terms2insmall = 2*TermsInSmall;  /* Used to be just + 100 rather than *2 */
-	if ( SmallEsize < (SmallSize*3)/2 ) SmallEsize = (SmallSize*3)/2;
-	if ( LargeSize > 0 && LargeSize < 2*SmallSize ) LargeSize = 2*SmallSize;
-	SmallEsize = (SmallEsize+15) & (-16L);
-	if ( LargeSize < 0 ) LargeSize = 0;
-	sortsize = sizeof(SORTING);
-	sortsize = (sortsize+15)&(-16L);
-	IObuffersize = (IObuffersize+sizeof(WORD)-1)/sizeof(WORD);
-/*
-	The next statement fixes a bug. In the rare case that we have a
-	problem here, we expand the size of the large buffer or the 
-	small extension
-*/
-	if ( (ULONG)( LargeSize+SmallEsize ) < MaxFpatches*((IObuffersize
-		+COMPINC)*sizeof(WORD)+2*AM.MaxTer) ) {
-		if ( LargeSize == 0 ) 
-			SmallEsize = MaxFpatches*((IObuffersize+COMPINC)*sizeof(WORD)+2*AM.MaxTer);
-		else
-			LargeSize  = MaxFpatches*((IObuffersize+COMPINC)*sizeof(WORD)+2*AM.MaxTer)
-				- SmallEsize;
+
+	LONG maxpatchcount = MaX(MaxPatches, MaxFpatches);
+	LONG mergetreesize = 1;
+	while ( mergetreesize < maxpatchcount ) {
+		mergetreesize *= 2;
 	}
+	maxpatchcount++;
+	mergetreesize++;
 
-	IOtry = ((LargeSize+SmallEsize)/MaxFpatches-2*AM.MaxTer)/sizeof(WORD)-COMPINC;
+	// Allocate separate buffers for most struct members, for better testing and debugging with valgrind.
+	SORTING* sort = Malloc1(sizeof(*sort), "AllocSort: sorting struct");
 
-	/* Here both IObuffersize and IOtry are in units of sizeof(WORD). */
-	if ( IObuffersize < IOtry ) {
-		IObuffersize = IOtry;
-	}
-
-#if DEBUGGING
-	char *prefix;
-	if ( level == 0 ) { prefix = ""; }
-	else { prefix = "Sub"; }
-	if ( LargeSize != inLargeSize ) { MesPrint("Warning: %sLargeSize adjusted: %l -> %l", prefix, inLargeSize, LargeSize); }
-	if ( SmallSize != inSmallSize ) { MesPrint("Warning: %sSmallSize adjusted: %l -> %l", prefix, inSmallSize, SmallSize); }
-	if ( SmallEsize != inSmallEsize ) {MesPrint("Warning: %sSmallEsize adjusted: %l -> %l", prefix, inSmallEsize, SmallEsize); }
-	if ( TermsInSmall != inTermsInSmall ) { MesPrint("Warning: %sTermsInSmall adjusted: %l -> %l", prefix, inTermsInSmall, TermsInSmall); }
-	if ( MaxPatches != inMaxPatches ) { MesPrint("Warning: MaxPatches adjusted: %d -> %d", inMaxPatches, MaxPatches); }
-	if ( MaxFpatches != inMaxFpatches ) {MesPrint("Warning: MaxFPatches adjusted: %d -> %d", inMaxFpatches, MaxFpatches); }
-	/* This one is always changed if the LargeSize has not been... */
-	/* if ( IObuffersize != inIOsize/(LONG)sizeof(WORD) ) { MesPrint("Warning: IOsize adjusted: %l -> %l", inIOsize/sizeof(WORD), IObuffersize); } */
-#endif
-
-	/* Allocate separate buffers for most struct members, for better testing and debugging with valgrind. */
-	sort = Malloc1(sizeof(*sort), "AllocSort: sorting struct");
-
-	sort->LargeSize = LargeSize/sizeof(WORD);
-	sort->SmallSize = SmallSize/sizeof(WORD);
-	sort->SmallEsize = SmallEsize/sizeof(WORD);
+	sort->LargeSize = LargeSize;
+	sort->SmallSize = SmallSize;
+	sort->SmallEsize = SmallEsize;
 	sort->MaxPatches = MaxPatches;
 	sort->MaxFpatches = MaxFpatches;
 	sort->TermsInSmall = TermsInSmall;
-	sort->Terms2InSmall = terms2insmall;
+	sort->Terms2InSmall = 2*TermsInSmall;
 
-	sort->sPointer     = Malloc1(sizeof(*(sort->sPointer    ))*terms2insmall, "AllocSort: sPointer");
-	sort->Patches      = Malloc1(sizeof(*(sort->Patches     ))*longer, "AllocSort: Patches");
-	sort->pStop        = Malloc1(sizeof(*(sort->pStop       ))*longer, "AllocSort: pStop");
-	sort->poina        = Malloc1(sizeof(*(sort->poina       ))*longerp, "AllocSort: poina");
-	sort->poin2a       = Malloc1(sizeof(*(sort->poin2a      ))*longerp, "AllocSort: poin2a");
+	// During file merges, the large+smallextension are divided into MaxFpatches parts
+	// which are used as caches. Each part needs at least 2*MaxTer + COMPINC bytes.
+	// The buffer sizes are already set to provide at least this, in SortBufferConstraints,
+	// but there might be additional space available. Set filePatchSize to use it.
+	// This size used to be coupled to POsize, but now it is separate.
+	sort->filePatchSize = ((LargeSize+SmallEsize)/MaxFpatches-COMPINC)*sizeof(WORD)-2*AM.MaxTer;
 
-	sort->fPatches     = Malloc1(sizeof(*(sort->fPatches    ))*longer, "AllocSort: fPatches");
-	sort->fPatchesStop = Malloc1(sizeof(*(sort->fPatchesStop))*longer, "AllocSort: fPatchesStop");
-	sort->inPatches    = Malloc1(sizeof(*(sort->inPatches   ))*longer, "AllocSort: inPatches");
-	sort->tree         = Malloc1(sizeof(*(sort->tree        ))*longerp, "AllocSort: tree");
-	sort->used         = Malloc1(sizeof(*(sort->used        ))*longerp, "AllocSort: used");
+	sort->sPointer     = Malloc1(sizeof(*(sort->sPointer    ))*(sort->Terms2InSmall), "AllocSort: sPointer");
+	sort->Patches      = Malloc1(sizeof(*(sort->Patches     ))*maxpatchcount, "AllocSort: Patches");
+	sort->pStop        = Malloc1(sizeof(*(sort->pStop       ))*maxpatchcount, "AllocSort: pStop");
+	sort->poina        = Malloc1(sizeof(*(sort->poina       ))*mergetreesize, "AllocSort: poina");
+	sort->poin2a       = Malloc1(sizeof(*(sort->poin2a      ))*mergetreesize, "AllocSort: poin2a");
+
+	sort->fPatches     = Malloc1(sizeof(*(sort->fPatches    ))*maxpatchcount, "AllocSort: fPatches");
+	sort->fPatchesStop = Malloc1(sizeof(*(sort->fPatchesStop))*maxpatchcount, "AllocSort: fPatchesStop");
+	sort->inPatches    = Malloc1(sizeof(*(sort->inPatches   ))*maxpatchcount, "AllocSort: inPatches");
+	sort->tree         = Malloc1(sizeof(*(sort->tree        ))*mergetreesize, "AllocSort: tree");
+	sort->used         = Malloc1(sizeof(*(sort->used        ))*mergetreesize, "AllocSort: used");
+	sort->ktoi         = Malloc1(sizeof(*(sort->ktoi        ))*(mergetreesize+2), "AllocSort: ktoi");
 
 #ifdef WITHZLIB
-	sort->fpcompressed   = Malloc1(sizeof(*(sort->fpcompressed  ))*(longerp+2), "AllocSort: fpcompressed");
-	sort->fpincompressed = Malloc1(sizeof(*(sort->fpincompressed))*(longerp+2), "AllocSort: fpincompressed");
+	sort->fpcompressed   = Malloc1(sizeof(*(sort->fpcompressed  ))*(mergetreesize+2), "AllocSort: fpcompressed");
+	sort->fpincompressed = Malloc1(sizeof(*(sort->fpincompressed))*(mergetreesize+2), "AllocSort: fpincompressed");
 	sort->zsparray = 0;
 #endif
 
-	sort->ktoi         = Malloc1(sizeof(*(sort->ktoi))*(longerp+2), "AllocSort: ktoi");
-
 	// The combined Large buffer and Small buffer (+ extension) are used.
 	// They must be allocated together.
-	sort->lBuffer      = Malloc1(sizeof(*(sort->lBuffer))*(sort->LargeSize+sort->SmallEsize), "AllocSort: lBuffer+sBuffer");
-	sort->lTop = sort->lBuffer+sort->LargeSize;
+	sort->lBuffer = Malloc1(sizeof(*(sort->lBuffer))*(sort->LargeSize+sort->SmallEsize), "AllocSort: lBuffer+sBuffer");
+	sort->lTop    = sort->lBuffer+sort->LargeSize;
 
 	sort->sBuffer = sort->lTop;
-	if ( sort->LargeSize == 0 ) { sort->lBuffer = 0; sort->lTop = 0; }
-	sort->sTop = sort->sBuffer + sort->SmallSize;
-	sort->sTop2 = sort->sBuffer + sort->SmallEsize;
-	sort->sHalf = sort->sBuffer + (LONG)((sort->SmallSize+sort->SmallEsize)>>1);
+	sort->sTop    = sort->sBuffer + sort->SmallSize;
+	sort->sTop2   = sort->sBuffer + sort->SmallEsize;
+	sort->sHalf   = sort->sBuffer + (sort->SmallSize+sort->SmallEsize)/2;
 
-	sort->file.PObuffer = Malloc1(IObuffersize*sizeof(*(sort->file.PObuffer))+fname2Size+16, "AllocSort: PObuffer");
-	sort->file.POstop = sort->file.PObuffer+IObuffersize;
-	sort->file.POsize = IObuffersize * sizeof(WORD);
+	sort->file.PObuffer = Malloc1(IOsize*sizeof(*(sort->file.PObuffer)), "AllocSort: PObuffer");
+	sort->file.POstop = sort->file.PObuffer + IOsize;
+	sort->file.POsize = IOsize * sizeof(WORD);
 	sort->file.POfill = sort->file.POfull = sort->file.PObuffer;
 	sort->file.active = 0;
 	sort->file.handle = -1;
@@ -1005,14 +1100,16 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	sort->file.pthreadslock = dummylock;
 #endif
 #ifdef WITHZLIB
-	sort->file.ziosize = IObuffersize*sizeof(WORD);
+	sort->file.ziosize = IOsize*sizeof(WORD);
 	sort->file.ziobuffer = 0;
 #endif
 	if ( AM.S0 != 0 ) {
-		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
+		sort->file.name = Malloc1(fname2Size, "AllocSort: file.name");
 		AllocSortFileName(sort);
 	}
-	else sort->file.name = 0;
+	else {
+		sort->file.name = 0;
+	}
 	sort->cBuffer = 0;
 	sort->cBufferSize = 0;
 	sort->f = 0;
@@ -1020,7 +1117,6 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 
 	return(sort);
 }
-
 /*
  		#] AllocSort : 
  		#[ AllocSortFileName :
@@ -1131,8 +1227,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 
 int MakeSetupAllocs(void)
 {
-	if ( RecalcSetups() || AllocSetups() ) return(1);
-	else return(0);
+	return AllocSetups();
 }
 
 /*

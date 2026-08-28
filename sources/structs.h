@@ -1155,7 +1155,7 @@ typedef struct sOrT {
     LONG TermsLeft;             /* Number of terms still in existence */
     LONG GenSpace;              /* Amount of space of generated terms */
     LONG SpaceLeft;             /* Space needed for still existing terms */
-    LONG putinsize;             /* Size of buffer in putin */
+    LONG filePatchSize;         /* Size of each input file-patch cache (in bytes) */
     LONG ninterms;              /* Which input term ? */
     LONG verbComparisons;       /* Counters for "On SortVerbose;" statistics */
     LONG verbSBsortTerms;
@@ -1419,8 +1419,8 @@ typedef struct NoRmDaTa {
 struct M_const {
     POSITION zeropos;              /* (M) is zero */
     SORTING *S0;                   /**< [D] The main sort buffer */
-    UWORD   *gcmod;                /**< Global setting of modulus. Uses AC.cmod's memory */
-    UWORD   *gpowmod;              /**< Global setting printing as powers. Uses AC.cmod's memory */
+    UWORD   *gcmod;                /**< Global setting of modulus. */
+    UWORD   *gpowmod;              /**< Global setting printing as powers. */
     UBYTE   *TempDir;              /* (M) Path with where the temporary files go */
     UBYTE   *TempSortDir;          /* (M) Path with where the sort files go */
     UBYTE   *IncDir;               /* (M) Directory path for include files */
@@ -1725,7 +1725,7 @@ struct C_const {
     LONG    *termstack;            /**< [D] Last term statement {offset} */
     LONG    *termsortstack;        /**< [D] Last sort statement {offset} */
     UWORD   *cmod;                 /**< [D] Local setting of modulus. Pointer to value. */
-    UWORD   *powmod;               /**< Local setting printing as powers. Points into cmod memory */
+    UWORD   *powmod;               /**< Local setting printing as powers. */
     UWORD   *modpowers;            /**< [D] The conversion table for mod-> powers. */
 	UWORD   *halfmod;              /* (C) half the modulus when not zero */
     WORD    *ProtoType;            /* (C) The subexpression prototype {wildcards} */

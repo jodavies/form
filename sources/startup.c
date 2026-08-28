@@ -1790,11 +1790,12 @@ int main(int argc, char **argv)
 #endif
 	if ( TryEnvironment() ) Terminate(-2);
 	if ( TryFileSetups() ) Terminate(-2);
+	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
+	if ( !AM.FromStdin ) PrintHeader(1);
 	if ( MakeSetupAllocs() ) Terminate(-2);
 	StartMore();
 	InitRecovery();
 	CheckRecoveryFile();
-	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
 	AS.MultiThreaded = 0;
 #ifdef WITHPTHREADS
 	if ( AM.totalnumberofthreads > 1 ) AS.MultiThreaded = 1;
@@ -1805,7 +1806,6 @@ int main(int argc, char **argv)
 	ReserveTempFiles(0);
 	IniFbuffer(AT.fbufnum);
 #endif
-	if ( !AM.FromStdin ) PrintHeader(1);
 	IniVars();
 	Globalize(1);
 #ifdef WITH_ALARM

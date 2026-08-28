@@ -46,6 +46,7 @@
 #define GETCOEF(x,y) x += *x;y = x[-1];x -= ABS(y);y=REDLENG(y)
 #define GETSTOP(x,y) y=x+(*x)-1;y -= ABS(*y)-1
 #define StuffAdd(x,y)  (((x)<0?-1:1)*(y)+((y)<0?-1:1)*(x))
+#define ROUNDUP(x,y) ((((x)+(y)-1)/(y))*(y))
  
 #define EXCHN(t1,t2,n) { WORD a,i; for(i=0;i<n;i++){a=t1[i];t1[i]=t2[i];t2[i]=a;} }
 #define EXCH(x,y) { WORD a = (x); (x) = (y); (y) = a; }
@@ -688,7 +689,7 @@ extern void   PrintFeatureList(void);
 extern void   PrintRunningTime(void);
 extern LONG   GetRunningTime(void);
 extern int    PutBracket(PHEAD WORD *);
-extern LONG   PutIn(FILEHANDLE *,POSITION *,WORD *,WORD **,int);
+extern LONG   PutIn(FILEHANDLE *,POSITION *,WORD *,LONG,WORD **,int);
 extern int    PutInStore(INDEXENTRY *,WORD);
 extern WORD   PutOut(PHEAD WORD *,POSITION *,FILEHANDLE *,WORD);
 extern UWORD  Quotient(UWORD *,WORD *,WORD);
@@ -886,9 +887,9 @@ extern void   ToGeneral(WORD *,WORD *,WORD);
 extern WORD   ToPolyFunGeneral(PHEAD WORD *);
 extern int    ToFast(WORD *,WORD *);
 extern SETUPPARAMETERS *GetSetupPar(UBYTE *);
-extern int    RecalcSetups(void);
 extern int    AllocSetups(void);
-extern SORTING *AllocSort(LONG,LONG,LONG,LONG,int,int,LONG,int);
+extern SORTING *AllocSort(LONG,LONG,LONG,LONG,int,int,LONG);
+extern void   SortBufferConstraints(LONG*,LONG*,LONG*,LONG*,LONG*,LONG*,LONG*,char*,int);
 extern void   AllocSortFileName(SORTING *);
 extern UBYTE *LoadInputFile(UBYTE *,int);
 extern UBYTE  GetInput(void);

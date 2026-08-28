@@ -2063,8 +2063,8 @@ assert result("Zero") =~ expr("0")
 *--#[ Issue214 :
 #-
 #: MaxTermSize 500
-#: ScratchSize 1K
-#: SortIOSize 1K
+#: ScratchSize 2K
+#: SortIOSize 2K
 
 Off compress;
 Symbol x,y,z,i;
@@ -2160,6 +2160,7 @@ assert succeeded?
 #-
 #: MaxTermSize 16K
 #: SubTermsInSmall 800
+#: FilePatches 128
 
 
 Off Statistics;

@@ -395,10 +395,7 @@ UBYTE *scratchname[] = { (UBYTE *)"scratchsize",
  *			AR.Fscr[0] : input for keep brackets and expressions in rhs
  *			AR.Fscr[1] : output of the sorting to be fed to the master
  *			AR.Fscr[2] : input for keep brackets and expressions in rhs
- *		Hence the 0 and 2 channels can use a rather small buffer like
- *			4*AM.MaxTer (which is the minimal master size of these buffers)
- *		The 1 channel needs a buffer roughly AM.ScratSize/#ofworkers,
- *		but also we set it at least 4*AM.MaxTer.
+ *		We use MINSCRATCHTERMS*AM.MaxTer for these buffers.
  */
 
 ALLPRIVATES *InitializeOneThread(int identity)
@@ -537,20 +534,19 @@ ALLPRIVATES *InitializeOneThread(int identity)
 				ScratchSize[j] = AM.ScratSize;
 			}
 			// AM.MaxTer is in bytes!
-			if ( ScratchSize[j] < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
-				ScratchSize[j] = 4*AM.MaxTer/sizeof(WORD);
+			if ( ScratchSize[j] < MINSCRATCHTERMS*AM.MaxTer/(LONG)sizeof(WORD) ) {
+				ScratchSize[j] = MINSCRATCHTERMS*AM.MaxTer/sizeof(WORD);
 			}
 		}
 		else {
 			if ( j == 1 ) ScratchSize[j] = AM.ThreadScratOutSize;
 			else          ScratchSize[j] = AM.ThreadScratSize;
-			if ( ScratchSize[j] < 4*AM.MaxTer/(LONG)sizeof(WORD) ) {
-				ScratchSize[j] = 4*AM.MaxTer/sizeof(WORD);
+			// AM.MaxTer is in bytes!
+			if ( ScratchSize[j] < MINSCRATCHTERMS*AM.MaxTer/(LONG)sizeof(WORD) ) {
+				ScratchSize[j] = MINSCRATCHTERMS*AM.MaxTer/sizeof(WORD);
 			}
 			AR.Fscr[j].name = 0;
 		}
-		ScratchSize[j] = ( ScratchSize[j] + 255 ) / 256;
-		ScratchSize[j] = ScratchSize[j] * 256;
 		ScratchBuf = (WORD *)Malloc1(ScratchSize[j]*sizeof(WORD),(char *)(scratchname[j]));
 		AR.Fscr[j].POsize = ScratchSize[j] * sizeof(WORD);
 		AR.Fscr[j].POfull = AR.Fscr[j].POfill = AR.Fscr[j].PObuffer = ScratchBuf;
@@ -577,8 +573,8 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AR.FoStage4[0].ziobuffer = 0;
 	AR.FoStage4[1].ziobuffer = 0;
 #endif	
-	AR.FoStage4[0].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
-	AR.FoStage4[1].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
+	AR.FoStage4[0].POsize  = ROUNDUP(IOsize, sizeof(WORD));
+	AR.FoStage4[1].POsize  = ROUNDUP(IOsize, sizeof(WORD));
 
 	AR.hidefile = &(AR.Fscr[2]);
 	AR.StoreData.Handle = -1;
@@ -758,19 +754,28 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AT.S0 = AM.S0;
 	}
 	else {
-/*
-		For the moment we don't have special settings.
-		They may become costly in virtual memory.
-*/
-		AT.S0 = AllocSort(AM.S0->LargeSize*sizeof(WORD)/numberofworkers
-						 ,AM.S0->SmallSize*sizeof(WORD)/numberofworkers
-						 ,AM.S0->SmallEsize*sizeof(WORD)/numberofworkers
-						 ,AM.S0->TermsInSmall
-						 ,AM.S0->MaxPatches
-/*						 ,AM.S0->MaxPatches/numberofworkers  */
-						 ,AM.S0->MaxFpatches/numberofworkers
-						 ,AM.S0->file.POsize
-						 ,0);
+		// The buffer sizes of the workers are smaller, but still need to satisfy
+		// the usual constraints.
+		// SortBufferConstraints expects the size parameters to be in bytes.
+		LONG LargeSize = sizeof(WORD)*AM.S0->LargeSize/numberofworkers;
+		LONG SmallSize = sizeof(WORD)*AM.S0->SmallSize/numberofworkers;
+		LONG SmallEsize = sizeof(WORD)*AM.S0->SmallEsize/numberofworkers;
+		LONG TermsInSmall = AM.S0->TermsInSmall;
+		LONG MaxPatches = AM.S0->MaxPatches;
+		LONG MaxFpatches = AM.S0->MaxFpatches/numberofworkers;
+		LONG SortIOsize = AM.S0->file.POsize; // in bytes already
+
+		SortBufferConstraints(&SmallSize, &SmallEsize, &LargeSize, &TermsInSmall, &MaxPatches,
+			&MaxFpatches, &SortIOsize, "thread ", identity);
+
+		// AllocSort expects the size parameters to be in WORDs.
+		LargeSize  /= sizeof(WORD);
+		SmallSize  /= sizeof(WORD);
+		SmallEsize /= sizeof(WORD);
+		SortIOsize /= sizeof(WORD);
+
+		AT.S0 = AllocSort(LargeSize, SmallSize, SmallEsize, TermsInSmall, MaxPatches, MaxFpatches,
+			SortIOsize);
 	}
 	AR.CompressPointer = AR.CompressBuffer;
 /*
@@ -3876,7 +3881,7 @@ OneTerm:
 						w = poly_ratfun_add(B0,m1,m2);
 						if ( *tt1 + w[1] - m1[1] > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 							MLOCK(ErrorMessageLock);
-							MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l is too small",AM.MaxTer);
+							MesPrint("Term too complex in PolyRatFun addition. MaxTermSize of %10l WORDs is too small",AM.MaxTer/sizeof(WORD));
 							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
@@ -3889,7 +3894,7 @@ OneTerm:
 						w = AT0.WorkPointer;
 						if ( w + m1[1] + m2[1] > AT0.WorkTop ) {
 							MLOCK(ErrorMessageLock);
-							MesPrint("MasterMerge: A WorkSpace of %10l is too small",AM.WorkSize);
+							MesPrint("MasterMerge: A WorkSpace of %10l WORDs is too small",AM.WorkSize);
 							MUNLOCK(ErrorMessageLock);
 							Terminate(-1);
 						}
@@ -4853,7 +4858,7 @@ int IniSortBlocks(int numworkers)
 	numberofterms = blocksize / maxter;
 	if ( numberofterms < MINIMUMNUMBEROFTERMS ) {
 /*
-		This should have been taken care of in RecalcSetups.
+		This should have been taken care of in AllocSetups.
 */
 		MesPrint("We have a problem with the size of the blocks in IniSortBlocks");
 		Terminate(-1);
@@ -4935,7 +4940,7 @@ int UpdateSortBlocks(int numworkers)
 	numberofterms = blocksize / maxter;
 	if ( numberofterms < MINIMUMNUMBEROFTERMS ) {
 /*
-		This should have been taken care of in RecalcSetups.
+		This should have been taken care of in AllocSetups.
 */
 		MesPrint("We have a problem with the size of the blocks in UpdateSortBlocks");
 		Terminate(-1);
