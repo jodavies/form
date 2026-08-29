@@ -887,6 +887,7 @@ extern void   ToGeneral(WORD *,WORD *,WORD);
 extern WORD   ToPolyFunGeneral(PHEAD WORD *);
 extern int    ToFast(WORD *,WORD *);
 extern SETUPPARAMETERS *GetSetupPar(UBYTE *);
+extern void   SetThreadCount(void);
 extern int    AllocSetups(void);
 extern SORTING *AllocSort(LONG,LONG,LONG,LONG,int,int,LONG);
 extern void   SortBufferConstraints(LONG*,LONG*,LONG*,LONG*,LONG*,LONG*,LONG*,char*,int);

@@ -353,6 +353,44 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 
 /*
 		#] GetSetupPar :
+		#[ SetThreadCount :
+
+	To be called after all setup parameters have been read, meaning the setup
+	file and command-line options.
+	Fix the number of threads for TFORM. Since there are various ways to set the
+	number, the precedence is as follows:
+		1. Set on the command line with -w or (undocumented) -m
+		2. Set with "#: Threads N" in the FORM script
+		3. Set with "Threads N" in form.set file.
+*/
+
+void SetThreadCount(void)
+{
+	SETUPPARAMETERS *sp = GetSetupPar((UBYTE *)"threads");
+
+#ifdef WITHPTHREADS
+	if ( AM.totalnumberofthreads > 0 ) {
+		// Already set with -w or -m: highest precedence:
+		sp->value = AM.totalnumberofthreads - 1;
+	}
+	else if ( sp->value > 0 ) {
+		// No -w or -m, but Threads was set in the script or form.set:
+		AM.totalnumberofthreads = sp->value + 1;
+	}
+	else {
+		// No threads specified anywhere. We don't use any workers.
+		sp->value = 0;
+		AM.totalnumberofthreads = 1;
+	}
+#else
+	// Not TFORM. We don't use any workers.
+	sp->value = 0;
+	AM.totalnumberofthreads = 1;
+#endif
+}
+
+/*
+		#] SetThreadCount :
 		#[ AllocSetups :
 
 	Here we read the setup parameters, which have default values or have been
@@ -370,21 +408,6 @@ int AllocSetups(void)
 #ifndef WITHPTHREADS
 	int j;
 #endif
-
-	sp = GetSetupPar((UBYTE *)"threads");
-	// A worker count specified on the command line with -w has precedence over a value
-	// from the setup. AM.totalnumberofthreads will already have a value in that case.
-	if ( AM.totalnumberofthreads > 1 ) {
-		sp->value = AM.totalnumberofthreads - 1;
-	}
-	else {
-		sp->value = 0;
-	}
-	if ( sp->value > 0 ) {
-		// totalnumberofthreads is the master + workers
-		AM.totalnumberofthreads = sp->value+1;
-	}
-
 
 	// MaxTermSize is specified by the user in WORDs, but AM.MaxTer is stored in bytes.
 	// Take care not to mis-match the units when comparing various buffer sizes to MaxTer!

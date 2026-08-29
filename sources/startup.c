@@ -1790,7 +1790,7 @@ int main(int argc, char **argv)
 #endif
 	if ( TryEnvironment() ) Terminate(-2);
 	if ( TryFileSetups() ) Terminate(-2);
-	if ( AM.totalnumberofthreads == 0 ) AM.totalnumberofthreads = 1;
+	SetThreadCount();
 	if ( !AM.FromStdin ) PrintHeader(1);
 	if ( MakeSetupAllocs() ) Terminate(-2);
 	StartMore();
