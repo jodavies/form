@@ -1986,7 +1986,7 @@ Model::Model(MInput *minp)
     }
     name    = strdup(minp->name);
     ncouple = minp->ncouple;
-    if (ncouple >= GRCC_MAXNCPLG) {
+    if (ncouple > GRCC_MAXNCPLG) {
         erEnd("too many coupling constants in the model (GRCC_MAXNCPLG)");
     }
     // cnlist = minp->cnamlist;
@@ -2957,7 +2957,7 @@ SProcess::SProcess(Model *mdl, Process *prc, Options *opts, int sid, int *clst, 
         ok = False;
     }
     nNodes = nvrt + nExtern;
-    if (nNodes >= GRCC_MAXNODES) {
+    if (nNodes > GRCC_MAXNODES) {
         if (prlevel > 0) {
             grcc_fprintf(GRCC_Stderr, "*** SProcess::SProcess: ");
             grcc_fprintf(GRCC_Stderr, "too many nodes = %d\n", nNodes);
@@ -3120,7 +3120,7 @@ SProcess::SProcess(Model *mdl, Process *prc, Options *opts, int sid, int *clst, 
         ok = False;
     }
     nNodes = nvrt + nExtern;
-    if (nNodes >= GRCC_MAXNODES) {
+    if (nNodes > GRCC_MAXNODES) {
         if (prlevel > 0) {
             grcc_fprintf(GRCC_Stderr, "*** SProcess::SProcess: ");
             grcc_fprintf(GRCC_Stderr, "too many nodes = %d\n", nNodes);
@@ -10318,7 +10318,7 @@ void AStack::pushNode(int n)
         erEnd("N-stack overflow (GRCC_MAXNSTACK)");
     }
     nc = agraph->nodes[n]->cand;
-    if (nc->nilist >= GRCC_MAXMINTERACT) {
+    if (nc->nilist > GRCC_MAXMINTERACT) {
         erEnd("N-stack: too long list (GRCC_MAXMINTERACT)");
     }
     ns = nStack[nStackP];
@@ -10348,7 +10348,7 @@ void AStack::pushEdge(int e)
         erEnd("E-stack overflow (GRCC_MAXESTACK)");
     }
     ec = agraph->edges[e]->cand;
-    if (ec->nplist >= GRCC_MAXMPARTICLES2) {
+    if (ec->nplist > GRCC_MAXMPARTICLES2) {
         erEnd("E-stack: Too long list (GRCC_MAXMPARTICLES)");
     }
     es = eStack[eStackP];
