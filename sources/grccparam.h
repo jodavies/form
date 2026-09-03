@@ -32,8 +32,8 @@
 #define GRCC_NAMESPACE
 */
 
-#define GRCC_MAXNCPLG         4
-#define GRCC_MAXLEGS         10
+#define GRCC_MAXNCPLG        15
+#define GRCC_MAXLEGS         15
 #define GRCC_MAXMPARTICLES   50
 #define GRCC_MAXMINTERACT   500
 #define GRCC_MAXSUBPROCS    500
