@@ -519,6 +519,8 @@ exists for case that the user would like to overrule such a mechanism).
 \vspace{4mm}
 
 \noindent For example
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Bracket_1)
 \begin{verbatim}
    Symbols x, y;
    Local F = (1+x+x^2)*(1+y+y^2);
@@ -1145,6 +1147,8 @@ occurrences of the denominator function to be renamed into the function
 that is given in the statement. This function will work well together with 
 the PolyRatFun statement in which we define a PolyFun with two arguments of 
 which the second acts as a denominator and the first as a numerator:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Denominators_1)
 \begin{verbatim}
    Symbols x, y;
    Cfunction rat, den;
@@ -1365,6 +1369,8 @@ expressions inside the current module. Basically the expressions to be
 dropped are not treated for execution and after the module has finished 
 completely they are removed. See also the ndrop 
 statement~\ref{substandrop}. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Drop_1)
 \begin{verbatim}
    Local F1 = 1;
    Local F2 = 2;
@@ -1412,6 +1418,8 @@ Example:
 Inside an 
 Argument/EndArgument\index{argument}\index{endargument} environment this 
 statement would drop the coefficient of the terms inside the argument. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_DropCoefficient_2)
 \begin{verbatim}
    Symbols x;
    Cfunction f;
@@ -1439,6 +1447,8 @@ Syntax & DropSymbols;
 \end{tabular} \vspace{4mm}
 
 \noindent This statement removes all symbols from a term. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_DropSymbols_1)
 \begin{verbatim}
    Symbols x, y, z;
    Local F = 1 + x + x^2 + z^3 + 2^2*y^4;
@@ -6899,6 +6909,8 @@ is equivalent to permute(r1,...,rn) where r1,...,rn are consecutive integers.
 For example:}
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
 % WELL! (Sta_Transform_11)
+% Note: Sta_Transform_11b verifies that a compilation error occurs when the
+% mandatory sign is missing.
 \begin{verbatim}
     CFunction f,g,h;
     Local test = f(1,...,9) + g(1,...,9) + h(1,...,9);
