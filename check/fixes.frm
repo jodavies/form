@@ -737,6 +737,72 @@ P;
 assert succeeded?
 assert result("G") =~ expr("1")
 *--#] Issue61 : 
+*--#[ Issue63_1 :
+#-
+
+Symbols x,y,n,m;
+CFunction f1,...,f7,g;
+
+Local test1 = f1(x);
+Local test2 = f2(y);
+Local test3 = f3(y);
+Local test4 = f4(x);
+Local test5 = f5(x,y);
+Local test6 = f6(x);
+Local test7 = f7(0);
+
+Identify f1(x^n?) = g(n);
+Identify f2(x^n?) = g(n);
+Identify f3(x?^n?) = g(x,n);
+Identify f4(x^2) = g(2);
+Identify f5(x^n?,y) = g(n);
+Identify f6(x^n?*y^m?) = g(n,m);
+Identify f7(g(x?)) = g(x);
+
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("g(1)")
+assert result("test2") =~ expr("f2(y)")
+assert result("test3") =~ expr("g(y,1)")
+assert result("test4") =~ expr("f4(x)")
+assert result("test5") =~ expr("g(1)")
+assert result("test6") =~ expr("g(1,0)")
+assert result("test7") =~ expr("f7(0)")
+*--#] Issue63_1 :
+*--#[ Issue63_2 :
+#-
+
+Symbols x,y,n,m,a,b;
+CFunction f1,...,f7,g;
+
+Local test1 = f1(a,x,b);
+Local test2 = f2(a,y,b);
+Local test3 = f3(a,y,b);
+Local test4 = f4(a,x,b);
+Local test5 = f5(a,x,y);
+Local test6 = f6(a,x,b);
+Local test7 = f7(a,0,b);
+
+Identify f1(?a,x^n?,?b) = g(n);
+Identify f2(?a,x^n?,?b) = g(n);
+Identify f3(a?,x?^n?,b?) = g(x,n);
+Identify f4(?a,x^2,?b) = g(2);
+Identify f5(?a,x^n?,y,?b) = g(n);
+Identify f6(?a,x^n?*y^m?,?b) = g(n,m);
+Identify f7(?a,g(x?),?b) = g(x);
+
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("g(1)")
+assert result("test2") =~ expr("f2(a,y,b)")
+assert result("test3") =~ expr("g(y,1)")
+assert result("test4") =~ expr("f4(a,x,b)")
+assert result("test5") =~ expr("g(1)")
+assert result("test6") =~ expr("g(1,0)")
+assert result("test7") =~ expr("f7(a,0,b)")
+*--#] Issue63_2 :
 *--#[ Issue69 :
 * No warnings/errors for the same labels
 On allwarning;
@@ -5141,3 +5207,4 @@ Global F1 = E{`i' % 10}*E2*E3*E4;
 .end
 assert succeeded?
 *--#] Issue808 :
+

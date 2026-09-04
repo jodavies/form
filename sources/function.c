@@ -832,9 +832,10 @@ int MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 	WORD *mtrmstop, *ttrmstop;
 	WORD *msubstop, *mnextsub;
 	WORD msizcoef, mcount, tcount, newvalue, j;
-	WORD *oldm, *oldt;
+	WORD *oldm, *oldt, *oldnextargt;
+	WORD fastarg[ARGHEAD+8]; // temporary storage for converted fast arguments
 	WORD *OldWork, numofwildarg;
-	WORD nwstore, tobeeaten, reservevalue = 0, resernum = 0, withwild;
+	WORD nwstore, tobeeaten, reservevalue = 0, resernum = 0, withwild, convertedfast;
 	WORD *wildargtaken;
 	CBUF *C = cbuf+AT.ebufnum;
 	int ntwa = AN.NumTotWildArgs;
@@ -1193,9 +1194,22 @@ topofloop:
 		argtstop = oldt = t;
 		NEXTARG(argmstop)
 		NEXTARG(argtstop)
+		convertedfast = 0;
 		if ( t == tstop ) { /* This concerns a very rare bug */
 			if ( *m == -ARGWILD ) goto ArgAll;
 			goto endofloop;
+		}
+		if ( *m > 0 && *t < 0 ) {
+			// m is in general notation but t is in fast notation. Convert t to
+			// general notation, and let the general case handle it below.
+			// We need to update argtstop for the "*m > 0 && *t > 0" case below,
+			// and therefore save the original value to restore later
+			oldnextargt = argtstop;
+			t = fastarg;
+			ToGeneral(oldt,t,0);
+			oldt = t;
+			argtstop = t + *t;
+			convertedfast = 1;
 		}
 		if ( *m < 0 && *t < 0 ) {
 			if ( *t <= -FUNCTION ) {
@@ -1369,6 +1383,11 @@ IndAll:				i = m[1] - WILDOFFSET;
 				We have to hope that the pattern contains a composite wildcard.
 */
 				m = oldm; t = oldt;
+				if ( *t == ARGHEAD ) {
+					// A "zero" argument has no term. This is produced when the
+					// fast->general conversion above hits "-SNUMBER 0"
+					goto endofloop;
+				}
 				m += ARGHEAD; t += ARGHEAD;			/* Point at (first?) term */
 				mtrmstop = m + *m;
 				ttrmstop = t + *t;
@@ -1503,7 +1522,9 @@ nomatch:
 		}
 		else goto endofloop;
 
-		t = argtstop;						/* Next argument */
+		// If we converted the argument from fast to general notation, we stored
+		// the old argtstop in oldnextargt
+		t = convertedfast ? oldnextargt : argtstop; /* Next argument */
 		m = argmstop;
 	}
 	if ( AN.SignCheck && AN.ExpectedSign ) goto endofloop;
