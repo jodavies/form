@@ -2667,7 +2667,11 @@ int ThreadsProcessor(EXPRESSIONS e, WORD LastExpression, WORD fromspectator)
 	The number of terms in the expression is in e->counter
 */
 	thrbufsiz2 = thrbufsiz = AC.ThreadBucketSize-1;
-	if ( ( e->counter / ( numberofworkers * 5 ) ) < thrbufsiz ) {
+	/* CopySpectator expressions have a one-term expression prototype in the
+	 * scratch file, regardless of how many terms the spectator contains. Don't
+	 * use this prototype to determine bucket size, or we'll end up with single-term
+	 * buckets and bad performance. Just use thrbufsiz in this case. */
+	if ( ! fromspectator && ( e->counter / ( numberofworkers * 5 ) ) < thrbufsiz ) {
 		thrbufsiz = e->counter / ( numberofworkers * 5 ) - 1;
 		if ( thrbufsiz < 0 ) thrbufsiz = 0;
 	}
@@ -2922,7 +2926,9 @@ Found2:;
 /*
 			There is room in the bucket. Fill yet another term.
 */
-			if ( GetTermP(B0,tt) == 0 ) { endofinput = 1; break; }
+			if ( ( fromspectator
+				? GetFromSpectator(tt,fromspectator-1)
+				: GetTermP(B0,tt) ) == 0 ) { endofinput = 1; break; }
 			dd++;
 			thr->totnum++;
 			dd += AN0.deferskipped;
@@ -2973,7 +2979,9 @@ Found2:;
 /*
 				There is room in the bucket. Fill yet another term.
 */
-				if ( GetTermP(B0,tt) == 0 ) { endofinput = 1; break; }
+				if ( ( fromspectator
+					? GetFromSpectator(tt,fromspectator-1)
+					: GetTermP(B0,tt) ) == 0 ) { endofinput = 1; break; }
 /*
 				Same bracket?
 */
