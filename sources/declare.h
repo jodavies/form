@@ -1379,6 +1379,7 @@ extern void   convertnamesblock(NAMESBLOCK *,NAMESBLOCK *,int);
 extern void   convertiniinfo(INIINFO *,INIINFO *,int);
 extern int    ReadIndex(DBASE *);
 extern int    WriteIndexBlock(DBASE *,MLONG);
+extern int    FlushDirtyIndexBlocks(DBASE *);
 extern int    WriteNamesBlock(DBASE *,MLONG);
 extern int    WriteIndex(DBASE *);
 extern int    WriteIniInfo(DBASE *);

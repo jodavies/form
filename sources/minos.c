@@ -415,9 +415,11 @@ int WriteIndexBlock(DBASE *d,MLONG num)
 /* INTERNAL_ERROR_EXCL_STOP */
 	}
 	fseek(d->handle,d->iblocks[num]->position,SEEK_SET);
+	d->iblocks[num]->flags &= MCLEANFLAG;
 	convertblock(d->iblocks[num],&scratchblock,TODISK);
 	if ( minoswrite(d->handle,(char *)(&scratchblock),sizeof(INDEXBLOCK)) ) {
 /* INTERNAL_ERROR_EXCL_START */
+		d->iblocks[num]->flags |= MDIRTYFLAG;
 		MesPrint("!>Error while writing an index block in file %s\n",d->name);
 		MesPrint("File may be unreliable now\n");
 		return(-1);
@@ -428,6 +430,22 @@ int WriteIndexBlock(DBASE *d,MLONG num)
 
 /*
   	#] WriteIndexBlock : 
+  	#[ FlushDirtyIndexBlocks :
+*/
+
+int FlushDirtyIndexBlocks(DBASE *d)
+{
+	MLONG i;
+	for ( i = 0; i < d->info.numberofindexblocks; i++ ) {
+		if ( ( d->iblocks[i]->flags & MDIRTYFLAG ) != 0 ) {
+			if ( WriteIndexBlock(d,i) ) return(-1);
+		}
+	}
+	return(0);
+}
+
+/*
+  	#] FlushDirtyIndexBlocks :
   	#[ WriteNamesBlock :
 */
 
@@ -715,7 +733,7 @@ getout:
 		else d->iblocks[i]->previousblock = -1;
 		d->iblocks[i]->position = ftell(f);
 		// Initialise, to keep valgrind happy
-		d->iblocks[i]->flags = -1;
+		d->iblocks[i]->flags = 0;
 /*----------change 10-feb-2003 */
 /*
 			Zero things properly. We don't want garbage in the file.
@@ -1153,6 +1171,7 @@ dowrite:
 			}
 			if ( i > 0 ) ib[i]->previousblock = ib[i-1]->position;
 			else ib[i]->previousblock = -1;
+			ib[i]->flags = 0;
 /*
 			Zero things properly. We don't want garbage in the file.
 */
@@ -1337,7 +1356,8 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 #else
 	obj->uncompressed = 0;
 #endif
-	return(WriteIndexBlock(d,j));
+	d->iblocks[j]->flags |= MDIRTYFLAG;
+	return(0);
 }
 
 /*

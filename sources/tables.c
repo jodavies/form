@@ -813,7 +813,7 @@ int CoTBaddto(UBYTE *s)
 	TABLES T = 0;
 	MLONG basenumber;
 	LONG x;
-	int i, j, error = 0, sum;
+	int i, j, error = 0, sum, writeini = 0;
 	if ( ( d = FindTB(tablebasename) ) == 0 ) {
 		MesPrint("&No open tablebase with the name %s",tablebasename);
 		return(-1);
@@ -854,7 +854,7 @@ int CoTBaddto(UBYTE *s)
 			  ParseSignedNumber(x,s);
 		      if ( FG.cTable[s[-1]] != 1 || ( *s != ',' && *s != ')' ) ) {
 				MesPrint("&Table arguments in TableBase addto statement should be numbers");
-				return(1);
+				goto tableabort;
 			  }
 			  *w++ = x;
 			  if ( *s == ')' ) break;
@@ -956,17 +956,18 @@ int CoTBaddto(UBYTE *s)
 		}
 		while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
 	}
-	if ( WriteIniInfo(d) ) goto tableabort;
-	M_free(AO.DollarOutBuffer,"DollarOutBuffer");
-	AO.DollarOutBuffer = 0;
-	AO.DollarOutSizeBuffer = 0;
-	return(error);	
-tableabort:;
+	writeini = 1;
+tablefinish:;
+	if ( FlushDirtyIndexBlocks(d) ) error = 1;
+	if ( writeini && WriteIniInfo(d) ) error = 1;
 	M_free(AO.DollarOutBuffer,"DollarOutBuffer");
 	AO.DollarOutBuffer = 0;
 	AO.DollarOutSizeBuffer = 0;
 	AO.OutInBuffer = 0;
-	return(1);
+	return(error);	
+tableabort:;
+	error = 1;
+	goto tablefinish;
 }
 
 /*

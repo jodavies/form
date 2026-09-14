@@ -3190,6 +3190,27 @@ assert stdout =~ exact_pattern(<<'EOF')
 ~~~
 EOF
 *--#] ZeroUnchanged :
+*--#[ tablebase_dirty_blocks :
+CTable,sparse f(1);
+#do i = 1,1030
+  Fill f(`i') = `i';
+#enddo
+.sort
+TableBase "dirty-blocks.tbl" create;
+TableBase "dirty-blocks.tbl" addto f;
+.end
+CTable,sparse f(1);
+TableBase "dirty-blocks.tbl" open;
+TableBase "dirty-blocks.tbl" enter;
+.sort
+Local F = f(1)+f(1024)+f(1025)+f(1030);
+Apply;
+Print;
+.end
+#pend_if mpi?
+assert succeeded?
+assert result("F") =~ expr("3080")
+*--#] tablebase_dirty_blocks :
 *--#[ tablebase_ro_1 :
 Table,sparse,no1fill(1);
 Fill no1fill(1) = 1;
