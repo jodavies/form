@@ -136,6 +136,26 @@ Print;
 assert succeeded?
 assert result("zero") =~ expr("0")
 *--#] Discussion639 :
+*--#[ OptSparseHorner :
+#-
+Off Statistics;
+
+* This crashes before the fix this test comes with.
+#define N "16000"
+Symbol y1,...,y3,x1,...,x`N';
+
+Local test = x1+...+x`N';
+Multiply y1+...+y3;
+
+Format O1;
+.sort
+#optimize test
+#write "OPERATIONS `optimvalue_'"
+.end
+#pend_if mpi? || wordsize == 2
+assert succeeded?
+assert stdout =~ exact_pattern("OPERATIONS 16004")
+*--#] OptSparseHorner :
 *--#[ Issue7_1 :
 * SegFault when #optimizing trivial bracket
 Symbol x;

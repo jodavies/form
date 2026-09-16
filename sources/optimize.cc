@@ -653,6 +653,25 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
 
 	GETIDENTITY;
 
+	/* When the input has a large number of variables but is very sparse,
+	 * each absent variable causes another recursion and multiplication by
+	 * 1. The tree is quadratic in the number of variables.
+	 * The symbols in a term are ordered by their index. So the symbol at
+	 * "pos" is the next symbol which can possibly occur in the term. Skip
+	 * symbols which do not occur, to avoid the unnecessary recursion. */
+	if (var < maxvar && AN.poly_vars[var] != FACTORSYMBOL
+		&& AN.poly_vars[var] != SEPARATESYMBOL) {
+
+		int nextvar = maxvar;
+		for (int i=0; i<numterms; i++) {
+			const WORD *t = terms[i];
+			if (*t != ABS(*(t+*t-1))+1 && 2*pos+2 < t[2]) {
+				nextvar = MiN(nextvar, (int)t[2*pos+3]);
+			}
+		}
+		if (nextvar > var) var = nextvar;
+	}
+
 	if (var == maxvar) {
 		// Horner tree is finished, so add remaining terms unfactorized
 		// (note: since only complete Horner schemes seem to be useful, numterms=1 here
