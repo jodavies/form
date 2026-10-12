@@ -3561,6 +3561,7 @@ int PutToMaster(PHEAD WORD *term)
 {
 	int i,j,nexti,ret = 0;
 	int urgent = 0;
+	const int finalsortbot = AT.identity > numberofworkers && AT.identity == AB[0]->T.SortBotIn1;
 	WORD *t, *fill, *top, zero = 0;
 	if ( term == 0 ) { /* Mark the end of the expression */
 		t = &zero; j = 1;
@@ -3578,7 +3579,10 @@ int PutToMaster(PHEAD WORD *term)
 	// block. If we manage to lock it, then we still have time to continue filling this
 	// block. If we can't lock it, the reading thread is waiting for us and we should
 	// move to the next block ASAP.
-	if ( j < top - fill && AT.SB.BlockTerms[i] > MINWRITENUMBEROFTERMS ) {
+	// We disable this check in the final stage of the merge tree, where a single sortbot
+	// thread merges terms for the master, which only writes the output. There, the master
+	// usually consumes terms very quickly, and we end up producing only tiny blocks.
+	if ( !finalsortbot && j < top - fill && AT.SB.BlockTerms[i] >= MINWRITENUMBEROFTERMS ) {
 		const int prev = ( i == 1 ? AT.SB.MasterNumBlocks : i-1 );
 		if ( ! pthread_mutex_trylock(&(AT.SB.MasterBlockLock[prev])) ) {
 			UNLOCK(AT.SB.MasterBlockLock[prev]);
