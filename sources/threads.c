@@ -3578,7 +3578,9 @@ int PutToMaster(PHEAD WORD *term)
 	// block. If we manage to lock it, then we still have time to continue filling this
 	// block. If we can't lock it, the reading thread is waiting for us and we should
 	// move to the next block ASAP.
-	if ( j < top - fill && AT.SB.Data[i].BlockTerms >= MINWRITENUMBEROFTERMS ) {
+	const int finalsortbot = AT.identity > numberofworkers && AT.identity == AB[0]->T.SortBotIn1;
+	const LONG minwritenumterms = finalsortbot ? MINWRITENUMBEROFTERMS*16 : MINWRITENUMBEROFTERMS;
+	if ( j < top - fill && AT.SB.Data[i].BlockTerms >= minwritenumterms ) {
 		const int prev = ( i == 1 ? AT.SB.MasterNumBlocks : i-1 );
 		if ( ! pthread_mutex_trylock(&(AT.SB.Data[prev].MasterBlockLock)) ) {
 			UNLOCK(AT.SB.Data[prev].MasterBlockLock);
